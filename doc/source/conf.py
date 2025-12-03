@@ -6,8 +6,10 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
 import sys
 
+sys.path.insert(0, os.path.abspath('.'))
 project = "FTW Patch"
 copyright = "2025, Fitzz TeXnik Welt"
 author = "Fitzz TeXnik Welt"
@@ -28,6 +30,8 @@ extensions = [
     "sphinx-copybutton",
     "sphinxcontrib-mermaid",
     "sphinxcontrib-plantuml",
+    # Eigener writer, test
+    "api_json_exporter",
 ]
 
 templates_path = ["_templates", "_templates/autosummary"]
