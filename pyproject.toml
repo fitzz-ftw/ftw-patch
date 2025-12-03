@@ -1,0 +1,42 @@
+[build-system]
+requires = [ "setuptools" ]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "ftw-patch"
+version = "0.1.0"
+description = "Ein Unicode resistenter Ersatz für patch."
+
+[project.scripts]
+ftwpatch = "ftw_patch.ftw_patch:prog_ftw_patch"
+
+[project.optional-dependencies]
+dev = [
+    "sphinx",
+    "sphinx-argparse",
+    "sphinx-autodoc-annotation",
+    "autoclasstoc",
+    "python-docs-theme",
+    "sphinxcontrib-mermaid",
+    "sphinxcontrib-plantuml",
+    "sphinx-copybutton",
+    "sphinx-rtd-theme",
+]
+
+
+[[authors]]
+name = "Fitzz TeXnik Welt"
+email = "FitzzTeXnikWelt@t-online.de"
+
+
+[[maintainers]]
+name = "Fitzz TeXnik Welt"
+email = "FitzzTeXnikWelt@t-online.de"
+
+[project]
+readme = "README.md"
+
+
+[tool.ruff]
+line-length = 120
