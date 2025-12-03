@@ -1,9 +1,13 @@
 # 📦 Entwicklungsumgebung Spezifikation
 
 ## 1. Projektbeschreibung
-Diese Projekt soll das Programm patch abbilden, da dieses Probleme
-mit UTF-8 und wechselnden/unterschiedlichen Zeilenenden in den diff
-Texten und den Sourcecodedateien hat. 
+* Diese Projekt soll das Programm patch abbilden, da dieses Probleme
+  mit UTF-8 und wechselnden/unterschiedlichen Zeilenenden in den diff
+  Texten und den Sourcecodedateien hat.
+  
+* Die mindest Version von Python ist Python 3.13.
+
+
 
 ## 2. Paketstruktur (Aktuelles Projekt)
 
