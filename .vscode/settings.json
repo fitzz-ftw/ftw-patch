@@ -1,0 +1,7 @@
+{
+    "asciiTreeGenerator.directoryIgnore": [
+        "node_modules",
+        ".git",
+        "venv"
+    ]
+}

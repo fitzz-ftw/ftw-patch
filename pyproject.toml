@@ -23,6 +23,7 @@ dev = [
     "sphinxcontrib-plantuml",
     "sphinx-copybutton",
     "sphinx-rtd-theme",
+    "pytest",
 ]
 
 

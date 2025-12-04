@@ -11,12 +11,39 @@
 
 ## 2. Paketstruktur (Aktuelles Projekt)
 
-Dies beschreibt die Verzeichnisstruktur des Pakets, an dem ich gerade arbeite ('ftw_patch'), und ist für korrekte interne Imports essenziell.
+Dies beschreibt die Verzeichnisstruktur des Projekts/Pakets, an dem ich gerade arbeite ('FTW-Patch'), und ist für korrekte interne Imports essenziell.
+Das Paket ist mit `pip install -e .` in die locale virtuele Pythonumgebung
+installiert.
 
-ftw_patch/
-    ├── __init__.py
-    └── ftw_patch.py
-
+FTW-Patch
+├── doc
+│   ├── source
+│   │   ├── _static
+│   │   ├── _templates
+│   │   │   ├── autosummary
+│   │   │   │   ├── class_extended.rst
+│   │   │   │   ├── module_extended.rst
+│   │   │   │   └── package.rst
+│   │   │   └── mymodul.html
+│   │   ├── devel
+│   │   │   ├── ftw_patch_module.rst
+│   │   │   └── get_started_ftw_patch.rst
+│   │   ├── user
+│   │   │   └── use_ftwpatch.rst
+│   │   ├── api_json_exporter.py
+│   │   ├── conf.py
+│   │   └── index.rst
+│   └── Makefile
+├── src
+│   └── ftw_patch
+│       ├── __init__.py
+│       └── ftw_patch.py
+├── tests
+│   └── __init__.py
+├── gemini_spec.md
+├── Makefile
+├── pyproject.toml
+└── README.md
 ---
 
 ## 3. Bevorzugte Pythonmodule 
@@ -31,9 +58,17 @@ Dies ist die limitierte Liste der öffentlichen PyPI-Pakete, die in jeder Datei 
 
 * **Keine**, frage nach.
 
+
+## 5. Erlaubte PyPI-Pakete zur Entwicklung (Externe Entwicklungs Abhängigkeiten)
+Dies ist die limitierte Liste der öffentlichen PyPI-Pakete, die zur
+Entwicklung verwendet werden dürfen.
+
+* **pytest**
+
+
 ---
 
-## 5. Lokale private Pakete (Interne Abhängigkeiten)
+## 6. Lokale private Pakete (Interne Abhängigkeiten)
 
 Dies ist die Liste Ihrer selbstentwickelten Pakete, die sich außerhalb des aktuellen Projekts befinden, aber im Code importiert werden dürfen (z.B. 'import custom_logging').
 
@@ -41,7 +76,7 @@ Dies ist die Liste Ihrer selbstentwickelten Pakete, die sich außerhalb des aktu
 
 ---
 
-## 6. Dokumentations-Artefakte (Wissensbasis)
+## 7. Dokumentations-Artefakte (Wissensbasis)
 
 Dies ist eine Checkliste der JSON-Dateien, die die API-Schnittstellen der privaten Pakete (Abschnitt 3) enthalten und in die Wissensanweisung hochgeladen werden MÜSSEN.
 
