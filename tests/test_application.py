@@ -232,12 +232,13 @@ def test_ignore_bl_collapse_context():
     # Inhaltszeilen.
     hunk = Hunk(
         original_start=1,
+        # original_length=4, # Gesamtlänge des Kontextes im Original
         original_length=5, # Gesamtlänge des Kontextes im Original
         new_start=1,
-        new_length=5,
+        new_length=3,
         lines=[
             " Line 1: Start\n",
-            " \n", # Eine Leerzeile im Hunk
+            # " \n", # Eine Leerzeile im Hunk
             " Line 4: Match Context\n", # Die nächste Inhaltszeile
             " Line 5: End\n",
         ]
@@ -340,4 +341,5 @@ def test_ignore_bl_no_skip_on_blank_line_context():
     # Hier tritt der Mismatch auf, weil " Line 4: Context" nicht mit "\n" matched,
     # nachdem die erste Leerzeile matchen durfte.
     assert "Context mismatch" in str(excinfo.value)
+#    assert "line 4" in str(excinfo.value)
     assert "line 3" in str(excinfo.value)

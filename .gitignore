@@ -1,3 +1,5 @@
 venv
 *.egg-info
 beispiel_*.md
+.pytest_cache
+__pycache__
