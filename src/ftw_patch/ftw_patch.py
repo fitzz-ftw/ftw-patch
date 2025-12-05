@@ -13,9 +13,9 @@ Ein Unicode resistenter Ersatz für patch.
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from dataclasses import dataclass 
+import sys
 from typing import Iterator, TextIO
 import re
-
 
 # --- Core Data Structures for Patch Content ---
 
@@ -862,53 +862,51 @@ def _get_argparser() -> ArgumentParser:
     return parser
 
 
-def main() -> int:
+def prog_ftw_patch() -> int:
     """
     Main entry point for the command line application.
     
-    This function parses the arguments and starts the patching process.
+    This function parses the arguments and starts the patching process. 
+    It is not intended to be called directly within the module (e.g., from __main__.py 
+    or __init__.py). Instead, it is invoked by the packaging system (via the 
+    'ftwpatch' entry point defined in pyproject.toml) when the user executes 
+    the 'ftwpatch' command in the shell.
 
     :returns: The system exit code (0 for success, 1 for error).
     """
-    # Example usage for testing and demonstration
-    class MockNamespace(Namespace):
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            # Default values for missing arguments
-            if 'strip_count' not in kwargs: self.strip_count = 0
-            if 'target_directory' not in kwargs: self.target_directory = Path('.')
-            if 'normalize_whitespace' not in kwargs: self.normalize_whitespace = False
-            if 'ignore_blank_lines' not in kwargs: self.ignore_blank_lines = False
-            if 'ignore_all_whitespace' not in kwargs: self.ignore_all_whitespace = False
-
-    # Simulate CLI arguments for a standard ftwpatch usage with full options
-    mock_args = MockNamespace(
-        patch_file=Path("testdata/my_feature.diff"), # Dummy path for demo
-        strip_count=1, 
-        target_directory=Path("src"),
-        normalize_whitespace=False,
-        ignore_blank_lines=False,
-        ignore_all_whitespace=True,
-    )
+    # 1. Argument Parser initialisieren (Annahme: _get_argparser() ist definiert)
+    parser = _get_argparser() 
     
-    try:
-        # Übergabe des gesamten Namespace-Objekts (PIMPLE-Idiom)
-        patcher = FtwPatch(args=mock_args)
-        
-        # apply_patch wird aufgerufen, FileNotFoundError wird bereits im __init__ 
-        # abgefangen.
-        exit_code = patcher.apply_patch(dry_run=True) 
-        print(f"Program finished with exit code: {exit_code}")
-    except FileNotFoundError as e:
-        print(f"File System Error: {e}")
-        exit(1)
-    except FtwPatchError as e:
-        print(f"An ftw_patch error occurred: {e}")
-        exit(1)
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        exit(1)
+    # 2. Argumente parsen
+    args = parser.parse_args()
 
+    # 3. Fehlerbehandlung und Ausführung
+    try:
+        # Das 'dry_run' Argument muss korrekt aus args extrahiert werden
+        dry_run = getattr(args, 'dry_run', False)
+
+        # Die FtwPatch-Klasse kapselt die gesamte Logik
+        patcher = FtwPatch(args=args)
+        
+        # apply_patch() führt die gesamte Patch-Logik aus
+        exit_code = patcher.apply_patch(dry_run=dry_run)
+        
+        return exit_code
+        
+    except FileNotFoundError as e:
+        # Fehler bei nicht gefundenen Dateien (Patch- oder Target-Datei)
+        print(f"File System Error: {e}", file=sys.stderr)
+        return 1
+        
+    except FtwPatchError as e:
+        # Anwendungsinterne Fehler (z.B. Parse Error, Hunk Mismatch, Strip Count)
+        print(f"An ftw_patch error occurred: {e}", file=sys.stderr)
+        return 1
+        
+    except Exception as e:
+        # Unerwartete Fehler
+        print(f"An unexpected error occurred: {e}", file=sys.stderr)
+        return 1
 
 if __name__ == "__main__":
     from doctest import testfile, FAIL_FAST
@@ -934,6 +932,6 @@ if __name__ == "__main__":
     test_sum += doctestresult.failed
     
     if test_sum == 0:
-        main()
+        print(f"DocTests passed without errors, {test_sum} tests.")
     else:
         print(f"DocTests failed: {test_sum} tests.")
