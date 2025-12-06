@@ -85,8 +85,8 @@ def test_parser_iter_files_standard_diff(mock_patch_file: Path):
 
     # --- 1. Geänderte Datei: src/old_file.py -> src/new_file.py ---
     old_path_1, new_path_1, hunks_1 = parsed_files[0]
-    assert old_path_1 == Path("src/old_file.py")
-    assert new_path_1 == Path("src/new_file.py")
+    assert old_path_1 == Path("a/src/old_file.py")
+    assert new_path_1 == Path("b/src/new_file.py")
     assert len(hunks_1) == 2
 
     # Hunk 1
@@ -113,7 +113,7 @@ def test_parser_iter_files_standard_diff(mock_patch_file: Path):
 
     # --- 2. Gelöschte Datei: data/deleted_file.txt -> /dev/null ---
     old_path_2, new_path_2, hunks_2 = parsed_files[1]
-    assert old_path_2 == Path("data/deleted_file.txt")
+    assert old_path_2 == Path("a/data/deleted_file.txt")
     assert new_path_2 == DEV_NULL_PATH
     assert len(hunks_2) == 1
 
@@ -132,7 +132,7 @@ def test_parser_iter_files_standard_diff(mock_patch_file: Path):
     # --- 3. Erstellte Datei: /dev/null -> data/created_file.txt ---
     old_path_3, new_path_3, hunks_3 = parsed_files[2]
     assert old_path_3 == DEV_NULL_PATH
-    assert new_path_3 == Path("data/created_file.txt")
+    assert new_path_3 == Path("b/data/created_file.txt")
     assert len(hunks_3) == 1
 
     # Hunk 1 (Creation)
