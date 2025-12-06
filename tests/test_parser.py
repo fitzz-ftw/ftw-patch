@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
 # Annahme: Das Paket ftw_patch liegt nun im src/ Verzeichnis
-from ftw_patch.ftw_patch import PatchParser, PatchParseError, Hunk, DEV_NULL_PATH
+from ftw_patch.ftw_patch import PatchParser, PatchParseError, DEV_NULL_PATH
 
 
 # --- Fixture für Mock-Patch-Dateien ---
@@ -126,8 +126,8 @@ def test_parser_iter_files_standard_diff(mock_patch_file: Path):
     assert len(hunk_2_1.lines) == 3 # 3 Deletions
     assert hunk_2_1.lines[0].startswith('-')
     # Prüfen auf korrekte no_newline-Markierung
-    assert hunk_2_1.original_has_newline == False 
-    assert hunk_2_1.new_has_newline == True # In der neuen Datei gibt es keinen Inhalt, also ist der Newline-Status für 'new' irrelevant (oder standardmäßig True)
+    assert not hunk_2_1.original_has_newline 
+    assert hunk_2_1.new_has_newline # In der neuen Datei gibt es keinen Inhalt, also ist der Newline-Status für 'new' irrelevant (oder standardmäßig True)
 
     # --- 3. Erstellte Datei: /dev/null -> data/created_file.txt ---
     old_path_3, new_path_3, hunks_3 = parsed_files[2]
@@ -180,8 +180,8 @@ def test_parser_no_newline_at_end_of_file(mock_patch_no_newline: Path):
     # 2. Die NEUE DATEI hat keinen Newline (weil die hinzugefügte/geänderte Zeile die letzte ist)
     
     assert len(hunk.lines) == 6 # 2 Context, 2 Deletion, 2 Addition
-    assert hunk.original_has_newline == False
-    assert hunk.new_has_newline == False
+    assert not hunk.original_has_newline
+    assert not hunk.new_has_newline
     
 def test_parser_malformed_hunk_header(tmp_path: Path):
     """Testet die Fehlerbehandlung bei einem fehlerhaften Hunk-Header."""
