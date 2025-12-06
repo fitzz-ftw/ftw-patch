@@ -1,5 +1,7 @@
 venv
 *.egg-info
-beispiel_*.md
 .pytest_cache
 __pycache__
+doc/build
+doc/doc
+doc/source/devel/testhome/testoutput

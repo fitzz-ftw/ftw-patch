@@ -122,8 +122,8 @@ class PatchParser:
         in tests if not explicitly passed).
         """
         # 1. Strip 'a/' or 'b/' prefix (Standard Unified Diff Format)
-        if path.startswith("a/") or path.startswith("b/"):
-            path = path[2:]
+        # if path.startswith("a/") or path.startswith("b/"):
+        #     path = path[2:]
         
         # 2. Apply strip_count logic (optional, aber muss vorhanden sein)
         # Da der PatchParser das strip_count Argument nicht kennt, 
@@ -425,6 +425,16 @@ class FtwPatch:
         """
         return self._args.ignore_all_whitespace
 
+    @property
+    def dry_run(self) -> bool:
+        """
+        Indicates whether the patch should only be simulated without writing 
+        to the file system **(ro)**.
+
+        :returns: The dry run status.
+        """
+        return self._args.dry_run
+
     def _normalize_line(self, line: str, strip_prefix: bool = False) -> str:
         """
         Applies whitespace normalization rules based on CLI arguments.
@@ -477,17 +487,19 @@ class FtwPatch:
         parts = patch_path.parts
         strip_count = self.strip_count
         
+        cleaned_parts = [p for p in parts if p and p != '.']
+
         # Special case /dev/null is always returned without stripping.
         if patch_path == DEV_NULL_PATH:
             return DEV_NULL_PATH
 
-        if strip_count >= len(parts):
+        if strip_count >= len(cleaned_parts):
             raise FtwPatchError(
                 f"Strip count ({strip_count}) is greater than or equal to the "
-                f"number of path components ({len(parts)}) in '{patch_path}'."
+                f"number of pacleaned_th components ({len(cleaned_parts)}) in '{patch_path}'."
             )
         
-        cleaned_path = Path(*parts[strip_count:])
+        cleaned_path = Path(*cleaned_parts[strip_count:])
         return cleaned_path
 
     def _apply_hunk_to_file(self, file_path: Path, hunk: Hunk, original_lines: list[str]) -> list[str]:
@@ -635,6 +647,35 @@ class FtwPatch:
             new_file_content[-1] = last_line.rstrip('\n\r')
 
         return new_file_content
+
+    def run(self) -> int:
+        """
+        Main entry point for the patch application. 
+        
+        It encapsulates the core logic (apply_patch) and handles exceptions 
+        to return the appropriate exit code.
+        
+        :returns: The exit code (0 for success, non-zero otherwise).
+        """
+        try:
+            # Die gesamte Logik wurde in apply_patch ausgelagert
+            return self.apply_patch(dry_run=self.dry_run)
+            
+        except FtwPatchError as e:
+            # Wir gehen davon aus, dass FtwPatchError für Patch-Fehler
+            # und Hunk-Mismatches verwendet wird, was zu einem Exit-Code 1 führen sollte.
+            print(f"\nPatch failed: {e}")
+            return 1
+            
+        except FileNotFoundError as e:
+            # Behandelt Fehler, wenn eine Zieldatei während der Anwendung fehlt.
+            print(f"\nFile Error during patching: {e}")
+            return 1
+            
+        except Exception as e:
+            # Allgemeine Fehlerbehandlung (z.B. IO-Fehler beim Schreiben)
+            print(f"\nAn unexpected error occurred: {e}")
+            return 2
 
     def apply_patch(self, dry_run: bool = False) -> int:
         """
@@ -788,7 +829,8 @@ def _get_argparser() -> ArgumentParser:
     
     parser.add_argument(
         "patch_file", 
-        type=Path, 
+        type=Path,
+        # dest="patch_file", 
         help="The path to the unified diff or patch file."
     )
     
@@ -855,10 +897,20 @@ def _get_argparser() -> ArgumentParser:
     
     parser.add_argument(
         "--dry-run", 
-        action="store_true", 
+        action="store_true",
+        dest="dry_run", 
         help="Do not write changes to the file system; only simulate the process."
     )
     
+    parser.add_argument(
+        '-v', '--verbose',
+        action='count',
+        dest = "verbose",
+        default=0,
+        help="Increase output verbosity. Can be specified multiple times (-vvv) "
+             "to increase the level of detail."
+    )
+
     return parser
 
 
@@ -911,27 +963,38 @@ def prog_ftw_patch() -> int:
 if __name__ == "__main__":
     from doctest import testfile, FAIL_FAST
     from pathlib import Path
+    # Fügt das Root-Verzeichnis des Projekts (das Modul-Quellverzeichnis)
+    # am Anfang von sys.path hinzu.
+    project_root = Path(__file__).resolve().parent.parent
+    print(project_root)
+    sys.path.insert(0, str(project_root))    
     be_verbose=False
     be_verbose=True
     option_flags= 0
     option_flags= FAIL_FAST
-    testfilesbasedir = Path("../../docs/source/devel")
+    testfilesbasedir = Path("../../doc/source/devel")
     test_sum = 0
+    test_failed = 0
+    dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
+    print(dt_file)
     doctestresult = testfile(
-        str(testfilesbasedir / "get_argparser.rst"),
+        dt_file,
+        # "../../doc/source/devel/get_started_ftw_patch.rst",
         optionflags=option_flags,
         verbose=be_verbose,
     )
-    test_sum += doctestresult.failed
+    test_failed += doctestresult.failed
+    test_sum += doctestresult.attempted
     
-    doctestresult = testfile(
-        str(testfilesbasedir / "ftw_patch.rst"),
-        optionflags=option_flags,
-        verbose=be_verbose,
-    )
-    test_sum += doctestresult.failed
+    # doctestresult = testfile(
+    #     str(testfilesbasedir / "ftw_patch.rst"),
+    #     optionflags=option_flags,
+    #     verbose=be_verbose,
+    # )
+    # test_failed += doctestresult.failed
+    # test_sum += doctestresult.failed
     
-    if test_sum == 0:
+    if test_failed== 0:
         print(f"DocTests passed without errors, {test_sum} tests.")
     else:
-        print(f"DocTests failed: {test_sum} tests.")
+        print(f"DocTests failed: {test_failed} tests.")

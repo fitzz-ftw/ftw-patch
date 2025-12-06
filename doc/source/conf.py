@@ -27,11 +27,11 @@ extensions = [
     "sphinxarg.ext",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
-    "sphinx-copybutton",
-    "sphinxcontrib-mermaid",
-    "sphinxcontrib-plantuml",
+    "sphinx_copybutton",
+    # "sphinxcontrib-mermaid",
+    # "sphinxcontrib-plantuml",
     # Eigener writer, test
-    "api_json_exporter",
+    # "api_json_exporter",
 ]
 
 templates_path = ["_templates", "_templates/autosummary"]
