@@ -11,13 +11,35 @@ Ein Unicode resistenter Ersatz für patch.
 
 """
 from argparse import ArgumentParser, Namespace
+from collections import namedtuple
 from pathlib import Path
 from dataclasses import dataclass 
 import sys
-from typing import Iterator, TextIO
+from typing import ClassVar, Iterator, Literal, TextIO
 import re
 
+### Temporäre Funktionen
+# oldprint=print
+
+# def print(*values: object, 
+#           sep: str | None = " ", 
+#           end: str | None = "\n", 
+#           file: str| None = None, 
+#           flush: Literal[False] = False):
+#     pass
+
+def dp(*args):
+    # oldprint(*args, flush=True)
+    pass
+
+HunkContentData = namedtuple(
+    'HunkContentData', 
+    ['lines', 'original_has_newline', 'new_has_newline']
+)
+
 # --- Core Data Structures for Patch Content ---
+
+
 
 @dataclass(frozen=True)
 class Hunk:
@@ -39,7 +61,7 @@ class Hunk:
     original_length: int
     new_start: int
     new_length: int
-    lines: list[str]
+    lines: list['HunkLine']
     original_has_newline: bool = True 
     new_has_newline: bool = True 
 
@@ -80,7 +102,263 @@ class PatchParseError(FtwPatchError):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(message={self.args[0]!r})"
 
+class FileLine:
+    """"""
 
+    _INTERNAL_WS_RE: ClassVar[re.Pattern] = re.compile(r'([ \t\f\v]+)')
+    _ALL_WS_RE: ClassVar[re.Pattern] = re.compile(r'\s+')
+    _TRAIL_WS_RE: ClassVar[re.Pattern] = re.compile(r"([ \t\f\v]+)[\n\r]*$")
+
+    def __init__(self, raw_line:str):
+        
+        self._prefix: str = ""
+        line_content = raw_line
+        clean_content = line_content.removesuffix('\\ No newline at end of file\n').removesuffix('\\ No newline at end of file\r\n')
+        self._has_trailing_whitespace: bool = bool(self._TRAIL_WS_RE.search(clean_content))
+        self._content: str = clean_content.rstrip('\n\r')
+
+    # --- Content Properties ---
+    
+    @property
+    def content(self) -> str:
+        """
+        The raw line content, stripped of the diff prefix and trailing newline **(ro)**.
+        
+        This value is used for standard matching when no whitespace flags are set.
+
+        :returns: The cleaned line content as a string.
+        """
+        return self._content
+    
+    @property
+    def normalized_ws_content(self) -> str:
+        """
+        The line content, dynamically normalized according to the --normalize-ws rule **(ro)**.
+        
+        Internal whitespace runs collapse to a single space; trailing 
+        whitespace is removed; leading whitespace is preserved.
+
+        :returns: The normalized string used for matches.
+        """
+        content = self._content
+        
+        # 1. Finde den Index des ersten Nicht-Whitespace-Zeichens und trenne
+        # Lstrip gibt den String ohne führenden Whitespace zurück.
+        stripped_content = content.lstrip(' \t\f\v')
+        first_non_ws_index = len(content) - len(stripped_content)
+        
+        # 2. Extrahiere den führenden Whitespace (muss erhalten bleiben)
+        leading_ws = content[:first_non_ws_index]
+        
+        # 3. Wende die Normalisierung (Collapse) auf den REST der Zeile an
+        # Nur interner Whitespace wird ersetzt.
+        collapsed_content = self._INTERNAL_WS_RE.sub(' ', stripped_content)
+        
+        # 4. Entferne nachgestellten Whitespace (vom Ende der collapsed_content)
+        final_content = collapsed_content.rstrip(' \t\f\v')
+        
+        # 5. Führenden Whitespace wieder anhängen und zurückgeben
+        return leading_ws + final_content
+
+    @property
+    def ignore_all_ws_content(self) -> str:
+        """
+        The line content, dynamically normalized according to the --ignore-all-ws rule **(ro)**.
+        
+        All forms of whitespace (leading, internal, trailing) are removed from the string.
+
+        :returns: The string content with all whitespace removed.
+        """
+        return self._ALL_WS_RE.sub('', self._content)
+
+    # --- Metadata & Convenience Properties ---
+    
+    @property
+    def prefix(self) -> str:
+        """
+        The diff prefix character (' ', '+', or '-') **(ro)**.
+        
+        :returns: The prefix character.
+        """
+        return self._prefix
+        
+    @property
+    def has_trailing_whitespace(self) -> bool:
+        """
+        Indicates if the original raw line contained trailing whitespace before the newline **(ro)**.
+        
+        :returns: Boolean value.
+        """
+        return self._has_trailing_whitespace
+
+    def is_empty(self):
+        if self.content:
+            return False
+        else:
+            return True
+
+    # @property
+    # def is_context(self) -> bool:
+    #     """Returns True if the line is a context line (' ') **(ro)**.
+        
+    #     :returns: Boolean value.
+    #     """
+    #     return self._prefix == ' '
+        
+    # @property
+    # def is_addition(self) -> bool:
+    #     """Returns True if the line is an addition line ('+') **(ro)**.
+        
+    #     :returns: Boolean value.
+    #     """
+    #     return self._prefix == '+'
+        
+    # @property
+    # def is_deletion(self) -> bool:
+    #     """Returns True if the line is a deletion line ('-') **(ro)**.
+        
+    #     :returns: Boolean value.
+    #     """
+    #     return self._prefix == '-'
+
+
+class HunkLine(FileLine):
+    """
+    Represents a single content line within a hunk block of a unified diff.
+
+    The class parses the raw diff line upon instantiation and provides 
+    dynamically calculated, read-only content properties for different 
+    levels of whitespace normalization.
+    """
+    
+    # _INTERNAL_WS_RE: ClassVar[re.Pattern] = re.compile(r'([ \t\f\v]+)')
+    # _ALL_WS_RE: ClassVar[re.Pattern] = re.compile(r'\s+')
+    # _TRAIL_WS_RE: ClassVar[re.Pattern] = re.compile(r"([ \t\f\v]+)[\n\r]*$")
+    
+    def __init__(self, raw_line: str) -> None:
+        """
+        Initializes the HunkLine by parsing the raw line.
+
+        The raw line must start with a valid diff prefix (' ', '+', or '-'). 
+        The content is stored without the final newline character.
+        
+        :param raw_line: The raw line from the patch file (including prefix).
+        :raises PatchParseError: If the prefix is invalid or missing.
+        """
+        # if not raw_line or len(raw_line) < 2 or raw_line[0] not in (' ', '+', '-'):
+        if not raw_line or raw_line[0] not in (' ', '+', '-'):
+             raise PatchParseError(
+                 f"Hunk content line missing valid prefix (' ', '+', '-') or is empty: {raw_line!r}"
+             )
+        
+        self._prefix: str = raw_line[0]
+        line_content = raw_line[1:]
+        
+        clean_content = line_content.removesuffix('\\ No newline at end of file\n').removesuffix('\\ No newline at end of file\r\n')
+        self._has_trailing_whitespace: bool = bool(self._TRAIL_WS_RE.search(clean_content))
+        self._content: str = clean_content.rstrip('\n\r')
+
+    def __repr__(self):
+        return "".join([self.__class__.__name__,
+                        f"(Content: {self.prefix}{self.content})"])
+
+    # --- Content Properties ---
+    
+    # @property
+    # def content(self) -> str:
+    #     """
+    #     The raw line content, stripped of the diff prefix and trailing newline **(ro)**.
+        
+    #     This value is used for standard matching when no whitespace flags are set.
+
+    #     :returns: The cleaned line content as a string.
+    #     """
+    #     return self._content
+    
+    # @property
+    # def normalized_ws_content(self) -> str:
+    #     """
+    #     The line content, dynamically normalized according to the --normalize-ws rule **(ro)**.
+        
+    #     Internal whitespace runs collapse to a single space; trailing 
+    #     whitespace is removed; leading whitespace is preserved.
+
+    #     :returns: The normalized string used for matches.
+    #     """
+    #     content = self._content
+        
+    #     # 1. Finde den Index des ersten Nicht-Whitespace-Zeichens und trenne
+    #     # Lstrip gibt den String ohne führenden Whitespace zurück.
+    #     stripped_content = content.lstrip(' \t\f\v')
+    #     first_non_ws_index = len(content) - len(stripped_content)
+        
+    #     # 2. Extrahiere den führenden Whitespace (muss erhalten bleiben)
+    #     leading_ws = content[:first_non_ws_index]
+        
+    #     # 3. Wende die Normalisierung (Collapse) auf den REST der Zeile an
+    #     # Nur interner Whitespace wird ersetzt.
+    #     collapsed_content = self._INTERNAL_WS_RE.sub(' ', stripped_content)
+        
+    #     # 4. Entferne nachgestellten Whitespace (vom Ende der collapsed_content)
+    #     final_content = collapsed_content.rstrip(' \t\f\v')
+        
+    #     # 5. Führenden Whitespace wieder anhängen und zurückgeben
+    #     return leading_ws + final_content
+
+    # @property
+    # def ignore_all_ws_content(self) -> str:
+    #     """
+    #     The line content, dynamically normalized according to the --ignore-all-ws rule **(ro)**.
+        
+    #     All forms of whitespace (leading, internal, trailing) are removed from the string.
+
+    #     :returns: The string content with all whitespace removed.
+    #     """
+    #     return self._ALL_WS_RE.sub('', self._content)
+
+    # --- Metadata & Convenience Properties ---
+    
+    @property
+    def prefix(self) -> str:
+        """
+        The diff prefix character (' ', '+', or '-') **(ro)**.
+        
+        :returns: The prefix character.
+        """
+        return self._prefix
+        
+    @property
+    def has_trailing_whitespace(self) -> bool:
+        """
+        Indicates if the original raw line contained trailing whitespace before the newline **(ro)**.
+        
+        :returns: Boolean value.
+        """
+        return self._has_trailing_whitespace
+
+    @property
+    def is_context(self) -> bool:
+        """Returns True if the line is a context line (' ') **(ro)**.
+        
+        :returns: Boolean value.
+        """
+        return self._prefix == ' '
+        
+    @property
+    def is_addition(self) -> bool:
+        """Returns True if the line is an addition line ('+') **(ro)**.
+        
+        :returns: Boolean value.
+        """
+        return self._prefix == '+'
+        
+    @property
+    def is_deletion(self) -> bool:
+        """Returns True if the line is a deletion line ('-') **(ro)**.
+        
+        :returns: Boolean value.
+        """
+        return self._prefix == '-'
 # --- Parser ---
 
 class PatchParser:
@@ -106,6 +384,8 @@ class PatchParser:
         :raises builtins.FileNotFoundError: If the patch file does not 
                                             exist.
         """
+        self._current_line: str|None =None
+
         if not patch_file_path.is_file():
             raise FileNotFoundError(f"Patch file not found: {patch_file_path}")
         
@@ -114,6 +394,267 @@ class PatchParser:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}" \
                f"(patch_file_path={self._patch_file_path!r})"
+
+# Innerhalb der PatchParser-Klasse
+
+    # Statische Regex für Hunk Header (einmalige Kompilierung)
+    _HUNK_HEADER_RE = re.compile(
+        r'^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@'
+    )
+
+# Assuming these methods are part of the PatchParser class.
+
+    def _peek_line(self) -> str:
+        """
+        Looks ahead at the next raw line in the patch stream without consuming it.
+        
+        This mechanism is crucial for correctly identifying the end of a hunk 
+        or the next file/hunk header without discarding the separator line.
+        
+        Returns:
+            The raw line as a string (including the newline '\\n').
+            Returns the empty string '' if End-Of-File (EOF) is reached.
+        """
+        if self._current_line is None:
+            # Read the next raw line from the file handle and store it.
+            # This can be 'Content\\n', '\\n', or '' (EOF).
+            self._current_line = self.file_handle.readline() 
+            
+        return self._current_line 
+
+
+    def _read_line(self) -> str:
+        """
+        Consumes and returns the next line from the patch stream.
+        
+        It uses '_peek_line' to ensure the buffer is populated and then
+        clears the lookahead buffer to signal that the line has been consumed.
+
+        Returns:
+            The raw, consumed line as a string (including the newline '\\n').
+            Returns the empty string '' if End-Of-File (EOF) is reached.
+        """
+        # Call _peek_line to populate self._current_line if it is None
+        line = self._peek_line() 
+        
+        # Consume the line by emptying the buffer.
+        self._current_line = None 
+            
+        return line
+
+    def _parse_hunk_metadata(self, line: str) -> tuple[int, int, int, int]:
+        """
+        Parses the Hunk header line (starting with '@@ ') to extract start and length 
+        metadata for the original and new files.
+        
+        :param line: The raw Hunk header line read from the patch file stream.
+        :raises PatchParseError: If the Hunk header line is malformed or does not 
+                                 match the expected unified diff format.
+        :returns: A tuple containing the parsed metadata: 
+                  (original_start, original_length, new_start, new_length).
+        """
+        match = self._HUNK_HEADER_RE.match(line)
+        
+        if not match:
+            raise PatchParseError(f"Malformed Hunk header: {line.strip()!r}")
+            
+        # Extrahieren der Gruppen (als Strings oder None, wenn die Länge fehlt)
+        o_start_str, o_len_str, n_start_str, n_len_str = match.groups()
+        
+        # Konvertieren in int, wobei die Länge standardmäßig 1 ist, falls nicht vorhanden
+        original_start = int(o_start_str)
+        original_length = int(o_len_str) if o_len_str else 1
+        new_start = int(n_start_str)
+        new_length = int(n_len_str) if n_len_str else 1
+        
+        return original_start, original_length, new_start, new_length
+
+    # def _parse_hunk_content(self, expected_line_count: int) -> tuple[list['HunkLine'], bool, bool]:
+    #     """
+    #     Reads the content lines of a hunk and checks for the 'No newline' marker.
+
+    #     This method consumes the lines containing the actual changes ('+', '-', ' ').
+    #     It also handles the special "No newline at end of file" marker.
+
+    #     :param expected_line_count: The total number of expected '+', '-', and ' ' lines.
+    #     :raises PatchParseError: On unexpected EOF or malformed content lines.
+    #     :returns: A tuple containing:
+    #               1. list['HunkLine']: The parsed content lines.
+    #               2. bool: original_has_newline (False if marker found for original file).
+    #               3. bool: new_has_newline (False if marker found for new file).
+    #     """
+    #     lines: list[HunkLine] = []
+    #     original_has_newline: bool = True
+    #     new_has_newline: bool = True
+    #     print("Linecounter: ", expected_line_count)
+    #     # 1. Reading the expected content lines
+    #     for _ in range(expected_line_count):
+    #         line = self.file_handle.readline()
+    #         if not line:
+    #             raise PatchParseError("Unexpected EOF while reading expected hunk content lines.")
+            
+    #         try:
+    #             hunk_line = HunkLine(line)
+    #             lines.append(hunk_line)
+    #         except PatchParseError as e:
+    #             raise PatchParseError(f"Error parsing hunk content line {len(lines) + 1}: {e}")
+        
+    #     # 2. Checking the Newline Marker
+    #     current_position = self.file_handle.tell()
+    #     next_line_peek = self.file_handle.readline()
+        
+    #     if next_line_peek and next_line_peek.startswith('\\ No newline at end of file'):
+    #         # Marker found: change status and consume the line.
+    #         if lines:
+    #             last_line = lines[-1]
+    #             if last_line.is_context or last_line.is_deletion:
+    #                 original_has_newline = False
+    #             if last_line.is_context or last_line.is_addition:
+    #                 new_has_newline = False
+            
+    #         # The file pointer is now correctly positioned after the marker.
+    #     else:
+    #         # No marker, we must reset the file pointer to re-read the line 
+    #         # in the next iter_files loop iteration.
+    #         self.file_handle.seek(current_position)
+            
+    #     return HunkContentData(lines, 
+    #                            original_has_newline, 
+    #                            new_has_newline)
+
+################################
+    def _parse_hunk_content(self) -> tuple[list['HunkLine'], bool, bool]:
+        """
+        Reads the content lines of a hunk by checking prefixes until the end of the 
+        hunk block is found (next header, EOF, or marker).
+
+        This method consumes the lines containing the actual changes ('+', '-', ' ').
+        It also handles the special "No newline at end of file" marker using lookahead.
+
+        Returns:
+            A tuple containing:
+            1. list['HunkLine']: The parsed content lines.
+            2. bool: original_has_newline (False if marker found for original file).
+            3. bool: new_has_newline (False if marker found for new file).
+        
+        Raises:
+            PatchParseError: On unexpected EOF or malformed content lines.
+        """
+        lines: list[HunkLine] = []
+        original_has_newline: bool = True
+        new_has_newline: bool = True
+        
+        # 1. Read content lines until the hunk ends (prefix check)
+        while True:
+            line = self._peek_line() # Use lookahead to check prefix without consuming
+            dp(f"DEBUG: _peek_line {line=}")
+            # Check for EOF first. An empty string means EOF.
+            if not line:
+                # EOF reached prematurely is an error if we haven't found a valid end marker yet.
+                # raise PatchParseError("Unexpected EOF while reading expected hunk content lines.")
+                break
+
+            # KORRIGIERTE LOGIK: Explicitly check for next block headers before checking the prefix.
+            if line.startswith(("--- ", "+++ ", "@@ ")):
+                # The next file header or hunk header is found. The hunk content is finished.
+                # The line is left in the buffer for iter_files to handle.
+                break
+
+            # The special marker also terminates the hunk content loop
+            if line.startswith(r"\ No newline at end of file"):
+                break
+
+            # Check if the line is valid hunk content (must start with ' ', '+', or '-').
+            # If not, the hunk content block is finished. The line is left in the buffer.
+            if line[0] not in (' ', '+', '-'):
+                break
+
+            # Consume the line and attempt to parse it as HunkLine
+            line_to_process = self._read_line()
+            dp(f"DEBUG: {line_to_process}")
+            try:
+                hunk_line = HunkLine(line_to_process)
+                lines.append(hunk_line)
+            except PatchParseError as e:
+                raise PatchParseError(f"Error parsing hunk content line {len(lines) + 1}: {e}")
+            except Exception as e: 
+                # Dies fängt Fehler wie IndexError (z.B. wenn HunkLine[0] fehlschlägt) ab
+                raise PatchParseError(f"Unexpected error processing HunkLine content (line: {len(lines) + 1}): {e}")
+        # 2. Check for the Newline Marker using lookahead (if the hunk was not ended by EOF)
+        
+        next_line_peek = self._peek_line()
+        
+        if next_line_peek.startswith(r"\ No newline at end of file"):
+            # Marker found: update status flags based on the last line's type
+            
+            # Consume the marker line to advance the parser
+            self._read_line() 
+            
+            if lines:
+                last_line = lines[-1]
+                
+                # The marker affects the original file if the last line was context or deletion.
+                if last_line.is_context or last_line.is_deletion:
+                    original_has_newline = False
+                    
+                # The marker affects the new file if the last line was context or addition.
+                if last_line.is_context or last_line.is_addition:
+                    new_has_newline = False
+
+        dp(f"DEBUG_HUNK: Successfully reached return. Lines found: {len(lines)}")    
+        
+        return HunkContentData(lines, 
+                            original_has_newline, 
+                            new_has_newline)
+
+
+# Innerhalb der PatchParser-Klasse
+
+    def _parse_file_headers(self) -> tuple[str | None, str | None, bool]:
+        """
+        Reads lines from the file handle until the '---' and '+++' file headers 
+        are found. Strips the time/date stamps and extracts the file paths.
+        
+        :returns: A tuple (original_path, new_path, found_file_block). 
+                  (None, None, False) if EOF is hit before finding the headers.
+        """
+        original_path = None
+        new_path = None
+        
+        # 1. Skip lines until the '---' header is found
+        while True:
+            line = self._read_line()
+            if not line: # EOF reached
+                return None, None, False
+            if line.startswith('--- '):
+                # Found original file header
+                original_path = self._clean_path(line[4:].strip())
+                break
+        
+        # 2. Read the subsequent '+++' header
+        line = self._read_line()
+        if not line or not line.startswith('+++ '):
+             # Fehler: '+++' fehlt nach '---'. PatchFile ist fehlerhaft.
+             raise PatchParseError("Missing '+++' file header after '---'.")
+
+        new_path = self._clean_path(line[4:].strip())
+        
+        return original_path, new_path, True
+
+    def _clean_path(self, path_line: str) -> str:
+        """
+        Removes tabs, carriage returns, and optional timestamp/revision info 
+        from the file path line. (e.g., '\t2017-01-01 ...' or '\trevision').
+        
+        This logic currently resides in FtwPatch; it will be moved to 
+        PatchContext later, but for now, we simulate the required cleaning.
+        """
+        if '\t' in path_line:
+            path_line = path_line.split('\t', 1)[0]
+        if '\r' in path_line:
+            path_line = path_line.split('\r', 1)[0]
+            
+        return path_line
 
 
     def _strip_patch_path(self, path: str) -> str:
@@ -132,22 +673,14 @@ class PatchParser:
         return path
 
 
+# Innerhalb der PatchParser-Klasse
+
     def iter_files(self) -> Iterator[tuple[Path, Path, list[Hunk]]]:
         """
-        Iterates over the files defined in the patch.
-
-        This method reads the patch file, identifies the file boundaries, 
-        collects all hunks for one file change, and yields the result.
-
-        :raises PatchParseError: If the patch file format is invalid.
-        :raises builtins.IOError: If an I/O error occurs during file reading.
-        :returns: An iterator yielding tuples of (original_path, new_path, 
-                  list_of_hunks).
+        Parses the patch file and yields the results for each file block.
         """
-
         original_file_path: Path | None = None
         new_file_path: Path | None = None
-
         hunks: list[Hunk] = []
         
         try:
@@ -157,183 +690,84 @@ class PatchParser:
                 mode="r", encoding="utf-8", errors="replace"
             ) as file_handle:
                 
-                # Variable to store a line that was read but belongs to the 
-                # next block
+                # We assign the file_handle to self to allow helper methods 
+                # to access the stream state.
+                self.file_handle = file_handle
                 next_line: str | None = None 
 
                 while True:
                     
-                    if next_line:
-                        line = next_line
-                        next_line = None
-                    else:
-                        line = file_handle.readline()
+                    # 1. FILE HEADER LOGIC: Extracts '---' and '+++'
+                    o_path_str, n_path_str, found_file_block = self._parse_file_headers()
 
-                    if not line: # EOF reached
-                        break
-                    # Ignore all lines that start with 'diff ' or '#'
-                    if not original_file_path and line.startswith(('diff ', '#', 'index ', '\n')):
-                        continue
+                    dp(f"DEBUG: {found_file_block=}")
 
-                    # 1. Identify File Header '---'
-                    if line.startswith('--- '):
+                    if not found_file_block:
+                        if hunks:
+                            yield original_file_path, new_file_path, hunks
+                        return  # EOF reached
 
-                        if original_file_path is not None:
-                            # Ausgabe des fertigen Blocks
-                            yield (
-                                original_file_path,  # Path-Objekt
-                                new_file_path,       # Path-Objekt
-                                hunks,
-                            )
-                            # Zurücksetzen für den nächsten Block
-                            hunks = []
-                            
-                        # Setze den neuen original_file_path
-                        path_str = self._strip_patch_path(line[4:].rstrip('\n\r'))
-                        original_file_path = Path(path_str)
-
+                    # If we have hunks from the previous file block, yield them
+                    dp(f"DEBUG: before yield {hunks=}")
+                    if hunks:
+                        yield original_file_path, new_file_path, hunks
+                        hunks = [] # Reset for the new file block
                     
-                    # 2. Identify File Header '+++'
-                    elif line.startswith('+++ '):
-                        # Extract new path
-                        path_part_raw = line.strip().split(' ', 1)[1].split('\t')[0]
-                        # FIX: Pfad strippen, bevor Path-Objekt erstellt wird
-                        path_str = self._strip_patch_path(path_part_raw)
-                        new_file_path = Path(path_str)
-                        
-                        if not original_file_path:
-                            raise PatchParseError(
-                                "Found '+++' line without preceding '---' line."
-                            )
-                            
-                        # Reset hunks list for the new file
-                        hunks = [] 
-                        continue
-                   
-                    # 3. Identify Hunk Header '@@ ... @@'
-                    elif line.startswith('@@ '):
-                        if not new_file_path:
-                            raise PatchParseError(
-                                "Found hunk header '@@' before '+++' file "
-                                "definition."
-                            )
-                            
-                        match = self._HUNK_HEADER_RE.match(line)
-                        if not match:
-                            raise PatchParseError(
-                                f"Malformed hunk header found: {line.strip()}"
-                            )
-                            
-                        # Extract start/length values. Default length to 1 if 
-                        # missing
-                        o_start, o_len_str, n_start, n_len_str = match.groups()
-                        o_len = int(o_len_str or 1)
-                        n_len = int(n_len_str or 1)
-                        
-                        current_hunk_lines: list[str] = []
-                        original_has_newline: bool = True
-                        new_has_newline: bool = True
-                        
-                        # --- START HUNK LINE CONSUMPTION ---
-                        while True:
-                            hunk_line = file_handle.readline()
-                            if not hunk_line: # EOF while reading hunk content
-                                break
-                            
-                            # Hunk content lines: context (' '), added ('+'), or 
-                            # removed ('-')
-                            if hunk_line.startswith((' ', '+', '-')):
-                                current_hunk_lines.append(hunk_line)
-                            
-                            # Special case: No newline at end of file metadata
-                            elif hunk_line.startswith(
-                                    '\\ No newline at end of file'
-                            ):
-                                if not current_hunk_lines:
-                                    original_has_newline = False
-                                    new_has_newline = False
-                                else:
-                                    # Check if the hunk affected the original or the new file content.
-                                    # Check for deletion ('-') or context (' ')
-                                    affects_original = any(line.startswith(('-', ' ')) for line in current_hunk_lines)
-                                    # Check for addition ('+') or context (' ')
-                                    affects_new = any(line.startswith(('+', ' ')) for line in current_hunk_lines)
-                                    
-                                    if affects_original:
-                                        original_has_newline = False
-                                        
-                                    if affects_new:
-                                        new_has_newline = False
-                                        
-                                continue
-                            
-                            # Check for the start of the next block: new hunk, 
-                            # new file, or end of diff
-                            elif hunk_line.startswith(('@@ ', '--- ', 'diff ')):
-                                # This line belongs to the next block. Put it 
-                                # back for the main loop.
-                                next_line = hunk_line
-                                break
-                            
-                            else:
-                                # Ignore other metadata lines inside the diff 
-                                continue 
-                        # --- END HUNK LINE CONSUMPTION ---
+                    # Set the paths for the new file block
+                    original_file_path = Path(o_path_str)
+                    new_file_path = Path(n_path_str)                    
 
-                        # Create and append Hunk
+                    # 2. HUNK BLOCK LOGIC: Process '@@' headers
+                    
+                    # line = next_line or self._read_line()
+                    # next_line = None
+                    # line = self._peek_line()
+                    line = self._read_line()
+
+                    if not line:
+                        break
+
+                    # Identify Hunk Header '@@ ... @@'
+                    if line.startswith('@@ '):
+                        # a) Parse metadata (using helper method)
+                        try:
+                            o_start, o_len, n_start, n_len = self._parse_hunk_metadata(line)
+                        except PatchParseError as e:
+                            raise FtwPatchError(f"Error parsing hunk metadata for file {original_file_path!r}: {e}")
+
+                        dp(f"DEBUG: After parsing Hunkmetadata {self._current_line=}")
+
+
+                        # b) Parse content lines (using helper method)
+                        hunk_line_count = o_len + n_len
+                        hunk_content_data = self._parse_hunk_content()
+
+                        dp(f"DEBUG_ITER: Hunk content data received: {hunk_content_data}")
+
+                        # c) Create and append Hunk
                         hunk = Hunk(
-                            original_start=int(o_start),
+                            original_start=o_start,
                             original_length=o_len,
-                            new_start=int(n_start),
+                            new_start=n_start,
                             new_length=n_len,
-                            lines=current_hunk_lines,
-                            original_has_newline=original_has_newline,
-                            new_has_newline=new_has_newline
+                            lines=hunk_content_data.lines,
+                            original_has_newline=hunk_content_data.original_has_newline,
+                            new_has_newline=hunk_content_data.new_has_newline
                         )
                         hunks.append(hunk)
                         
-                        # Start the main loop iteration again (either with 
-                        # next_line or a fresh read)
+                    else:
+                        # Skip other lines between blocks (e.g., 'Index: ...')
                         continue 
-
-
-                    # 4. Handle end of a file block (e.g., empty lines or 
-                    # other headers before next '---')
-                    elif line.startswith('diff ') and new_file_path:
-                        # Found the start of the next diff, yield the current 
-                        # file's hunks
-                        yield original_file_path, new_file_path, hunks
-                        # Reset state for the new file block
-                        original_file_path = None
-                        new_file_path = None
-                        hunks = []
                         
-                # 5. Handle EOF: Yield the last collected file patch if any 
-                # hunks were found
-                
-                if original_file_path is not None:
-                    # Ausgabe des fertigen Blocks
-                    yield (
-                        original_file_path,
-                        new_file_path,      
-                        hunks,
-                    )
-                    # Zurücksetzen für den nächsten Block
-                    hunks = []
-                    
+                # End of While loop (EOF)
+                if hunks:
+                    yield original_file_path, new_file_path, hunks
 
-        except IOError as e:
-            # Catch I/O errors (e.g., encoding problems, read errors)
-            raise IOError(
-                f"Error reading patch file '{self._patch_file_path.name}': {e}"
-            )
+        except FtwPatchError:
+            raise
         except Exception as e:
-            # Catch other unexpected parsing issues and wrap them
-            if not isinstance(e, PatchParseError):
-                 raise PatchParseError(
-                     f"Unexpected error during patch parsing: {e}"
-                 )
-            raise # Re-raise if it was already a PatchParseError
+            raise FtwPatchError(f"An unexpected error occurred during patch file parsing: {e}")
 
 # --- FtwPatch (Main Application) ---
 
@@ -435,7 +869,8 @@ class FtwPatch:
         """
         return self._args.dry_run
 
-    def _normalize_line(self, line: str, strip_prefix: bool = False) -> str:
+#ANCHOR - _nomalize_line
+    def _normalize_line(self, file_line: FileLine, strip_prefix: bool = False) -> str:
         """
         Applies whitespace normalization rules based on CLI arguments.
         
@@ -445,13 +880,16 @@ class FtwPatch:
         :returns: The normalized line.
         """
         # Strip the diff prefix if present and requested
-        if strip_prefix and line.startswith((' ', '+', '-')):
-            line = line[1:]
+        #line = " ".join([file_line.prefix, file_line.content])
+        line = "".join([file_line.prefix, file_line.content])
+        if strip_prefix:
+            line = file_line.content
         
         # Dominante Option: --ignore-all-ws
         if self.ignore_all_whitespace:
             # Remove all whitespace characters (including newlines, tabs, and spaces)
-            return "".join(line.split())
+            # return "".join(line.split())
+            return file_line.ignore_all_ws_content
         
         # Secondary options: --normalize-ws and --ignore-bl
         
@@ -459,19 +897,20 @@ class FtwPatch:
         line = line.strip('\n\r') 
 
         # Ignore Blank Lines: If line is now empty after stripping, return empty string
-        if self.ignore_blank_lines and not line.strip():
+        if self.ignore_blank_lines and not file_line.content.strip():
             return ''
         
         # Normalize non-leading whitespace
         if self.normalize_whitespace:
-            # We use re.match for leading whitespace and process the rest.
-            match = re.match(r'^\s*', line)
-            leading_ws = match.group(0) if match else ''
-            rest = line[len(leading_ws):]
-            # Normalize the rest: replace sequences of internal whitespace 
-            # with a single space.
-            rest_normalized = re.sub(r'[ \t\f\v]+', ' ', rest)
-            line = leading_ws + rest_normalized
+            # # We use re.match for leading whitespace and process the rest.
+            # match = re.match(r'^\s*', line)
+            # leading_ws = match.group(0) if match else ''
+            # rest = line[len(leading_ws):]
+            # # Normalize the rest: replace sequences of internal whitespace 
+            # # with a single space.
+            # rest_normalized = re.sub(r'[ \t\f\v]+', ' ', rest)
+            # line = leading_ws + rest_normalized
+            line = file_line.normalized_ws_content
         
         return line
 
@@ -513,7 +952,7 @@ class FtwPatch:
         :raises FtwPatchError: If a hunk mismatch occurs (context or deletion line does not match).
         :returns: The new content of the file as a list of strings.
         """
-        
+        dp("DEBUG: _apply_hunk_to_file start")
         # A. Initial checks and setup (omitted)
         
         # B. Hunk Application
@@ -526,27 +965,39 @@ class FtwPatch:
         last_line_was_explicit_blank = False 
         
         hunk_line_index = 0
+        
+        dp(f"DEBUG: {hunk=}")
+
         for hunk_line in hunk.lines:
-            prefix = hunk_line[0]
-            
+            #prefix = hunk_line[0]
+            dp(f"DEBUG: for {hunk_line}")
             # 1. Check for Addition
-            if prefix == '+':  # Addition line
-                new_line_content = hunk_line[1:]
+            if hunk_line.is_addition:  # Addition line
+                new_line_content = hunk_line.content
                 
                 # Ensure the line has a trailing newline if not present
                 if not new_line_content.endswith(('\n', '\r')):
                     new_line_content += '\n'
                     
                 new_file_content.append(new_line_content)
-                
+                dp(f"DEBUG: addition: {new_line_content}")
+                dp(f"DEBUG: addition: {new_file_content}")
                 # FINAL FIX 4b: Reset state, addition breaks context chain
                 last_line_was_explicit_blank = False 
 
             # 2. Check for Deletion
-            elif prefix == '-':  # Deletion line
-                
+            elif hunk_line.is_deletion:  # Deletion line
+                #ANCHOR - hunklines
                 # Normalize lines for comparison
-                norm_hunk_line = self._normalize_line(hunk_line, strip_prefix=True)
+                norm_hunk_line=self._normalize_line(hunk_line, True)
+                #norm_hunk_line = self._normalize_line(hunk_line, strip_prefix=True)
+                # if self.ignore_all_whitespace:
+                #     norm_hunk_line = hunk_line.ignore_all_ws_content
+                # elif self.ignore_blank_lines:
+                #     norm_hunk_line = ''
+                # elif self.normalize_whitespace:
+                #     norm_hunk_line = hunk_line.normalized_ws_content
+
 
                 # FINAL FIX 4b: Reset state, deletion breaks context chain
                 last_line_was_explicit_blank = False 
@@ -565,8 +1016,9 @@ class FtwPatch:
                     raise FtwPatchError(f"Hunk mismatch on deletion line {hunk_line!r}: Found 'EOF'.")
 
                 original_line = original_lines[file_current_index]
-                norm_original_line = self._normalize_line(original_line)
-                
+                norm_original_line = self._normalize_line(FileLine(original_line))
+                # print("HO:", norm_hunk_line, flush=True)
+                # print("NO:",norm_original_line, flush=True)
                 if norm_original_line != norm_hunk_line:
                     raise FtwPatchError(
                         f"Hunk mismatch on deletion line {hunk_line!r}: "
@@ -578,7 +1030,7 @@ class FtwPatch:
                 lines_consumed_in_original += 1
                 
             # 3. Check for Context
-            elif prefix == ' ':  # Context line
+            elif hunk_line.is_context:  # Context line
                 
                 # 1. Normalize the hunk line and check if it contains content
                 norm_hunk_line = self._normalize_line(hunk_line, strip_prefix=True)
@@ -615,7 +1067,7 @@ class FtwPatch:
 
                 original_line = original_lines[file_current_index]
                 # Normalize original line after loading
-                norm_original_line = self._normalize_line(original_line) 
+                norm_original_line = self._normalize_line(FileLine(original_line)) 
                 
                 # --- MATCH CHECK ---
                 if norm_hunk_line != norm_original_line:
@@ -645,7 +1097,7 @@ class FtwPatch:
             # rstrip removes '\n' or '\r\n'
             last_line = new_file_content[-1]
             new_file_content[-1] = last_line.rstrip('\n\r')
-
+        dp(f"DEBUG: Before return {new_file_content=}")
         return new_file_content
 
     def run(self) -> int:
@@ -704,7 +1156,7 @@ class FtwPatch:
         
         # 1. Iteriere über die geparsten Dateiblöcke und wende Hunks an
         for original_path, new_path, hunks in parser.iter_files():
-            
+            dp(f"DEBUG: return of iter_files: {hunks=}")
             # 2. Pfadbereinigung und Zielpfad-Ermittlung
             target_original_path = self._clean_patch_path(original_path)
             target_new_path = self._clean_patch_path(new_path)
@@ -759,6 +1211,7 @@ class FtwPatch:
 
             # 4. Hunks sequenziell im Speicher anwenden
             current_lines = original_lines
+            dp(f"DEBUG: {hunks=}")
             for i, hunk in enumerate(hunks):
                 print(
                     f" - Applying Hunk {i+1}/{len(hunks)} "
@@ -770,7 +1223,7 @@ class FtwPatch:
                     hunk=hunk,
                     original_lines=current_lines
                 )
-            
+            dp(f"DEBUG: {current_lines=}")
             # 5. Ergebnis im Speicher zwischenspeichern (nur wenn keine # Löschung)
             if target_new_path != DEV_NULL_PATH:
                 patched_file_storage[full_new_path] = current_lines
@@ -976,6 +1429,7 @@ if __name__ == "__main__":
     test_sum = 0
     test_failed = 0
     dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
+    # dt_file = str(testfilesbasedir / "temp_test.rst")
     print(dt_file)
     doctestresult = testfile(
         dt_file,

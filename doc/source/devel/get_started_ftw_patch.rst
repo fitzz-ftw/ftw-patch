@@ -592,6 +592,108 @@ Verify success:
     >>> ws_target_file.read_text()
     'def fn():\n    pass   # More space\n    return\n\n\n'
 
+
+
+HunkLine
+========
+
+The HunkLine class is implemented in the Patch Parser to encapsulate hunk line content and manage whitespace normalization.
+
+.. code:: python
+
+   >>> from ftw_patch.ftw_patch import HunkLine, PatchParseError
+
+Test Case 1: Basic Initialization and Properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This test verifies the basic decomposition of the line into prefix and content.
+
+.. code:: python
+
+   >>> hl1 = HunkLine(" Content with spaces")
+   >>> hl1.prefix
+   ' '
+   >>> hl1.content
+   'Content with spaces'
+   >>> hl1.is_context
+   True
+
+Test Case 2: Lines with Trailing Whitespace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This test simulates a deletion line that includes trailing whitespace, which is important for the `has_trailing_whitespace` property.
+
+.. code:: python
+
+   >>> hl2 = HunkLine("-Remove this line. \t")
+   >>> hl2.content
+   'Remove this line. \t'
+   >>> hl2.has_trailing_whitespace
+   True
+
+Test Case 3: Error Handling (Missing Prefix)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The class must raise a `PatchParseError` if the line does not have a valid diff prefix (' ', '+', '-').
+
+.. code:: python
+
+   >>> HunkLine("Missing prefix") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+   Traceback (most recent call last):
+   ...
+   ftw_patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix (' ', '+', '-') or is empty: 'Missing prefix'
+
+Test Case 4: Whitespace Normalization (Compare all 3 Properties)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This test is critical and compares the three levels of dynamic whitespace handling (Default, --normalize-ws, --ignore-all-ws).
+
+Original Content: Leading WS, Internal WS run, Trailing WS
+.. code:: python
+
+   >>> ws_raw = "+  def test_fn(  a, b ): \t"
+   >>> hl_ws = HunkLine(ws_raw)
+
+Test 4a: Default Content (Raw, only newline/prefix stripped)
+.. code:: python
+
+   >>> hl_ws.content
+   '  def test_fn(  a, b ): \t'
+
+Test 4b: Normalized WS (Internal collapses, trailing removed, leading kept)
+.. code:: python
+
+   >>> hl_ws.normalized_ws_content
+   '  def test_fn( a, b ):'
+
+.. code:: python
+
+   >>> hl_ws2 = HunkLine("+  def    test_fn2(  \t   a, b ): \t")
+   >>> hl_ws2.normalized_ws_content
+   '  def test_fn2( a, b ):'
+
+
+Test 4c: Ignore All WS (Removes all \s)
+.. code:: python
+
+   >>> hl_ws.ignore_all_ws_content
+   'deftest_fn(a,b):'
+
+Test Case 5: Blank Line Context
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tests an explicit blank context line (' '), which is important for the Blank Line Skip Logic.
+
+.. code:: python
+
+   >>> hl_blank = HunkLine(" ")
+   >>> hl_blank.content
+   ''
+   >>> hl_blank.is_context
+   True
+
+
+
+
 ..
     ---
 

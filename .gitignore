@@ -4,4 +4,4 @@ venv
 __pycache__
 doc/build
 doc/doc
-doc/source/devel/testhome/testoutput
+doc/source/devel/testhome
