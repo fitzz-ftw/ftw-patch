@@ -15,8 +15,11 @@
     :template: class_extended.rst
 
 
+   FileLine
    FtwPatch
    Hunk
+   HunkContentData
+   HunkLine
    PatchParser
 
 .. rubric:: Functions
@@ -24,8 +27,14 @@
 .. autosummary::
 
     
+        dp
         prog_ftw_patch
 
+
+.. include:: ../api_inc/functions/ftw_patch.ftw_patch.dp_funcinc.rst.inc
+    :parser: rst
+
+.. autofunction:: dp
 
 .. include:: ../api_inc/functions/ftw_patch.ftw_patch.prog_ftw_patch_funcinc.rst.inc
     :parser: rst
