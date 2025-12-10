@@ -1,2 +1,8 @@
 venv
 *.egg-info
+.pytest_cache
+__pycache__
+doc/build
+doc/doc
+doc/source/devel/testhome
+.coverage

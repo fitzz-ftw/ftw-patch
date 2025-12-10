@@ -11,10 +11,10 @@ Add your content using ``reStructuredText`` syntax. See the
 documentation for details.
 
 .. toctree::
-   :maxdepth: 1
-   :caption: ftwpatch
+   :maxdepth: 2
+   :caption: CLI ftwpatch
 
-    user/use_ftwpatch
+   user/use_ftwpatch
 
 .. toctree::
    :maxdepth: 2

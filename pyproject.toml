@@ -2,11 +2,14 @@
 requires = [ "setuptools" ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [project]
 name = "ftw-patch"
 version = "0.1.0"
 description = "Ein Unicode resistenter Ersatz für patch."
+readme = "README.md"
 
 [project.scripts]
 ftwpatch = "ftw_patch.ftw_patch:prog_ftw_patch"
@@ -22,6 +25,9 @@ dev = [
     "sphinxcontrib-plantuml",
     "sphinx-copybutton",
     "sphinx-rtd-theme",
+    "sphinx-copybutton",
+    "ruff",
+    "pytest",
 ]
 
 
@@ -34,9 +40,28 @@ email = "FitzzTeXnikWelt@t-online.de"
 name = "Fitzz TeXnik Welt"
 email = "FitzzTeXnikWelt@t-online.de"
 
-[project]
-readme = "README.md"
 
 
 [tool.ruff]
 line-length = 120
+
+[tool.pytest.ini_options]
+# Pytest-Optionen für die Testausführung
+minversion = "7.0"
+addopts = "--doctest-glob=get_started_*.rst"
+testpaths = [
+    "doc/source/devel", # Durchsucht Ihr Dokumentationsverzeichnis nach .rst-Dateien
+    "tests",            # Durchsucht das Unit-Test-Verzeichnis (für test_*.py)
+]
+
+[tool.coverage.report]
+# Fügt Regeln hinzu, um spezifische Dateien und Zeilen auszuschließen
+omit = [
+    "src/ftw_patch/ftw_patch.py:490-494", # docstringlines
+    "src/ftw_patch/ftw_patch.py:1305-1342", # if __name__ == "__main__"-Block
+]
+
+
+
+
+#

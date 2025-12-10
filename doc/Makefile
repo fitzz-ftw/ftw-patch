@@ -19,11 +19,41 @@ htmlpure:
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 html: 
-	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@$(SPHINXBUILD) -M coverage "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 coverage:
 	@$(SPHINXBUILD) -M coverage "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: api-json
+
+api-json:  
+	@echo "INFO: Starte schlanken Build zum Generieren der Gemini API JSON..."  
+	# Nutzt den schnellsten Builder ('dummy'), um die Sphinx-Umgebung zu befüllen.  
+	$(SPHINXBUILD) -b dummy "$(SOURCEDIR)" "$(BUILDDIR)/dummy_api_export"  
+	@echo "SUCCESS: API JSON erstellt. Datei liegt unter: \$(BUILDDIR)/api-json/gemini_api_data.json"
+
+
+.PHONY: html-coverage-full
+
+# Ziel: Generiert Coverage-Berichte, die vollständige HTML-Doku UND die gemini\_api\_data.json  
+html-coverage-full:  
+	@echo "INFO: Starte COVERAGE-Check..."  
+	# 1. Führt den Coverage-Build zuerst aus, um die Berichtsdatei zu erstellen.  
+	$(SPHINXBUILD) -b coverage "$(SOURCEDIR)" "$(BUILDDIR)/coverage"  
+	  
+	@echo "INFO: Starte HTML-Build (inkl. Gemini API JSON Export)..."  
+	# 2. Führt den HTML-Build aus. Er liest den Coverage-Bericht ein und 
+	# löst den JSON-Hook aus.  
+	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html"  
+	  
+	@echo "SUCCESS: Build abgeschlossen."  
+	@echo "Berichte liegen unter: $(BUILDDIR)/coverage"  
+	@echo "HTML-Doku liegt unter: $(BUILDDIR)/html"  
+	@echo "JSON-API liegt unter: $(BUILDDIR)/api-json/gemini_api_data.json"
+
+
+
 
 
 
