@@ -28,6 +28,7 @@
 
     
         dp
+        is_null_path
         prog_ftw_patch
 
 
@@ -35,6 +36,11 @@
     :parser: rst
 
 .. autofunction:: dp
+
+.. include:: ../api_inc/functions/ftw_patch.ftw_patch.is_null_path_funcinc.rst.inc
+    :parser: rst
+
+.. autofunction:: is_null_path
 
 .. include:: ../api_inc/functions/ftw_patch.ftw_patch.prog_ftw_patch_funcinc.rst.inc
     :parser: rst

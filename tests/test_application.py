@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from argparse import Namespace
 # Annahme: Das Paket ftw_patch liegt nun im src/ Verzeichnis
-from ftw_patch.ftw_patch import FtwPatch, Hunk, FtwPatchError
+from ftw_patch.ftw_patch import FtwPatch, Hunk, FtwPatchError, HunkLine
 
 # --- Fixture für Mock FtwPatch Instanz ---
 
@@ -57,10 +57,10 @@ def test_hunk_application_basic_change():
         new_start=1,
         new_length=3,
         lines=[
-            " Line 1: Context\n",
-            "-Line 2: Delete me\n",
-            "+Line 2: Added instead\n",
-            " Line 3: Context\n",
+            HunkLine(" Line 1: Context\n"),
+            HunkLine("-Line 2: Delete me\n"),
+            HunkLine("+Line 2: Added instead\n"),
+            HunkLine(" Line 3: Context\n"),
         ]
     )
     
@@ -92,9 +92,9 @@ def test_hunk_application_mismatch():
         new_start=1,
         new_length=3,
         lines=[
-            " Line 1: Correct Context\n",
-            " Line 2: Expected content\n",
-            " Line 3: Context\n",
+            HunkLine(" Line 1: Correct Context\n"),
+            HunkLine(" Line 2: Expected content\n"),
+            HunkLine(" Line 3: Context\n"),
         ]
     )
     
@@ -121,8 +121,8 @@ def test_hunk_application_no_newline_handling():
         new_start=1,
         new_length=2,
         lines=[
-            "-Last line with newline\n",
-            "+New last line",
+            HunkLine("-Last line with newline\n"),
+            HunkLine("+New last line"),
         ],
         new_has_newline=False
     )
@@ -154,7 +154,7 @@ def test_normalize_ws_success():
         new_start=1,
         new_length=1,
         lines=[
-            " def some_func(arg): \n", # Nur ein Leerzeichen (normalisiert)
+            HunkLine(" def some_func(arg): \n"), # Nur ein Leerzeichen (normalisiert)
         ]
     )
     
@@ -180,7 +180,7 @@ def test_ignore_all_ws_success():
         new_start=1,
         new_length=1,
         lines=[
-            " if(x==1){", # Im Hunk fehlen Spaces und Einrückung
+            HunkLine(" if(x==1){"), # Im Hunk fehlen Spaces und Einrückung
         ]
     )
     
@@ -202,7 +202,7 @@ def test_ignore_all_ws_success():
         new_start=1,
         new_length=0,
         lines=[
-            "-delete me;", # Der Hunk erwartet keine Einrückung
+            HunkLine("-delete me;"), # Der Hunk erwartet keine Einrückung
         ]
     )
     new_content = patcher._apply_hunk_to_file(
@@ -237,10 +237,10 @@ def test_ignore_bl_collapse_context():
         new_start=1,
         new_length=3,
         lines=[
-            " Line 1: Start\n",
+            HunkLine(" Line 1: Start\n"),
             # " \n", # Eine Leerzeile im Hunk
-            " Line 4: Match Context\n", # Die nächste Inhaltszeile
-            " Line 5: End\n",
+            HunkLine(" Line 4: Match Context\n"), # Die nächste Inhaltszeile
+            HunkLine(" Line 5: End\n"),
         ]
     )
     
@@ -274,9 +274,9 @@ def test_ignore_bl_skip_deletion():
         new_start=1,
         new_length=3,
         lines=[
-            " Line 1: Context\n",
-            "-Line 3: Delete me\n", # Löschung der Inhaltszeile
-            " Line 4: Context\n",
+            HunkLine(" Line 1: Context\n"),
+            HunkLine("-Line 3: Delete me\n"), # Löschung der Inhaltszeile
+            HunkLine(" Line 4: Context\n"),
         ]
     )
     
@@ -314,9 +314,9 @@ def test_ignore_bl_no_skip_on_blank_line_context():
         new_start=1,
         new_length=4,
         lines=[
-            " Line 1: Context\n",
-            " \n", # Hunk erwartet EINE Leerzeile
-            " Line 4: Context\n",
+            HunkLine(" Line 1: Context\n"),
+            HunkLine(" \n"), # Hunk erwartet EINE Leerzeile
+            HunkLine(" Line 4: Context\n"),
         ]
     )
     

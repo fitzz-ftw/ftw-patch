@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 from dataclasses import dataclass 
 import sys
-from typing import ClassVar, Iterator, Literal, TextIO
+from typing import ClassVar, Iterator, TextIO
 import re
 
 ### Temporary Functions
@@ -29,9 +29,45 @@ import re
 #           flush: Literal[False] = False):
 #     pass
 
-def dp(*args):
-    # oldprint(*args, flush=True)
-    pass
+# def dp(*args):
+#     # oldprint(*args, flush=True)
+#     pass
+
+
+
+def is_null_path(path: Path | str) -> bool:
+    """Check if the given path represents a null path marker.
+
+    This function detects special paths used in patch files to signify
+    file deletion or creation, specifically:
+    1. '/dev/null' (POSIX standard, case-sensitive).
+    2. 'NUL' (Windows standard, case-insensitive).
+
+    The implementation is hard-coded for maximum performance and stability,
+    as these standards are highly unlikely to change.
+
+    :param path: The path object or string to check.
+    :returns: :py:obj:`True` if the path matches a known null path
+              marker, :py:obj:`False` otherwise.
+    """
+    if isinstance(path, Path):
+        path_str = str(path)
+    elif isinstance(path, str):
+        path_str = path
+    else:
+        return False
+        
+    # 1. POSIX Check: Must match '/dev/null' exactly (case-sensitive).
+    # This ensures correctness on POSIX filesystems.
+    if path_str == "/dev/null":
+        return True
+    
+    # 2. Windows Check: Must match 'NUL' (case-insensitive).
+    # This handles patches created on Windows/DOS systems (e.g., 'nul', 'NuL').
+    if path_str.upper() == "NUL":
+        return True
+        
+    return False
 
 HunkContentData = namedtuple(
     'HunkContentData', 
@@ -79,7 +115,7 @@ class FtwPatchError(Exception):
         * :py:class:`builtins.Exception`
     """
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
+        return f"{self.__class__.__name__}({str(self)!r})"
 
 
 class PatchParseError(FtwPatchError):
@@ -101,24 +137,48 @@ class PatchParseError(FtwPatchError):
         super().__init__(message)
     
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(message={self.args[0]!r})"
+        return f"{self.__class__.__name__}({str(self)!r})"
+        # return f"{self.__class__.__name__}(message={self.args[0]!r})"
 
 
 #CLASS - FileLine
 class FileLine:
-    """"""
+    """
+    Represents a single line read from a file or contained within a patch hunk.
 
+    The primary responsibility is to handle the line content and its associated 
+    prefix (if it comes from a patch) consistently, especially by immediately 
+    stripping the trailing newline character upon initialization.
+
+    The actual content, free of the trailing newline, is exposed via the 
+    :py:attr:`~FileLine.content` property.
+    """
     _INTERNAL_WS_RE: ClassVar[re.Pattern] = re.compile(r'([ \t\f\v]+)')
     _ALL_WS_RE: ClassVar[re.Pattern] = re.compile(r'\s+')
     _TRAIL_WS_RE: ClassVar[re.Pattern] = re.compile(r"([ \t\f\v]+)[\n\r]*$")
 
     def __init__(self, raw_line:str):
-        
+        """
+        Initializes the FileLine instance.
+
+        The raw line content is processed immediately: the trailing newline 
+        character is removed, and the cleaned content is stored internally. 
+        This prevents issues where the newline character interferes with 
+        hunk application logic.
+
+        :param raw_line: The complete, unmodified line string, typically including 
+                         a trailing newline.
+        """        
         self._prefix: str = ""
         line_content = raw_line
         clean_content = line_content.removesuffix('\\ No newline at end of file\n').removesuffix('\\ No newline at end of file\r\n')
         self._has_trailing_whitespace: bool = bool(self._TRAIL_WS_RE.search(clean_content))
         self._content: str = clean_content.rstrip('\n\r')
+
+    def __repr__(self):
+        return "".join([self.__class__.__name__,
+                        f"(Content: {self.prefix}{self.content})"])
+
 
     # --- Content Properties ---
     
@@ -143,7 +203,7 @@ class FileLine:
 
         :returns: The normalized string used for matches.
         """
-        content = self._content
+        content = self._content.replace('\xa0', ' ')
         
         # 1. Find the index of the first non-whitespace character and separate
         # Lstrip returns the string without leading whitespace.
@@ -194,6 +254,7 @@ class FileLine:
         """
         return self._has_trailing_whitespace
 
+    @property
     def is_empty(self):
         """
         Checks if the line content is an empty string **(ro)**.
@@ -436,7 +497,6 @@ class PatchParser:
         # 1. Read content lines until the hunk ends (prefix check)
         while True:
             line = self._peek_line() # Use lookahead to check prefix without consuming
-            dp(f"DEBUG: _peek_line {line=}")
             # Check for EOF first. An empty string means EOF.
             if not line:
                 # EOF reached prematurely is an error if we haven't found a valid end marker yet.
@@ -459,7 +519,6 @@ class PatchParser:
 
             # Consume the line and attempt to parse it as HunkLine
             line_to_process = self._read_line()
-            dp(f"DEBUG: {line_to_process}")
             try:
                 hunk_line = HunkLine(line_to_process)
                 lines.append(hunk_line)
@@ -541,20 +600,20 @@ class PatchParser:
         return path_line
 
 
-    def _strip_patch_path(self, path: str) -> str:
-        """
-        Strips 'a/', 'b/', and applies strip_count logic (which is assumed to be 0 
-        in tests if not explicitly passed).
-        """
-        # 1. Strip 'a/' or 'b/' prefix (Standard Unified Diff Format)
-        # if path.startswith("a/") or path.startswith("b/"):
-        #     path = path[2:]
+    # def _strip_patch_path(self, path: str) -> str:
+    #     """
+    #     Strips 'a/', 'b/', and applies strip_count logic (which is assumed to be 0 
+    #     in tests if not explicitly passed).
+    #     """
+    #     # 1. Strip 'a/' or 'b/' prefix (Standard Unified Diff Format)
+    #     # if path.startswith("a/") or path.startswith("b/"):
+    #     #     path = path[2:]
         
-        # 2. Apply strip_count logic (optional, aber muss vorhanden sein)
-        # Da der PatchParser das strip_count Argument nicht kennt, 
-        # gehen wir davon aus, dass es hier nur um das b/ / a/ stripping geht.
+    #     # 2. Apply strip_count logic (optional, aber muss vorhanden sein)
+    #     # Da der PatchParser das strip_count Argument nicht kennt, 
+    #     # gehen wir davon aus, dass es hier nur um das b/ / a/ stripping geht.
 
-        return path
+    #     return path
 
 
     def iter_files(self) -> Iterator[tuple[Path, Path, list[Hunk]]]:
@@ -595,7 +654,8 @@ class PatchParser:
                     # 1. FILE HEADER LOGIC: Extracts '---' and '+++'
                     o_path_str, n_path_str, found_file_block = self._parse_file_headers()
 
-                    dp(f"DEBUG: {found_file_block=}")
+                    if is_null_path(n_path_str):
+                        yield Path(o_path_str), Path(n_path_str), []
 
                     if not found_file_block:
                         if hunks:
@@ -603,7 +663,6 @@ class PatchParser:
                         return  # EOF reached
 
                     # If we have hunks from the previous file block, yield them
-                    dp(f"DEBUG: before yield {hunks=}")
                     if hunks:
                         yield original_file_path, new_file_path, hunks
                         hunks = [] # Reset for the new file block
@@ -649,8 +708,8 @@ class PatchParser:
                         continue 
                         
                 # End of While loop (EOF)
-                if hunks:
-                    yield original_file_path, new_file_path, hunks
+                # if hunks:
+                #     yield original_file_path, new_file_path, hunks
 
         except FtwPatchError:
             raise
@@ -665,7 +724,7 @@ class PatchParser:
 
 # Constant for the /dev/null path, which is returned by _clean_patch_path with strip=0.
 # This path must be independent of the operating system.
-DEV_NULL_PATH = Path(os.devnull) 
+# DEV_NULL_PATH = Path(os.devnull) 
 
 #CLASS - FtwPatch
 class FtwPatch:
@@ -761,42 +820,81 @@ class FtwPatch:
         """
         return self._args.dry_run
 
-#ANCHOR - _nomalize_line
-    def _normalize_line(self, file_line: FileLine, strip_prefix: bool = False) -> str:
-        """
-        Applies whitespace normalization rules based on CLI arguments.
+#ANCHOR - alt _nomalize_line
+    # def _normalize_line(self, file_line: FileLine, strip_prefix: bool = False) -> str:
+    #     """
+    #     Applies whitespace normalization rules based on CLI arguments.
         
-        :param line: The line content from the file or the patch.
-        :param strip_prefix: If True, strips the diff prefix (' ', '+', '-') 
-                             from the patch line.
-        :returns: The normalized line.
-        """
-        # Strip the diff prefix if present and requested
-        #line = " ".join([file_line.prefix, file_line.content])
-        line = "".join([file_line.prefix, file_line.content])
-        if strip_prefix:
-            line = file_line.content
+    #     :param line: The line content from the file or the patch.
+    #     :param strip_prefix: If True, strips the diff prefix (' ', '+', '-') 
+    #                          from the patch line.
+    #     :returns: The normalized line.
+    #     """
+    #     # Strip the diff prefix if present and requested
+    #     #line = " ".join([file_line.prefix, file_line.content])
+    #     line = "".join([file_line.prefix, file_line.content])
+    #     if strip_prefix:
+    #         line = file_line.content
         
-        # Dominant option: --ignore-all-ws
+    #     # Dominant option: --ignore-all-ws
+    #     if self.ignore_all_whitespace:
+    #         # Remove all whitespace characters (including newlines, tabs, and spaces)
+    #         # return "".join(line.split())
+    #         return file_line.ignore_all_ws_content
+        
+    #     # Secondary options: --normalize-ws and --ignore-bl
+        
+    #     # Remove newline and carriage return at the end
+    #     line = line.strip('\n\r') 
+
+    #     # Ignore Blank Lines: If line is now empty after stripping, return empty string
+    #     if self.ignore_blank_lines and not file_line.content.strip():
+    #         return ''
+        
+    #     # Normalize non-leading whitespace
+    #     if self.normalize_whitespace:
+    #         line = file_line.normalized_ws_content
+        
+    #     return line
+
+    def _normalize_line(self, file_line: FileLine) -> str:
+        """
+        Applies whitespace normalization rules based on CLI arguments, 
+        dispatching to the correct :py:class:`FileLine` getter method.
+
+        This function acts as the central dispatcher, ensuring that the appropriate 
+        comparison logic is used (e.g., ignoring all whitespace, normalizing spaces, 
+        or standard comparison). It relies on the :py:class:`FileLine` getters to 
+        handle prefix stripping and newline removal, as these methods have been 
+        validated to return content suitable for comparison.
+
+        :param file_line: The line content from the file or the patch as 
+                          a :py:class:`FileLine` instance.
+        :returns: The normalized line content suitable for comparison.
+        """
+        
+        # 1. Dominant Option: --ignore-all-ws
         if self.ignore_all_whitespace:
-            # Remove all whitespace characters (including newlines, tabs, and spaces)
-            # return "".join(line.split())
+            # The method returns content with all whitespace removed.
             return file_line.ignore_all_ws_content
         
-        # Secondary options: --normalize-ws and --ignore-bl
-        
-        # Remove newline and carriage return at the end
-        line = line.strip('\n\r') 
-
-        # Ignore Blank Lines: If line is now empty after stripping, return empty string
+        # 2. Option: --ignore-bl
+        # Checks for an explicit blank line (content is effectively empty after stripping).
         if self.ignore_blank_lines and not file_line.content.strip():
+            # If ignore-bl is active and the content is empty, return an empty string for comparison.
             return ''
-        
-        # Normalize non-leading whitespace
+            
+        # 3. Secondary Option: --normalize-ws
         if self.normalize_whitespace:
-            line = file_line.normalized_ws_content
-        
-        return line
+            # The method returns content with internal whitespace collapsed, 
+            # preserving leading indentation (which may include the patch prefix).
+            return file_line.normalized_ws_content
+            
+        # 4. Standard Mode (No WS options active)
+        # For standard comparison, the content part (without prefix and without newline) is returned.
+        return file_line.content
+
+
 
     def _clean_patch_path(self, patch_path: Path) -> Path:
         """
@@ -813,13 +911,17 @@ class FtwPatch:
         cleaned_parts = [p for p in parts if p and p != '.']
 
         # Special case /dev/null is always returned without stripping.
-        if patch_path == DEV_NULL_PATH:
-            return DEV_NULL_PATH
+        # if patch_path == DEV_NULL_PATH:
+        #     return DEV_NULL_PATH
+        if is_null_path(patch_path):
+            return os.devnull
 
         if strip_count >= len(cleaned_parts):
             raise FtwPatchError(
-                f"Strip count ({strip_count}) is greater than or equal to the "
-                f"number of pacleaned_th components ({len(cleaned_parts)}) in '{patch_path}'."
+                # f"Strip count ({strip_count}) is greater than or equal to the "
+                # f"number of pacleaned_th components ({len(cleaned_parts)}) in '{patch_path}'."
+                f"Strip count ({strip_count}) is greater than the number of " 
+                f"cleaned_path components ({len(cleaned_parts)}) in '{patch_path}'."
             )
         
         cleaned_path = Path(*cleaned_parts[strip_count:])
@@ -865,7 +967,7 @@ class FtwPatch:
             # 2. Check for Deletion
             elif hunk_line.is_deletion:  # Deletion line
                 # Normalize lines for comparison
-                norm_hunk_line=self._normalize_line(hunk_line, True)
+                norm_hunk_line=self._normalize_line(hunk_line)
 
 
                 # FINAL FIX 4b: Reset state, deletion breaks context chain
@@ -899,7 +1001,7 @@ class FtwPatch:
             elif hunk_line.is_context:  # Context line
                 
                 # 1. Normalize the hunk line and check if it contains content
-                norm_hunk_line = self._normalize_line(hunk_line, strip_prefix=True)
+                norm_hunk_line = self._normalize_line(hunk_line)
                 is_hunk_line_content = (norm_hunk_line != '')
                 
                 # --- FINAL FIX 4c / 3b START: Skip Control and Execution ---
@@ -947,7 +1049,7 @@ class FtwPatch:
                 file_current_index += 1
                 lines_consumed_in_original += 1
 
-            else:
+            else: # pragma: no cover
                 # Should be caught by PatchParser.iter_files.
                 raise PatchParseError(
                     f"Unexpected line prefix in hunk line: {hunk_line!r}"
@@ -962,7 +1064,6 @@ class FtwPatch:
         if new_file_content and not hunk.new_has_newline:
             last_line = new_file_content[-1]
             new_file_content[-1] = last_line.rstrip('\n\r')
-        dp(f"DEBUG: Before return {new_file_content=}")
         return new_file_content
 
     def run(self) -> int:
@@ -993,6 +1094,7 @@ class FtwPatch:
             # General error handling (e.g., IO errors during writing)
             print(f"\nAn unexpected error occurred: {e}")
             return 2
+
 
     def apply_patch(self, dry_run: bool = False) -> int:
         """
@@ -1035,8 +1137,8 @@ class FtwPatch:
                 f"{target_new_path!r} ({len(hunks)} hunks)"
             )
             
-            # --- Special case: Deletion (Original exists, New is DEV_NULL_PATH)
-            if target_new_path == DEV_NULL_PATH:
+            # --- Special case: Deletion (Original exists, New is_null_path()=True )
+            if is_null_path(target_new_path):
                 if not full_original_path.is_file():
                     raise FtwPatchError(
                         f"File to be deleted not found: {full_original_path!r}"
@@ -1047,8 +1149,8 @@ class FtwPatch:
                 print(" -> Marked for deletion.")
                 continue
 
-            # --- Special case: Creation (Original is DEV_NULL_PATH)
-            if target_original_path == DEV_NULL_PATH:
+            # --- Special case: Creation (Original is_null_path()==True)
+            if is_null_path(target_original_path):
                 # Since the file does not exist, we start with an empty array
                 # The hunks only consist of '+' lines and context (' ').
                 original_lines = []
@@ -1087,7 +1189,7 @@ class FtwPatch:
                     original_lines=current_lines
                 )
             # 5. Cache the result in memory (only if not a deletion)
-            if target_new_path != DEV_NULL_PATH:
+            if not is_null_path(target_new_path):
                 patched_file_storage[full_new_path] = current_lines
                 applied_file_count += 1
                 print(
@@ -1095,10 +1197,11 @@ class FtwPatch:
                     f"memory ({len(current_lines)} lines)."
                 )
 
-            # END OF ITERATION: If we reach this point, the entire patch process 
-            # was error-free.
-
-            # 6. Write and delete files (all-or-nothing write phase        if not dry_run:
+            # END OF HUNK ITERATION: If we reach this point, the entire patch process 
+            # for THIS file was error-free. (LOOP CONTINUES)
+            
+        # 6. WRITE PHASE (All-or-nothing write phase, runs ONCE after all files are verified)
+        if not dry_run:
             print("\nStarting write/delete phase: Applying changes to " "file system...")
             
             # Perform deletions first
@@ -1120,9 +1223,11 @@ class FtwPatch:
                     raise IOError(
                         f"Error writing patched file {full_new_path}: {e}"
                     )
-        else:
+        
+        else: # Executes if dry_run is True (corresponds to the 'if not dry_run:' above)
             print("\nDry run completed. No files were modified.")
         
+        # 7. Summary (runs regardless)
         print(f"\nSuccessfully processed {applied_file_count} file changes.")
         return 0
 #!CLASS - FtwPatch
@@ -1275,7 +1380,7 @@ def prog_ftw_patch() -> int:
         print(f"An unexpected error occurred: {e}", file=sys.stderr)
         return 1
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     from doctest import testfile, FAIL_FAST
     from pathlib import Path
     # Adds the project's root directory (the module source directory)
@@ -1292,6 +1397,7 @@ if __name__ == "__main__":
     test_failed = 0
     dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
     # dt_file = str(testfilesbasedir / "temp_test.rst")
+    # dt_file = str(testfilesbasedir / "test_parser_fix.rst")
     print(dt_file)
     doctestresult = testfile(
         dt_file,
@@ -1314,3 +1420,5 @@ if __name__ == "__main__":
         print(f"DocTests passed without errors, {test_sum} tests.")
     else:
         print(f"DocTests failed: {test_failed} tests.")
+
+
