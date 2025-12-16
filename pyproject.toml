@@ -1,13 +1,20 @@
 [build-system]
-requires = [ "setuptools" ]
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools_scm]
+write_to = "src/ftw_patch/_version.py"
+
 [project]
 name = "ftw-patch"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Ein Unicode resistenter Ersatz für patch."
 readme = "README.md"
 
@@ -15,7 +22,7 @@ readme = "README.md"
 ftwpatch = "ftw_patch.ftw_patch:prog_ftw_patch"
 
 [project.optional-dependencies]
-dev = [
+doc =[
     "sphinx",
     "sphinx-argparse",
     "sphinx-autodoc-annotation",
@@ -25,25 +32,49 @@ dev = [
     "sphinxcontrib-plantuml",
     "sphinx-copybutton",
     "sphinx-rtd-theme",
-    "sphinx-copybutton",
-    "ruff",
+    "sphinx-design",
+]
+test=[
     "pytest",
+    "pytest-mock",
+    "pytest-cov",
+]
+lint=["ruff",]
+dev = [
+    "ftw_patch[test,doc,lint]",
 ]
 
 
-[[authors]]
+[[project.authors]]
 name = "Fitzz TeXnik Welt"
 email = "FitzzTeXnikWelt@t-online.de"
 
 
-[[maintainers]]
+[[project.maintainers]]
 name = "Fitzz TeXnik Welt"
 email = "FitzzTeXnikWelt@t-online.de"
 
-
+[tool.distutils.egg_info]
+egg_base = "."
 
 [tool.ruff]
-line-length = 120
+src = ["src"]
+line-length = 88
+
+[tool.ruff.lint]
+# E/W = Pycodestyle (Standard-Fehler/Warnungen)
+# F = Pyflakes (Logik-Fehler wie ungenutzte Imports)
+# I = isort (Sortierung der Imports)
+# B = flake8-bugbear (findet potenzielle Design-Fehler)
+select = ["E", "W", "F", "I", "B"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["ftw"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.pytest.ini_options]
 # Pytest-Optionen für die Testausführung
@@ -54,13 +85,10 @@ testpaths = [
     "tests",            # Durchsucht das Unit-Test-Verzeichnis (für test_*.py)
 ]
 
-[tool.coverage.report]
-# Fügt Regeln hinzu, um spezifische Dateien und Zeilen auszuschließen
+[tool.coverage.run]
 omit = [
-    "src/ftw_patch/ftw_patch.py:490-494", # docstringlines
-    "src/ftw_patch/ftw_patch.py:1305-1342", # if __name__ == "__main__"-Block
+    "src/ftw_patch/_version.py",
 ]
-
 
 
 

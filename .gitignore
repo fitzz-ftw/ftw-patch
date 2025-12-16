@@ -6,3 +6,5 @@ doc/build
 doc/doc
 doc/source/devel/testhome
 .coverage
+dist
+src/ftw_patch/_version.py

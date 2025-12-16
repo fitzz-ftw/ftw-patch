@@ -28,10 +28,9 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
+    'sphinx_design',
     # "sphinxcontrib-mermaid",
     # "sphinxcontrib-plantuml",
-    # Eigener writer, test
-    # "api_json_exporter",
 ]
 
 templates_path = ["_templates", "_templates/autosummary"]
@@ -62,12 +61,14 @@ html_theme_options = {
 }
 
 html_sidebars = {
-    "devel/**": ["searchbox.html", "globaltoc.html", "relations.html", "mymodul.html", "sourcelink.html"],
+    "devel/**": ["searchbox.html", "globaltoc.html", "relations.html", "mymodul.html",
+                "sourcelink.html"],
     "*": ["searchbox.html", "globaltoc.html", "relations.html", "sourcelink.html"],
 }
 # intersphinx configuration
 
-intersphinx_mapping = {"python": (f"https://docs.python.org/{sys.version_info.major}.{sys.version_info.minor}", None)}
+intersphinx_mapping = {"python": (f"https://docs.python.org/{sys.version_info.major}.{sys.version_info.minor}",
+                                    None)}
 
 # autodoc and  autoclasstoc configuration
 # autoclass_content = "class" #"both" see:

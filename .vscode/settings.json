@@ -59,5 +59,6 @@
             "behavior": "region",
             "highlightColor": "#2ecc71"
         }
-    }
+    },
+    "git.followTagsWhenSync": true
 }

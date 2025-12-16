@@ -4,3 +4,4 @@
 gemini_spec.md export-ignore
 Api_json_exporter_configuration.md export-ignore
 Api_json_exporter_Makefileziele.md export-ignore
+doc/source/api_json_exporter.py export-ignore

@@ -27,15 +27,9 @@
 .. autosummary::
 
     
-        dp
         is_null_path
         prog_ftw_patch
 
-
-.. include:: ../api_inc/functions/ftw_patch.ftw_patch.dp_funcinc.rst.inc
-    :parser: rst
-
-.. autofunction:: dp
 
 .. include:: ../api_inc/functions/ftw_patch.ftw_patch.is_null_path_funcinc.rst.inc
     :parser: rst
