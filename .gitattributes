@@ -1,0 +1,3 @@
+.gitignore export-ignore
+.vscode/ export-ignore
+gemini_spec.md export-ignore
