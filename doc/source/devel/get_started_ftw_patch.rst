@@ -23,65 +23,67 @@ This document provides a step-by-step introduction and executable documentation 
     Environment Setup and Path Initialization
     -----------------------------------------
 
+
+
+.. dropdown:: Environment Setup and Path Initialization for the Tests
+    :chevron: down-up
+
     **Important Note for Users:** The following code blocks (Sections 1 through 3) are **only used to set up an isolated test environment** for the DocTests. These steps are required for the tests to run correctly and ensure test coverage. As an end-user or reader of the documentation, you **do not need to understand or run** this code; it is solely for information about the test conditions.
+
 
     The setup is divided into three separate DocTest blocks. Since these commands produce no output, they appear as compact executable lines in the rendered document.
 
     1. Module Imports
-    ~~~~~~~~~~~~~~~~~
-.. code:: python
-    :hidden:
 
-    >>> import os
-    >>> import sys
-    >>> from pathlib import Path
+    .. code:: python
+        
+        >>> import os
+        >>> import sys
+        >>> from pathlib import Path
 
-..
-    1. Global Variable Definitions
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: python
-    :hidden:
+    2. Global Variable Definitions
+    
 
-    >>> TEST_BASEDIR = Path("doc/source/devel/testhome")
-    >>> TEST_INPUT = TEST_BASEDIR / "testinput"
-    >>> TEST_CWD = TEST_BASEDIR / "testoutput"
+    .. code:: python
 
-..
-    1. File System and Environment Setup
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        >>> TEST_BASEDIR = Path("doc/source/devel/testhome")
+        >>> TEST_INPUT = TEST_BASEDIR / "testinput"
+        >>> TEST_CWD = TEST_BASEDIR / "testoutput"
 
-.. code:: python
-    :hidden:
 
-    >>> TEST_BASEDIR.mkdir(parents=True, exist_ok=True)
-    >>> os.environ['HOME'] = str(TEST_BASEDIR.resolve())
-    >>> TEST_INPUT.mkdir(parents=True, exist_ok=True)
-    >>> TEST_CWD.mkdir(parents=True, exist_ok=True)
-    >>> CONFIG_DIR = TEST_BASEDIR / ".config/ftw"
-    >>> CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    3. File System and Environment Setup
+    
 
-..
+    .. code:: python
+
+        >>> TEST_BASEDIR.mkdir(parents=True, exist_ok=True)
+        >>> os.environ['HOME'] = str(TEST_BASEDIR.resolve())
+        >>> TEST_INPUT.mkdir(parents=True, exist_ok=True)
+        >>> TEST_CWD.mkdir(parents=True, exist_ok=True)
+        >>> CONFIG_DIR = TEST_BASEDIR / ".config/ftw"
+        >>> CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+
     Verification using path abstraction to ensure environment is set:
 
-.. code:: python
-    :hidden:
+    .. code:: python
 
-    >>> expected_suffix = 'doc/source/devel/testhome'
-    >>> resolved_home = os.environ['HOME']
-    >>> start_index = resolved_home.rfind(expected_suffix)
-    >>> print(f"HOME set to: .../{resolved_home[start_index:]}") # doctest: +ELLIPSIS
-    HOME set to: .../doc/source/devel/testhome
-    >>> print(f"TEST_CWD (Write): {TEST_CWD.name}")
-    TEST_CWD (Write): testoutput
-    >>> os.chdir(TEST_CWD)
+        >>> expected_suffix = 'doc/source/devel/testhome'
+        >>> resolved_home = os.environ['HOME']
+        >>> start_index = resolved_home.rfind(expected_suffix)
+        >>> print(f"HOME set to: .../{resolved_home[start_index:]}") # doctest: +ELLIPSIS
+        HOME set to: .../doc/source/devel/testhome
+        >>> print(f"TEST_CWD (Write): {TEST_CWD.name}")
+        TEST_CWD (Write): testoutput
+        >>> os.chdir(TEST_CWD)
 
-..
+
     ---
-..
-    Temporary Patch File Setup
-    --------------------------
 
+.. dropdown:: Temporary Patch File Setup
+    :chevron: down-up
+    
     We create a dummy patch file in the CWD (`TEST_CWD`) to allow the **FtwPatch class initialization** to succeed the file existence check.
 
     .. code:: python
@@ -90,7 +92,7 @@ This document provides a step-by-step introduction and executable documentation 
         >>> dummy_patch_file.touch()
 
 
-..
+
     Understanding the Current Working Directory (CWD)
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -103,6 +105,104 @@ This document provides a step-by-step introduction and executable documentation 
     to `TEST_CWD`.
 
     ---
+
+Test Cases for is_null_path Function
+------------------------------------
+
+This section documents the `is_null_path` function, which checks if a given path represents a **null path marker** (like `/dev/null` or `NUL`) used in patch files to signify file deletion or creation.
+
+.. code:: python
+
+    >>> from ftw_patch.ftw_patch import is_null_path
+
+
+1. POSIX Null Path Check
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test the standard POSIX null path marker. This check is **case-sensitive**.
+
+The standard POSIX null path string
+
+.. code:: python
+
+    >>> is_null_path("/dev/null")
+    True
+
+Path object input
+
+.. code:: python
+
+    >>> is_null_path(Path("/dev/null"))
+    True
+
+POSIX path with incorrect casing (should fail)
+
+.. code:: python
+
+    >>> is_null_path("/dev/Null")
+    False
+
+2. Windows Null Path Check
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test the Windows null path marker (`NUL`). This check is **case-insensitive**.
+
+Standard Windows null path (Uppercase)
+
+.. code:: python
+
+    >>> is_null_path("NUL")
+    True
+
+Windows null path (Lowercase)
+
+.. code:: python
+
+    >>> is_null_path("nul")
+    True
+
+Windows null path (Mixed case)
+
+.. code:: python
+
+    >>> is_null_path("NuL")
+    True
+
+3. Invalid Paths and Types
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Ensure that invalid path strings and unexpected types (like `None` or numbers) are correctly rejected and return `False`.
+
+
+A regular file path
+
+.. code:: python
+
+    >>> is_null_path("/etc/hosts")
+    False
+
+Empty string
+
+.. code:: python
+
+    >>> is_null_path("")
+    False
+
+Invalid type (NoneType), testing the robust handling
+
+.. code:: python
+
+    >>> is_null_path(None)
+    False
+
+Invalid type (Number)
+
+.. code:: python
+
+    >>> is_null_path(123)
+    False
+
+---
 
 FileLine Class
 --------------------
@@ -319,8 +419,9 @@ HunkContentData Named Tuple
 
 The :py:class:`ftw_patch.ftw_patch.HunkContentData` **Named Tuple** serves as a temporary container to store the parsed hunk information **before** it is compiled into the final :py:class:`Hunk` dataclass. It holds the raw list of lines as well as boolean flags that store the state of the line ending (**Newline**) for the original and new file content.
 
-### Attributes and Demonstration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Attributes and Demonstration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The Named Tuple is immutable and stores three main components: the parsed hunk lines and two boolean values indicating whether the last line of the original and new file content, respectively, ends with a newline character.
 
 1.  **Import the Named Tuple** and the necessary :py:class:`FileLine` class.
@@ -366,7 +467,8 @@ The :py:class:`ftw_patch.ftw_patch.Hunk` dataclass represents a single contiguou
 changes ("a hunk") within a file being patched. It primarily stores the line number 
 and length metadata, as well as the content of the changes (the **hunk lines**).
 
-### Method: Initialization and Attributes
+Method: Initialization and Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. _ftw_patch-hunk-init-method:
 
 The dataclass is initialized with the key statistics derived from the **hunk header** and the list of :py:class:`FileLine` objects containing the actual changes.
@@ -585,31 +687,31 @@ PatchParser Class
 
 The :py:class:`ftw_patch.ftw_patch.PatchParser` class is responsible for processing the patch file. It reads the patch format (typically Unified Diff) and divides it into logical units (the file data tuples).
 
-### Method: Initialization and ``iter_files``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Method: Initialization and ``iter_files``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. Setup and temporary patch file ..
+.. dropdown:: Setup and temporary patch file ..
+    :chevron: down-up
 
-.. code:: python
-    :hidden:
+    .. code:: python
 
-    >>> import tempfile
-    >>> from pathlib import Path
-    
-    >>> # 1. Create a temporary directory and a valid patch file
-    >>> temp_dir = Path(tempfile.mkdtemp())
-    >>> patch_content = """--- a/old_file.txt
-    ... +++ b/new_file.txt
-    ... @@ -1,2 +1,3 @@
-    ...  Context Line 1
-    ... -Deletion Line 2
-    ... +Addition Line 2a
-    ... +Addition Line 2b
-    ...  Context Line 3
-    ... """
-    >>> patch_file = temp_dir / "test.patch"
-    >>> with patch_file.open("w") as f:
-    ...     _ = f.write(patch_content)
+        >>> import tempfile
+        >>> from pathlib import Path
+        
+        >>> # 1. Create a temporary directory and a valid patch file
+        >>> temp_dir = Path(tempfile.mkdtemp())
+        >>> patch_content = """--- a/old_file.txt
+        ... +++ b/new_file.txt
+        ... @@ -1,2 +1,3 @@
+        ...  Context Line 1
+        ... -Deletion Line 2
+        ... +Addition Line 2a
+        ... +Addition Line 2b
+        ...  Context Line 3
+        ... """
+        >>> patch_file = temp_dir / "test.patch"
+        >>> with patch_file.open("w") as f:
+        ...     _ = f.write(patch_content)
 
 1. Initialize the Parser
 
@@ -629,13 +731,19 @@ The :py:class:`ftw_patch.ftw_patch.PatchParser` class is responsible for process
     1
     >>> original_path, new_path, hunks = results[0]
     
-    >>> # Verification of the paths
+Verification of the paths
+
+.. code:: python
+
     >>> str(original_path)
     'a/old_file.txt'
     >>> str(new_path)
     'b/new_file.txt'
 
-    >>> # Verification of the Hunk content
+Verification of the Hunk content
+
+.. code:: python
+    
     >>> len(hunks)
     1
     >>> hunks[0].original_length
@@ -654,22 +762,22 @@ The :py:class:`ftw_patch.ftw_patch.PatchParser` class is responsible for process
     * :py:meth:`~PatchParser._read_file` (utility method to consume and return the current line from the patch file).
     * :py:meth:`~PatchParser._peek_line` (utility method to look ahead at the next line without advancing the position).
 
-### Method: Error Handling
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Method: Error Handling
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. Setup for invalid patch file ..
+.. dropdown:: Setup for invalid patch file ..
+    :chevron: down-up
 
-.. code:: python
-    :hidden:
+    .. code:: python
 
-    >>> invalid_patch_content = """--- a/old_file.txt
-    ... +++ b/new_file.txt
-    ... -Deletion Line
-    ... """
-    >>> invalid_file = temp_dir / "invalid.patch"
-    >>> with invalid_file.open("w") as f:
-    ...     _ = f.write(invalid_patch_content)
-    >>> invalid_parser = PatchParser(invalid_file)
+        >>> invalid_patch_content = """--- a/old_file.txt
+        ... +++ b/new_file.txt
+        ... -Deletion Line
+        ... """
+        >>> invalid_file = temp_dir / "invalid.patch"
+        >>> with invalid_file.open("w") as f:
+        ...     _ = f.write(invalid_patch_content)
+        >>> invalid_parser = PatchParser(invalid_file)
 
 2. Test the error handling (Missing Hunk Header). The iterator should raise an ``FtwPatchError``.
 
@@ -726,11 +834,10 @@ FtwPatch.run() Method (Applying the Patch)
 
 This section tests the core application of a patch file.
 
-..
-    Setup for patching (Hidden):
+.. dropdown:: Setup for patching ...
+    :chevron: down-up
 
     .. code-block:: python
-        :hidden:
 
         >>> target_dir = Path("target")
         >>> target_dir.mkdir(exist_ok=True)
@@ -829,8 +936,8 @@ FtwPatch.run() Test Case 3: Strip Count (-p / --strip)
 
 This test verifies the effect of `strip_count` on path resolution, simulating a patch created from a repository root.
 
-..
-    Setup for strip count test (Hidden):
+.. dropdown:: Setup for strip count test ...
+    :chevron: down-up
 
     .. code-block:: python
         
@@ -894,8 +1001,8 @@ FtwPatch.run() Test Case 4: Whitespace Normalization
 
 This section tests the FTW-specific normalization flags using a patch that intentionally contains differences in spacing and blank lines, causing a standard patch failure.
 
-..
-    Setup for Whitespace Test (Hidden):
+.. dropdown:: Setup for Whitespace Test ...
+    :chevron: down-up
 
     .. code-block:: python
         
@@ -993,11 +1100,13 @@ Verify success:
 
 Run Test Case 4c: Ignore All Whitespace. Revert the file and apply the patch using `--ignore-all-ws`. This overrides other flags and handles all whitespace differences, including blank lines:
 
-.. code:: python
-    :hidden:
+.. dropdown:: Setup testfile
+    :chevron: down-up
 
-    >>> ws_target_file.write_text("def fn():\n    pass  # End space\n\n    return\n\n\n")
-    46
+    .. code:: python
+
+        >>> ws_target_file.write_text("def fn():\n    pass  # End space\n\n    return\n\n\n")
+        46
 
 .. code:: python
 
@@ -1026,21 +1135,24 @@ Verify success:
 
 
 
-#### FtwPatch.run() Test Case 5: Target File Missing
-------------------------------------------------------
+FtwPatch.run() Test Case 5: Target File Missing
+-----------------------------------------------
 
 This test verifies the handling of a patch targeting a non-existent file when no creation flag is used.
 
-.. code:: python
+.. dropdown:: Setup testfile
+    :chevron: down-up
 
-    >>> missing_target_patch_content = """--- missing_file.txt
-    ... +++ missing_file.txt
-    ... @@ -0,0 +1,1 @@
-    ... +New content.
-    ... """
-    >>> missing_patch_path = Path("../testinput/missing.diff")
-    >>> missing_patch_path.write_text(missing_target_patch_content)
-    72
+    .. code:: python
+
+        >>> missing_target_patch_content = """--- missing_file.txt
+        ... +++ missing_file.txt
+        ... @@ -0,0 +1,1 @@
+        ... +New content.
+        ... """
+        >>> missing_patch_path = Path("../testinput/missing.diff")
+        >>> missing_patch_path.write_text(missing_target_patch_content)
+        72
 
     >>> args_missing = parser.parse_args([str(missing_patch_path.resolve())])
     >>> ftw_app_missing = FtwPatch(args=args_missing)
@@ -1055,17 +1167,21 @@ This test verifies the handling of a patch targeting a non-existent file when no
 
 ---
 
-## Tests for Pure Deletion Diff Patches
+Tests for Pure Deletion Diff Patches
+------------------------------------
 
 Patches can also contain instructions that initiate the **deletion of a file**. This instruction is composed of two header lines in the unified diff format. Note that for **Windows operating systems**, `nul` should be used instead of `/dev/null`.
 
 First, we set up the target directory where the file will be located.
 
-.. code:: python
-    :hidden:
+.. dropdown:: Setup testfile
+    :chevron: down-up
 
-    >>> target_dir = Path("target")
-    >>> target_dir.mkdir(exist_ok=True)
+    .. code:: python
+        
+
+        >>> target_dir = Path("target")
+        >>> target_dir.mkdir(exist_ok=True)
 
 Next, we define the content of a **pure deletion patch**. The `+++ /dev/null` line signals that the new version of the file is empty, instructing the patching utility to delete the original file. We also define the target file's path.
 
@@ -1079,14 +1195,16 @@ Next, we define the content of a **pure deletion patch**. The `+++ /dev/null` li
 
 To make the patch applicable, we first create the target file temporarily and write the deletion patch content to a file.
 
-.. code:: python
-    :hidden: 
+.. dropdown:: Setup testfile
+    :chevron: down-up
 
-    >>> target_file.write_text("Diese Datei wird gelöscht.")
-    26
-    >>> del_patch_path = Path("../testinput/del_test.diff")
-    >>> del_patch_path.write_text(del_patch_content)
-    39
+    .. code:: python
+
+        >>> target_file.write_text("Diese Datei wird gelöscht.")
+        26
+        >>> del_patch_path = Path("../testinput/del_test.diff")
+        >>> del_patch_path.write_text(del_patch_content)
+        39
 
 Now, we parse the command line arguments required to apply the patch. We specify the patch file path, the target directory, and set the strip count (`-p 1`).
 
@@ -1141,127 +1259,28 @@ If the patch is accidentally used again, or if the file did not exist before the
     ftw_patch.ftw_patch.FtwPatchError: File to be deleted not found: PosixPath('target/file_to_delete.txt')
 
 
-Test Cases for is_null_path Function
-------------------------------------
-
-This section documents the `is_null_path` function, which checks if a given path represents a **null path marker** (like `/dev/null` or `NUL`) used in patch files to signify file deletion or creation.
-
-.. code:: python
-
-    >>> from ftw_patch.ftw_patch import is_null_path
-
-
-1. POSIX Null Path Check
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test the standard POSIX null path marker. This check is **case-sensitive**.
-
-The standard POSIX null path string
-
-.. code:: python
-
-    >>> is_null_path("/dev/null")
-    True
-
-Path object input
-
-.. code:: python
-
-    >>> is_null_path(Path("/dev/null"))
-    True
-
-POSIX path with incorrect casing (should fail)
-
-.. code:: python
-
-    >>> is_null_path("/dev/Null")
-    False
-
-2. Windows Null Path Check
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test the Windows null path marker (`NUL`). This check is **case-insensitive**.
-
-Standard Windows null path (Uppercase)
-
-.. code:: python
-
-    >>> is_null_path("NUL")
-    True
-
-Windows null path (Lowercase)
-
-.. code:: python
-
-    >>> is_null_path("nul")
-    True
-
-Windows null path (Mixed case)
-
-.. code:: python
-
-    >>> is_null_path("NuL")
-    True
-
-3. Invalid Paths and Types
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Ensure that invalid path strings and unexpected types (like `None` or numbers) are correctly rejected and return `False`.
-
-
-A regular file path
-
-.. code:: python
-
-    >>> is_null_path("/etc/hosts")
-    False
-
-Empty string
-
-.. code:: python
-
-    >>> is_null_path("")
-    False
-
-Invalid type (NoneType), testing the robust handling
-
-.. code:: python
-
-    >>> is_null_path(None)
-    False
-
-Invalid type (Number)
-
-.. code:: python
-
-    >>> is_null_path(123)
-    False
 
 
 
 
 
 
-
-#### FtwPatch Cleanup
+FtwPatch Cleanup
 --------------------
 
-Cleanup of all temporary files and directories created during testing.
+.. dropdown:: Cleanup of all temporary files and directories created during testing.
 
-.. code:: python
-    :hidden:
+    .. code:: python
 
-..
-    >> target_file.unlink(missing_ok=True)
-    >> target_dir.rmdir()
-    >> target_file_deep.unlink(missing_ok=True)
-    >> target_file_deep.parent.rmdir()
-    >> target_file_deep.parent.parent.rmdir()
-    >> ws_target_file.unlink(missing_ok=True)
-    >> patch_file_path.unlink(missing_ok=True)
-    >> strip_patch_path.unlink(missing_ok=True)
-    >> ws_patch_path.unlink(missing_ok=True)
-    >> missing_patch_path.unlink(missing_ok=True)
+        >>> target_dir.rmdir()
+        >>> target_file_deep.unlink(missing_ok=True)
+        >>> target_file_deep.parent.rmdir()
+        >>> target_file_deep.parent.parent.rmdir()
+        >>> ws_target_file.unlink(missing_ok=True)
+        >>> patch_file_path.unlink(missing_ok=True)
+        >>> strip_patch_path.unlink(missing_ok=True)
+        >>> ws_patch_path.unlink(missing_ok=True)
+        >>> missing_patch_path.unlink(missing_ok=True)
 
 
 
