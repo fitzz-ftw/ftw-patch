@@ -49,22 +49,94 @@ suppress_warnings=[
 
 # html_theme = 'alabaster'
 # html_theme = 'classic'
-html_theme = "python_docs_theme"
-html_static_path = ["_static"]
-html_show_sourcelink = True
-html_theme_options = {
-    "sidebarwidth": "300",
-    "collapsiblesidebar": False,
-    "stickysidebar": True,
-    "navigation_with_keys": True,
-    "rightsidebar": False,
-}
+# Configuration for python_docs_theme
+# html_theme = "python_docs_theme"
+# html_static_path = ["_static"]
+# html_show_sourcelink = True
+# html_theme_options = {
+#     "sidebarwidth": "300",
+#     "collapsiblesidebar": False,
+#     "stickysidebar": True,
+#     "navigation_with_keys": True,
+#     "rightsidebar": False,
+# }
+# html_sidebars = {
+#     "devel/**": ["searchbox.html", "globaltoc.html", "relations.html", "mymodul.html",
+#                 "sourcelink.html"],
+#     "*": ["searchbox.html", "globaltoc.html", "relations.html", "sourcelink.html"],
+# }
 
-html_sidebars = {
-    "devel/**": ["searchbox.html", "globaltoc.html", "relations.html", "mymodul.html",
-                "sourcelink.html"],
-    "*": ["searchbox.html", "globaltoc.html", "relations.html", "sourcelink.html"],
-}
+# ##############
+# # Configuration for read_the_docs
+# html_theme = "sphinx_rtd_theme"
+# html_static_path = ["_static"]
+# html_show_sourcelink = True
+# html_theme_options = {
+#     "collapse_navigation": True,  # Zeigt Unterpunkte in der Sidebar an
+#     "sticky_navigation": True,     # Sidebar bleibt beim Scrollen fixiert
+#     "navigation_depth": 4,         # Tiefe der Menüstruktur
+#     #"display_version": True,       # Zeigt die Projektversion oben links an
+#     "includehidden": True,
+#     "titles_only": False,
+# }
+# def setup(app):
+#     app.add_css_file("custom.css")
+# ##########
+
+# ################
+# # Configuration for furo
+# html_theme = "furo"
+
+# # Furo braucht kaum Optionen, um gut auszusehen
+# html_theme_options = {
+#     "sidebar_hide_name": False,
+#     "navigation_with_keys": True,
+# }
+# ########
+
+#################
+# Configuration for pydata_sphinx_them
+#                   ^^^^^^^^^^^^^^^^^^^
+# html_theme = "pydata_sphinx_theme"
+
+# html_theme_options = {
+#     "logo": {
+#         "text": "FTW Patch",
+#     },
+#     "show_nav_level": 2,
+#     "show_prev_next": True,
+#     "navbar_align": "left",
+#     "secondary_sidebar_items": ["page-toc", "edit-this-page"],
+#     "navbar_persistent": ["search-button"],
+#     "header_links_before_dropdown": 5,
+#     "icon_links": [
+#         {
+#             "name": "Index",
+#             "url": "genindex.html", # Verweist auf den General Index
+#             "icon": "fa-solid fa-list",
+#         },
+#     ],
+# }
+
+# html_sidebars = {
+#   "**": ["sidebar-nav-bs"]
+# }
+
+# html_theme_options.update({
+#     "external_links": [], # Sicherstellen, dass nichts fälschlich als extern gilt
+# })
+# ##########
+
+#################
+# Configuration for sphinx_book_theme
+#                   ^^^^^^^^^^^^^^^^^
+html_theme = "sphinx_book_theme"
+toc_object_entries = True
+toc_object_entries_show_parents = 'hide'
+html_theme_options = { "show_toc_level": 2, 
+    "show_navbar_depth": 1, 
+    "home_page_in_toc": True }
+
 # intersphinx configuration
 
 intersphinx_mapping = {"python": (f"https://docs.python.org/{sys.version_info.major}.{sys.version_info.minor}",

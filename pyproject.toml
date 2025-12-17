@@ -67,7 +67,7 @@ line-length = 88
 # I = isort (Sortierung der Imports)
 # B = flake8-bugbear (findet potenzielle Design-Fehler)
 select = ["E", "W", "F", "I", "B"]
-ignore = []
+ignore = ["W293","W291", "B904"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["ftw"]

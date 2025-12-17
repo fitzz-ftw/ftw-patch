@@ -27,6 +27,7 @@ This document provides a step-by-step introduction and executable documentation 
 
 .. dropdown:: Environment Setup and Path Initialization for the Tests
     :chevron: down-up
+    :color: info
 
     **Important Note for Users:** The following code blocks (Sections 1 through 3) are **only used to set up an isolated test environment** for the DocTests. These steps are required for the tests to run correctly and ensure test coverage. As an end-user or reader of the documentation, you **do not need to understand or run** this code; it is solely for information about the test conditions.
 
@@ -83,6 +84,7 @@ This document provides a step-by-step introduction and executable documentation 
 
 .. dropdown:: Temporary Patch File Setup
     :chevron: down-up
+    :color: info
     
     We create a dummy patch file in the CWD (`TEST_CWD`) to allow the **FtwPatch class initialization** to succeed the file existence check.
 
@@ -93,8 +95,8 @@ This document provides a step-by-step introduction and executable documentation 
 
 
 
-    Understanding the Current Working Directory (CWD)
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    .. rubric:: Understanding the Current Working Directory (CWD)
+    
 
     The variable **`TEST_CWD`** (`testoutput`) defines the isolated 
     location where files are created and patched. In the subsequent 
@@ -634,7 +636,7 @@ Test for non-numeric input, which should raise a `SystemExit` error:
 .. _ftw-patch-dry-run:
 
 Test Case 3: Handling Dry Run (--dry-run)
-----------------------------------
+-----------------------------------------
 
 This test confirms that the boolean flag `dry_run` is correctly set.
 
@@ -692,6 +694,7 @@ Method: Initialization and ``iter_files``
 
 .. dropdown:: Setup and temporary patch file ..
     :chevron: down-up
+    :color: info
 
     .. code:: python
 
@@ -767,6 +770,7 @@ Method: Error Handling
 
 .. dropdown:: Setup for invalid patch file ..
     :chevron: down-up
+    :color: info
 
     .. code:: python
 
@@ -836,6 +840,7 @@ This section tests the core application of a patch file.
 
 .. dropdown:: Setup for patching ...
     :chevron: down-up
+    :color: info
 
     .. code-block:: python
 
@@ -938,6 +943,7 @@ This test verifies the effect of `strip_count` on path resolution, simulating a 
 
 .. dropdown:: Setup for strip count test ...
     :chevron: down-up
+    :color: info
 
     .. code-block:: python
         
@@ -1003,6 +1009,7 @@ This section tests the FTW-specific normalization flags using a patch that inten
 
 .. dropdown:: Setup for Whitespace Test ...
     :chevron: down-up
+    :color: info
 
     .. code-block:: python
         
@@ -1068,7 +1075,6 @@ Verify failure (Content must be unchanged):
 Run Test Case 4b: Normalize Non-Leading Whitespace. Revert the file and apply the patch using `--normalize-ws`. This ignores differences in spaces/tabs within lines:
 
 .. code:: python
-    :hidden:
 
     >>> ws_target_file.write_text("def fn():\n    pass  # End space\n\n    return\n\n\n")
     46
@@ -1142,6 +1148,7 @@ This test verifies the handling of a patch targeting a non-existent file when no
 
 .. dropdown:: Setup testfile
     :chevron: down-up
+    :color: info
 
     .. code:: python
 
@@ -1176,6 +1183,7 @@ First, we set up the target directory where the file will be located.
 
 .. dropdown:: Setup testfile
     :chevron: down-up
+    :color: info
 
     .. code:: python
         
@@ -1197,6 +1205,7 @@ To make the patch applicable, we first create the target file temporarily and wr
 
 .. dropdown:: Setup testfile
     :chevron: down-up
+    :color: info
 
     .. code:: python
 
@@ -1269,7 +1278,9 @@ FtwPatch Cleanup
 --------------------
 
 .. dropdown:: Cleanup of all temporary files and directories created during testing.
-
+    :chevron: down-up
+    :color: info
+    
     .. code:: python
 
         >>> target_dir.rmdir()

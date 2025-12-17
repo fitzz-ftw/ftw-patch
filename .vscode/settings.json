@@ -60,5 +60,6 @@
             "highlightColor": "#2ecc71"
         }
     },
-    "git.followTagsWhenSync": true
+    "git.followTagsWhenSync": true,
+    "liveServer.settings.root": "/doc/build/html/"
 }

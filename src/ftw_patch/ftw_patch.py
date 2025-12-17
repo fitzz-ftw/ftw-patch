@@ -10,14 +10,14 @@ Ein Unicode resistenter Ersatz für patch.
 
 
 """
+import os
+import re
+import sys
 from argparse import ArgumentParser, Namespace
 from collections import namedtuple
-import os
+from dataclasses import dataclass
 from pathlib import Path
-from dataclasses import dataclass 
-import sys
 from typing import ClassVar, Iterator, TextIO
-import re
 
 ### Temporary Functions
 # oldprint=print
@@ -171,8 +171,11 @@ class FileLine:
         """        
         self._prefix: str = ""
         line_content = raw_line
-        clean_content = line_content.removesuffix('\\ No newline at end of file\n').removesuffix('\\ No newline at end of file\r\n')
-        self._has_trailing_whitespace: bool = bool(self._TRAIL_WS_RE.search(clean_content))
+        clean_content = line_content.removesuffix(
+            '\\ No newline at end of file\n').removesuffix(
+                '\\ No newline at end of file\r\n')
+        self._has_trailing_whitespace: bool = bool(
+                        self._TRAIL_WS_RE.search(clean_content))
         self._content: str = clean_content.rstrip('\n\r')
 
     def __repr__(self):
@@ -255,7 +258,7 @@ class FileLine:
         return self._has_trailing_whitespace
 
     @property
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """
         Checks if the line content is an empty string **(ro)**.
 
@@ -1068,7 +1071,7 @@ class FtwPatch:
 
     def run(self) -> int:
         """
-        Main entry point for the patch application. 
+        Main entry point for the patch application.
         
         It encapsulates the core logic (apply_patch) and handles exceptions 
         to return the appropriate exit code.
@@ -1200,7 +1203,8 @@ class FtwPatch:
             # END OF HUNK ITERATION: If we reach this point, the entire patch process 
             # for THIS file was error-free. (LOOP CONTINUES)
             
-        # 6. WRITE PHASE (All-or-nothing write phase, runs ONCE after all files are verified)
+        # 6. WRITE PHASE (All-or-nothing write phase, runs ONCE after all files are 
+        #    verified)
         if not dry_run:
             print("\nStarting write/delete phase: Applying changes to " "file system...")
             
@@ -1381,7 +1385,7 @@ def prog_ftw_patch() -> int:
         return 1
 
 if __name__ == "__main__": # pragma: no cover
-    from doctest import testfile, FAIL_FAST
+    from doctest import testfile, FAIL_FAST  # noqa: I001
     from pathlib import Path
     # Adds the project's root directory (the module source directory)
     # to the beginning of sys.path.
