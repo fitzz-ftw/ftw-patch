@@ -8,9 +8,11 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["ftw*"]
+namespaces = true
 
 [tool.setuptools_scm]
-write_to = "src/ftw_patch/_version.py"
+write_to = "src/ftw/patch/_version.py"
 
 [project]
 name = "ftw-patch"
@@ -87,7 +89,7 @@ testpaths = [
 
 [tool.coverage.run]
 omit = [
-    "src/ftw_patch/_version.py",
+    "src/ftw/patch/_version.py",
 ]
 
 

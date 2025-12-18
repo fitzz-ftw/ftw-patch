@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from argparse import Namespace
 # Annahme: Das Paket ftw_patch liegt nun im src/ Verzeichnis
-from ftw_patch.ftw_patch import FtwPatch, Hunk, FtwPatchError, HunkLine
+from ftw.patch.ftw_patch import FtwPatch, Hunk, FtwPatchError, HunkLine
 
 # --- Fixture für Mock FtwPatch Instanz ---
 

@@ -5,15 +5,15 @@
 
 .. _ftw-patch-intro:
 
-ftw_patch: Getting Started with Patch Application
+ftw.patch: Getting Started with Patch Application
 =================================================
 
 :Author: Fitzz TeXnik Welt
 :Email: FitzzTeXnikWelt@t-online.de
 
-This document provides a step-by-step introduction and executable documentation for the core logic in the ``ftw_patch`` module.
+This document provides a step-by-step introduction and executable documentation for the core logic in the ``ftw.patch`` module.
 
-.. seealso:: The full API documentation for the module is available here: :py:mod:`ftw_patch.ftw_patch`
+.. seealso:: The full API documentation for the module is available here: :py:mod:`ftw.patch.ftw_patch`
 
 ---
 
@@ -115,7 +115,7 @@ This section documents the `is_null_path` function, which checks if a given path
 
 .. code:: python
 
-    >>> from ftw_patch.ftw_patch import is_null_path
+    >>> from ftw.patch.ftw_patch import is_null_path
 
 
 1. POSIX Null Path Check
@@ -210,7 +210,7 @@ FileLine Class
 --------------------
 .. _ftw_patch-fileline-class:
 
-The :py:class:`ftw_patch.ftw_patch.FileLine` class represents a single line of text from a 
+The :py:class:`ftw.patch.ftw_patch.FileLine` class represents a single line of text from a 
 file. Its core function is to immediately **strip the trailing newline character** from 
 the input and provide the clean, ready-to-use content via the **``content``** property.
 
@@ -224,7 +224,7 @@ The class is initialized solely with the raw line input as the **first positiona
 
 .. code:: python
 
-    >>> from ftw_patch.ftw_patch import FileLine
+    >>> from ftw.patch.ftw_patch import FileLine
     >>> line1 = FileLine("This is line 1.\n")
     >>> line1.content
     'This is line 1.'
@@ -325,7 +325,7 @@ The HunkLine class is implemented in the Patch Parser to encapsulate hunk line c
 
 .. code:: python
 
-   >>> from ftw_patch.ftw_patch import HunkLine, PatchParseError
+   >>> from ftw.patch.ftw_patch import HunkLine, PatchParseError
 
 Test Case 1: Basic Initialization and Properties
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -364,7 +364,7 @@ The class must raise a `PatchParseError` if the line does not have a valid diff 
    >>> HunkLine("Missing prefix") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
    Traceback (most recent call last):
    ...
-   ftw_patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix (' ', '+', '-') or is empty: 'Missing prefix'
+   ftw.patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix (' ', '+', '-') or is empty: 'Missing prefix'
 
 Test Case 4: Whitespace Normalization (Compare all 3 Properties)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -419,7 +419,7 @@ HunkContentData Named Tuple
 ----------------------------------
 .. _ftw_patch-hunkcontentdata-namedtuple:
 
-The :py:class:`ftw_patch.ftw_patch.HunkContentData` **Named Tuple** serves as a temporary container to store the parsed hunk information **before** it is compiled into the final :py:class:`Hunk` dataclass. It holds the raw list of lines as well as boolean flags that store the state of the line ending (**Newline**) for the original and new file content.
+The :py:class:`ftw.patch.ftw_patch.HunkContentData` **Named Tuple** serves as a temporary container to store the parsed hunk information **before** it is compiled into the final :py:class:`Hunk` dataclass. It holds the raw list of lines as well as boolean flags that store the state of the line ending (**Newline**) for the original and new file content.
 
 Attributes and Demonstration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -430,7 +430,7 @@ The Named Tuple is immutable and stores three main components: the parsed hunk l
 
 .. code:: python
 
-    >>> from ftw_patch.ftw_patch import HunkContentData, FileLine
+    >>> from ftw.patch.ftw_patch import HunkContentData, FileLine
 
 2.  **Initialize a Named Tuple**. We store three lines (two context and one addition line) and set the flags for the newline status.
 
@@ -465,7 +465,7 @@ Hunk Class
 ----------
 .. _ftw_patch-hunk-class:
 
-The :py:class:`ftw_patch.ftw_patch.Hunk` dataclass represents a single contiguous block of 
+The :py:class:`ftw.patch.ftw_patch.Hunk` dataclass represents a single contiguous block of 
 changes ("a hunk") within a file being patched. It primarily stores the line number 
 and length metadata, as well as the content of the changes (the **hunk lines**).
 
@@ -479,7 +479,7 @@ The dataclass is initialized with the key statistics derived from the **hunk hea
 
 .. code:: python
 
-    >>> from ftw_patch.ftw_patch import Hunk, HunkLine
+    >>> from ftw.patch.ftw_patch import Hunk, HunkLine
 
 2. **Initialize a standard Hunk** that deletes 2 lines and adds 3 lines, resulting in a net increase of 1 line. The newline metadata is also stored.
 
@@ -532,7 +532,7 @@ First, import the necessary component:
 
 .. code:: python
 
-    >>> from ftw_patch.ftw_patch import _get_argparser 
+    >>> from ftw.patch.ftw_patch import _get_argparser 
 
 Initialize the parser:
 
@@ -687,7 +687,7 @@ Test with the long flag (`--verbose`):
 PatchParser Class
 -------------------
 
-The :py:class:`ftw_patch.ftw_patch.PatchParser` class is responsible for processing the patch file. It reads the patch format (typically Unified Diff) and divides it into logical units (the file data tuples).
+The :py:class:`ftw.patch.ftw_patch.PatchParser` class is responsible for processing the patch file. It reads the patch format (typically Unified Diff) and divides it into logical units (the file data tuples).
 
 Method: Initialization and ``iter_files``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -720,7 +720,7 @@ Method: Initialization and ``iter_files``
 
 .. code:: python
 
-    >>> from ftw_patch.ftw_patch import PatchParser, FtwPatchError
+    >>> from ftw.patch.ftw_patch import PatchParser, FtwPatchError
     >>> patch_parser = PatchParser(patch_file)
     >>> patch_parser # doctest: +ELLIPSIS
     PatchParser(patch_file_path=PosixPath(...))
@@ -802,13 +802,13 @@ Method: Error Handling
 FtwPatch Class Initialization
 -----------------------------
 
-The :py:class:`ftw_patch.ftw_patch.FtwPatch` class encapsulates the patching logic.
+The :py:class:`ftw.patch.ftw_patch.FtwPatch` class encapsulates the patching logic.
 
 First, import the class and its custom exception:
 
 .. code:: python
 
-    >>> from ftw_patch.ftw_patch import FtwPatch, FtwPatchError
+    >>> from ftw.patch.ftw_patch import FtwPatch, FtwPatchError
 
 Instantiate the class using the default `args` namespace object:
 
@@ -1265,7 +1265,7 @@ If the patch is accidentally used again, or if the file did not exist before the
     >>> ftw_patcher.apply_patch() 
     Traceback (most recent call last):
             ...
-    ftw_patch.ftw_patch.FtwPatchError: File to be deleted not found: PosixPath('target/file_to_delete.txt')
+    ftw.patch.ftw_patch.FtwPatchError: File to be deleted not found: PosixPath('target/file_to_delete.txt')
 
 
 
@@ -1283,6 +1283,8 @@ FtwPatch Cleanup
     
     .. code:: python
 
+        >>> for file_ in target_dir.iterdir():
+        ...     file_.unlink()
         >>> target_dir.rmdir()
         >>> target_file_deep.unlink(missing_ok=True)
         >>> target_file_deep.parent.rmdir()

@@ -7,7 +7,7 @@ from unittest.mock import mock_open, Mock, MagicMock
 import builtins # Wichtig: Importiere builtins, um die globale open-Funktion als Fallback zu verwenden
 from io import StringIO
 # Importiere die notwendigen Klassen aus Ihrem Paket
-from ftw_patch.ftw_patch import FtwPatch, FtwPatchError, PatchParser, FileLine 
+from ftw.patch.ftw_patch import FtwPatch, FtwPatchError, PatchParser, FileLine 
 
 
 # 1. Füge die MockArgs-Klasse hinzu (ursprünglich fehlend)
@@ -458,7 +458,7 @@ def test_apply_patch_io_error_on_final_write(tmp_path: Path, mocker):
     assert target_file.read_text() == original_content
 
 # Fügen Sie diesen Test zu Ihrer tests/test_coverage_hunks.py hinzu:
-from ftw_patch.ftw_patch import FtwPatchError, PatchParseError 
+from ftw.patch.ftw_patch import FtwPatchError, PatchParseError 
 
 def test_exception_repr_coverage():
     """
@@ -748,7 +748,7 @@ def _test_apply_patch_creation_write_error(tmp_path: Path):
         # Für alle anderen Aufrufe (Lesen der Patch-Datei) rufen wir die Original-Methode auf
         return original_path_open(self, *args, **kwargs)
         
-    with patch("ftw_patch.ftw_patch.Path.open", side_effect=wrapper_open) as mock_open:
+    with patch("ftw.patch.ftw_patch.Path.open", side_effect=wrapper_open) as mock_open:
 
         # 3. Anwendung des Patches
         with pytest.raises(IOError, match=r".*Error writing patched file .*new_folder/new_file.txt: Simulierter I/O-Fehler beim Schreiben"):
@@ -817,7 +817,7 @@ def _test_apply_patch_creation_write_error(tmp_path: Path):
     #     # Fallback (sollte nicht erreicht werden)
     #     return original_path_open_func(path_instance, *args, **kwargs)
     # # Mocken der Methode im Anwendungsmodul (ftw_patch.ftw_patch)
-    #     with patch("ftw_patch.ftw_patch.Path.open", side_effect=conditional_open):
+    #     with patch("ftw.patch.ftw_patch.Path.open", side_effect=conditional_open):
 
     def conditional_open(*args, **kwargs):
         # Das erste Argument in *args ist die Path-Instanz, auf der .open aufgerufen wurde.
@@ -838,7 +838,7 @@ def _test_apply_patch_creation_write_error(tmp_path: Path):
         return original_path_open_func(path_instance, *args[1:], **kwargs)
 
     # Mocken der Methode im Anwendungsmodul (ftw_patch.ftw_patch)
-    with patch("ftw_patch.ftw_patch.Path.open", side_effect=conditional_open):
+    with patch("ftw.patch.ftw_patch.Path.open", side_effect=conditional_open):
 
     
         # 3. Erwarte den geworfenen IOError aus dem except-Block (Lücken 1089-1097)
@@ -921,7 +921,7 @@ def test_apply_patch_creation_write_error(tmp_path: Path):
         mock_write_file_error,  # 2. Zum Schreiben (wirft Fehler)
     ]
     
-    with patch("ftw_patch.ftw_patch.Path.open", side_effect=mock_side_effects):
+    with patch("ftw.patch.ftw_patch.Path.open", side_effect=mock_side_effects):
         
         # 4. Erwarte den geworfenen IOError aus dem except-Block (Lücken 1089-1097)
         with pytest.raises(IOError, match=r".*Error writing patched file .*new_folder/new_file.txt: Simulierter I/O-Fehler beim Schreiben"):
@@ -965,7 +965,7 @@ def _test_apply_patch_deletion_unlink_error(tmp_path: Path):
     
     # # Der Mock muss bedingt sein, da der Parser zuerst Path.open aufruft.
     # # Da .unlink() nur einmal (zum Löschen) aufgerufen wird, können wir das global mocken.
-    # with patch("ftw_patch.ftw_patch.Path.unlink", unlink_mock):
+    # with patch("ftw.patch.ftw_patch.Path.unlink", unlink_mock):
 
     #     # 4. Erwarte den Fehler (Zeile 922)
     #     # Die Methode apply_patch sollte den IOError in einen FtwPatchError umwandeln oder ihn durchlassen.
@@ -982,7 +982,7 @@ def _test_apply_patch_deletion_unlink_error(tmp_path: Path):
     # 3. Path.unlink mocken, um einen Fehler zu werfen
     unlink_mock = MagicMock(side_effect=IOError("Simulierter I/O-Fehler beim Löschen"))
     
-    with patch("ftw_patch.ftw_patch.Path.unlink", unlink_mock):
+    with patch("ftw.patch.ftw_patch.Path.unlink", unlink_mock):
         
         # 4. Erwarte den neu geworfenen FtwPatchError (Zeile 922)
         with pytest.raises(
@@ -1144,7 +1144,7 @@ def _skipped_test_run_general_exception(tmp_path: Path):
     # Wir nehmen an, dass apply_patch Path.open aufruft, um die Originaldatei zu lesen.
     # Hier verwenden wir den MagicMock-Ansatz, da wir nur einen Fehler brauchen.
     
-    with patch("ftw_patch.ftw_patch.Path.open") as mock_open:
+    with patch("ftw.patch.ftw_patch.Path.open") as mock_open:
         # Wir setzen den Seiteneffekt so, dass der Fehler beim Versuch, die Datei zu lesen, geworfen wird.
         mock_open.side_effect = IOError("Simulierter I/O-Fehler beim Lesen der Originaldatei")
         
@@ -1177,7 +1177,7 @@ def test_run_unexpected_exception(tmp_path: Path):
     patcher = FtwPatch(mock_args)
     
     # --- MOCKING VON apply_patch ---
-    with patch("ftw_patch.ftw_patch.FtwPatch.apply_patch") as mock_apply_patch:
+    with patch("ftw.patch.ftw_patch.FtwPatch.apply_patch") as mock_apply_patch:
         
         # Simuliere einen Fehler, der nicht FtwPatchError oder FileNotFoundError ist
         mock_apply_patch.side_effect = TypeError("Simulierter unerwarteter interner Fehler")
@@ -1558,7 +1558,7 @@ def test_run_file_not_found_error(tmp_path: Path):
     assert exit_code == 1
 
 # Wir patchen FtwPatch.apply_patch, damit es einen FileNotFoundError wirft.
-@patch('ftw_patch.ftw_patch.FtwPatch.apply_patch', side_effect=FileNotFoundError("Mocked missing file"))
+@patch('ftw.patch.ftw_patch.FtwPatch.apply_patch', side_effect=FileNotFoundError("Mocked missing file"))
 def test_run_catches_filenotfounderror_via_mock(mock_apply_patch, tmp_path: Path):
     """
     Testet den FileNotFoundError-Pfad (Zeilen 1093-1094) in FtwPatch.run(), 

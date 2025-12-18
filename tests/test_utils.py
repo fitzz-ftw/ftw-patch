@@ -1,5 +1,5 @@
 from pathlib import Path
-from ftw_patch.ftw_patch import is_null_path
+from ftw.patch.ftw_patch import is_null_path
 
 # Angenommen, Sie haben is_null_path und die Konstanten NULL_PATHS_POSIX/WIN_UPPER
 # in Ihrem Modul importiert.

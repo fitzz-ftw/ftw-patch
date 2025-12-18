@@ -2,7 +2,7 @@
 FTW Patch
 ===============================
 
-| File: ftw_patch/ftw_patch.py
+| File: ftw.patch/ftw_patch.py
 | Author: Fitzz TeXnik Welt
 | Email: FitzzTeXnikWelt@t-online.de
 
@@ -1396,7 +1396,7 @@ if __name__ == "__main__": # pragma: no cover
     be_verbose=True
     option_flags= 0
     option_flags= FAIL_FAST
-    testfilesbasedir = Path("../../doc/source/devel")
+    testfilesbasedir = Path("../../../doc/source/devel")
     test_sum = 0
     test_failed = 0
     dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
