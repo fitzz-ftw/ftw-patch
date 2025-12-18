@@ -1,12 +1,12 @@
-﻿ftw\_patch.ftw\_patch
-=====================
+﻿ftw.patch.ftw\_patch
+====================
 
-.. include:: ../api_inc/modules/ftw_patch.ftw_patch_moduleinc.rst.inc
+.. include:: ../api_inc/modules/ftw.patch.ftw_patch_moduleinc.rst.inc
     :parser: rst
 
 
 
-.. module:: ftw_patch.ftw_patch
+.. module:: ftw.patch.ftw_patch
 .. rubric:: Classes
 
 .. autosummary::
@@ -31,12 +31,12 @@
         prog_ftw_patch
 
 
-.. include:: ../api_inc/functions/ftw_patch.ftw_patch.is_null_path_funcinc.rst.inc
+.. include:: ../api_inc/functions/ftw.patch.ftw_patch.is_null_path_funcinc.rst.inc
     :parser: rst
 
 .. autofunction:: is_null_path
 
-.. include:: ../api_inc/functions/ftw_patch.ftw_patch.prog_ftw_patch_funcinc.rst.inc
+.. include:: ../api_inc/functions/ftw.patch.ftw_patch.prog_ftw_patch_funcinc.rst.inc
     :parser: rst
 
 .. autofunction:: prog_ftw_patch
@@ -50,11 +50,11 @@
     FtwPatchError
     PatchParseError
 
-.. include:: ../api_inc/exceptions/ftw_patch.ftw_patch.FtwPatchError_.rst.inc
+.. include:: ../api_inc/exceptions/ftw.patch.ftw_patch.FtwPatchError_.rst.inc
 
 .. autoexception:: FtwPatchError
     :show-inheritance:
-.. include:: ../api_inc/exceptions/ftw_patch.ftw_patch.PatchParseError_.rst.inc
+.. include:: ../api_inc/exceptions/ftw.patch.ftw_patch.PatchParseError_.rst.inc
 
 .. autoexception:: PatchParseError
     :show-inheritance:
