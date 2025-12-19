@@ -1,3 +1,19 @@
+# Copyright (C) 2025 Fitzz TeXnik Welt <FitzzTeXnikWelt@t-online.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 """
 FTW Patch
 ===============================
@@ -251,7 +267,8 @@ class FileLine:
     @property
     def has_trailing_whitespace(self) -> bool:
         """
-        Indicates if the original raw line contained trailing whitespace before the newline **(ro)**.
+        Indicates if the original raw line contained trailing whitespace before the newline 
+        **(ro)**.
         
         :returns: Boolean value.
         """
@@ -319,7 +336,8 @@ class HunkLine(FileLine):
     @property
     def has_trailing_whitespace(self) -> bool:
         """
-        Indicates if the original raw line contained trailing whitespace before the newline **(ro)**.
+        Indicates if the original raw line contained trailing whitespace before the newline 
+        **(ro)**.
         
         :returns: Boolean value.
         """
@@ -404,7 +422,8 @@ class PatchParser:
         Used by:
         - :py:meth:`~PatchParser._read_line` (to ensure the buffer is populated before consumption)
         - :py:meth:`~PatchParser.iter_files` (to check for next file/hunk headers)
-        - :py:meth:`~PatchParser._parse_hunk_content` (to check for hunk termination or newline markers)
+        - :py:meth:`~PatchParser._parse_hunk_content` (to check for hunk termination or newline 
+                    markers)
 
         :returns: The next line, including the newline character, or an empty 
                 string if the end of the file is reached.
@@ -422,8 +441,8 @@ class PatchParser:
         Consumes and returns the line currently stored in the lookahead buffer 
         (self._current_line).
 
-        This method calls :py:meth:`~PatchParser._peek_line` to ensure the buffer is populated first. 
-        After retrieving the line, it explicitly sets self._current_line to None, 
+        This method calls :py:meth:`~PatchParser._peek_line` to ensure the buffer is populated 
+        first. After retrieving the line, it explicitly sets self._current_line to None, 
         making the line officially consumed and advancing the parser's position.
 
         Uses:
@@ -884,7 +903,8 @@ class FtwPatch:
         # 2. Option: --ignore-bl
         # Checks for an explicit blank line (content is effectively empty after stripping).
         if self.ignore_blank_lines and not file_line.content.strip():
-            # If ignore-bl is active and the content is empty, return an empty string for comparison.
+            # If ignore-bl is active and the content is empty, return an empty string for 
+            # comparison.
             return ''
             
         # 3. Secondary Option: --normalize-ws
@@ -894,7 +914,8 @@ class FtwPatch:
             return file_line.normalized_ws_content
             
         # 4. Standard Mode (No WS options active)
-        # For standard comparison, the content part (without prefix and without newline) is returned.
+        # For standard comparison, the content part (without prefix and without newline) is 
+        # returned.
         return file_line.content
 
 
@@ -949,7 +970,8 @@ class FtwPatch:
         file_current_index = hunk.original_start - 1
         lines_consumed_in_original = 0
         
-        # FINAL FIX 4a: NEW STATE for skip suppression (for test_ignore_bl_no_skip_on_blank_line_context)
+        # FINAL FIX 4a: NEW STATE for skip suppression (for 
+        # test_ignore_bl_no_skip_on_blank_line_context)
         last_line_was_explicit_blank = False 
         
         hunk_line_index = 0
@@ -1106,7 +1128,8 @@ class FtwPatch:
         :param dry_run: If :py:obj:`True`, only simulate the patching process.
         :raises builtins.IOError: If an I/O error occurs during patch file reading or writing.
         :raises PatchParseError: If the patch file content is malformed.
-        :raises FtwPatchError: If an error occurs during the application of the patch or path stripping.
+        :raises FtwPatchError: If an error occurs during the application of the patch or path 
+                stripping.
         :returns: The exit code, typically 0 for success.
         """
         parser = PatchParser(self.patch_file_path)

@@ -22,3 +22,18 @@ documentation for details.
 
    devel/get_started_ftw_patch
    devel/ftw_patch_module
+
+
+.. |cc-logo| image:: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
+   :target: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de
+   :alt: CC BY-NC-SA 4.0
+
+Lizenziert unter |cc-logo|
+`Creative Commons Namensnennung - Nicht-kommerziell - Weitergabe unter gleichen Bedingungen 4.0 International <https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de>`_
+
+.. topic:: Zitieren dieser Dokumentation
+
+   Bitte zitieren Sie dieses Werk wie folgt:
+   
+   Fitzz TeXnik Welt. (2025). *ftw-patch: Ein Unicode-resistenter Ersatz für das klassische patch-Tool* (Version 1.0.0) [Software-Dokumentation]. Abgerufen von https://github.com/dein-nutzername/ftw-patch
+   
