@@ -36,17 +36,17 @@ from pathlib import Path
 from typing import ClassVar, Iterator, TextIO
 
 ### Temporary Functions
-# oldprint=print
+oldprint=print
 
-# def print(*values: object, 
-#           sep: str | None = " ", 
-#           end: str | None = "\n", 
-#           file: str| None = None, 
-#           flush: Literal[False] = False):
-#     pass
+def print(*values: object, 
+          sep: str | None = " ", 
+          end: str | None = "\n", 
+          file: str| None = None, 
+          flush: bool = False):
+    pass
 
-# def dp(*args):
-#     # oldprint(*args, flush=True)
+def dp(*args):
+    oldprint(*args, flush=True)
 #     pass
 
 
@@ -432,7 +432,7 @@ class PatchParser:
             # Read the next raw line from the file handle and store it.
             # This can be 'Content\\n', '\\n', or '' (EOF).
             self._current_line = self.file_handle.readline() 
-            
+        dp(f"{self._current_line=}")    
         return self._current_line 
 
 
@@ -516,30 +516,21 @@ class PatchParser:
         original_has_newline: bool = True
         new_has_newline: bool = True
         
-        # 1. Read content lines until the hunk ends (prefix check)
-        while True:
-            line = self._peek_line() # Use lookahead to check prefix without consuming
-            # Check for EOF first. An empty string means EOF.
-            if not line:
-                # EOF reached prematurely is an error if we haven't found a valid end marker yet.
-                # raise PatchParseError("Unexpected EOF while reading expected hunk content lines.")
-                break
-
+        for line in iter(self._peek_line, ""):
+            
+            # Stop if a new file or hunk header starts
             if line.startswith(("--- ", "+++ ", "@@ ")):
-                # The next file header or hunk header is found. The hunk content is finished.
-                # The line is left in the buffer for iter_files to handle.
                 break
 
-            # The special marker also terminates the hunk content loop
+            # Stop if the 'No newline' marker is reached
             if line.startswith(r"\ No newline at end of file"):
                 break
 
-            # Check if the line is valid hunk content (must start with ' ', '+', or '-').
-            # If not, the hunk content block is finished. The line is left in the buffer.
+            # Stop if the line does not start with a valid patch prefix
             if line[0] not in (' ', '+', '-'):
                 break
 
-            # Consume the line and attempt to parse it as HunkLine
+            # Consume the line now that we know it belongs to the hunk
             line_to_process = self._read_line()
             try:
                 hunk_line = HunkLine(line_to_process)
@@ -547,33 +538,30 @@ class PatchParser:
             except PatchParseError as e:
                 raise PatchParseError(f"Error parsing hunk content line {len(lines) + 1}: {e}")
             except Exception as e: 
-                # This catches errors like IndexError (e.g., if HunkLine[0] fails)
+                # Catch unexpected errors like IndexErrors
                 raise PatchParseError(f"Unexpected error processing HunkLine content (line: {len(lines) + 1}): {e}")
-        # 2. Check for the Newline Marker using lookahead (if the hunk was not ended by EOF)
-        
+
+        # 2. Check for the 'No Newline' marker using lookahead
         next_line_peek = self._peek_line()
         
         if next_line_peek.startswith(r"\ No newline at end of file"):
-            # Marker found: update status flags based on the last line's type
-            
             # Consume the marker line to advance the parser
             self._read_line() 
             
             if lines:
                 last_line = lines[-1]
                 
-                # The marker affects the original file if the last line was context or deletion.
+                # Marker affects original file if last line was context or deletion
                 if last_line.is_context or last_line.is_deletion:
                     original_has_newline = False
                     
-                # The marker affects the new file if the last line was context or addition.
+                # Marker affects new file if last line was context or addition
                 if last_line.is_context or last_line.is_addition:
                     new_has_newline = False
 
         return HunkContentData(lines, 
                             original_has_newline, 
                             new_has_newline)
-
 
     def _parse_file_headers(self) -> tuple[str | None, str | None, bool]:
         """
@@ -621,6 +609,25 @@ class PatchParser:
             
         return path_line
 
+    def _classify_line(self) -> tuple[bool, bool, bool]:
+        """
+        Classifies the next line in the stream without consuming it.
+        
+        Returns:
+            tuple: (is_minus, is_plus, is_at)
+        """
+        try:
+            line = self._peek_line()
+            if not line:
+                return False, False, False
+            
+            return (
+                line.startswith('--- '),
+                line.startswith('+++ '),
+                line.startswith('@@ ')
+            )
+        except (EOFError, StopIteration):
+            return False, False, False
 
     # def _strip_patch_path(self, path: str) -> str:
     #     """
@@ -679,10 +686,14 @@ class PatchParser:
                     if is_null_path(n_path_str):
                         yield Path(o_path_str), Path(n_path_str), []
 
+                    dp(f"{found_file_block=}, {hunks=}")
                     if not found_file_block:
                         if hunks:
                             yield original_file_path, new_file_path, hunks
-                        return  # EOF reached
+                        eof = self._peek_line()
+                        dp(f"{eof=}")
+                        if eof =="":
+                            return  # EOF reached
 
                     # If we have hunks from the previous file block, yield them
                     if hunks:
@@ -699,6 +710,9 @@ class PatchParser:
 
                     if not line:
                         break
+
+                    dp(f"{line=}")
+                    dp(f"{hunks=}")
 
                     # Identify Hunk Header '@@ ... @@'
                     if line.startswith('@@ '):
@@ -724,10 +738,10 @@ class PatchParser:
                             new_has_newline=hunk_content_data.new_has_newline
                         )
                         hunks.append(hunk)
-                        
                     else:
                         # Skip other lines between blocks (e.g., 'Index: ...')
-                        continue 
+                        # continue 
+                        pass
                         
                 # End of While loop (EOF)
                 # if hunks:
@@ -982,8 +996,8 @@ class FtwPatch:
                 new_line_content = hunk_line.content
                 
                 # Ensure the line has a trailing newline if not present
-                if not new_line_content.endswith(('\n', '\r')):
-                    new_line_content += '\n'
+                #if not new_line_content.endswith(('\n', '\r')):
+                new_line_content += '\n'
                     
                 new_file_content.append(new_line_content)
                 # FINAL FIX 4b: Reset state, addition breaks context chain
@@ -1214,6 +1228,7 @@ class FtwPatch:
                     hunk=hunk,
                     original_lines=current_lines
                 )
+
             # 5. Cache the result in memory (only if not a deletion)
             if not is_null_path(target_new_path):
                 patched_file_storage[full_new_path] = current_lines
@@ -1233,7 +1248,7 @@ class FtwPatch:
             
             # Perform deletions first
             for file_path in files_to_delete:
-                file_path.unlink()
+                file_path.unlink(missing_ok=True)
                 print(f" -> Successfully deleted {file_path!r}.")
 
             # Then write changes
@@ -1422,9 +1437,10 @@ if __name__ == "__main__": # pragma: no cover
     testfilesbasedir = Path("../../../doc/source/devel")
     test_sum = 0
     test_failed = 0
-    dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
+    # dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
     # dt_file = str(testfilesbasedir / "temp_test.rst")
     # dt_file = str(testfilesbasedir / "test_parser_fix.rst")
+    dt_file = str(testfilesbasedir / "fix_me_multi_hunks.rst")
     print(dt_file)
     doctestresult = testfile(
         dt_file,
