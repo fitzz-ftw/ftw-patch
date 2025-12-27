@@ -1,3 +1,5 @@
+:orphan:
+
 {{ fullname | escape | underline}}
 
 .. include:: ../api_inc/modules/{{fullname}}_{{module_inc}}.rst.inc

@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.abspath('.'))
 project = "FTW Patch"
 copyright = "2025, Fitzz TeXnik Welt"
 author = "Fitzz TeXnik Welt"
+html_show_copyright = True
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

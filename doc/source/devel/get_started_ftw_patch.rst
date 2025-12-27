@@ -108,107 +108,105 @@ This document provides a step-by-step introduction and executable documentation 
 
     ---
 
-Test Cases for is_null_path Function
-------------------------------------
-
-This section documents the `is_null_path` function, which checks if a given path represents a **null path marker** (like `/dev/null` or `NUL`) used in patch files to signify file deletion or creation.
-
-.. code:: python
-
-    >>> from ftw.patch.ftw_patch import is_null_path
 
 
-1. POSIX Null Path Check
-~~~~~~~~~~~~~~~~~~~~~~~~
+Class PatchLine 
+================
 
-Test the standard POSIX null path marker. This check is **case-sensitive**.
 
-The standard POSIX null path string
+.. code:: python 
 
-.. code:: python
+    >>> from ftw.patch.ftw_patch import PatchLine
 
-    >>> is_null_path("/dev/null")
-    True
+    >>> patchline = PatchLine("This is a test line.\n")
+    >>> patchline
+    PatchLine(Content: 'This is a test line.')
 
-Path object input
+    >>> print(patchline)
+    PatchLine(Content: 'This is a test line.')
 
-.. code:: python
+    >>> patchline.content
+    'This is a test line.'
 
-    >>> is_null_path(Path("/dev/null"))
-    True
-
-POSIX path with incorrect casing (should fail)
-
-.. code:: python
-
-    >>> is_null_path("/dev/Null")
+    >>> patchline.has_trailing_whitespace
     False
 
-2. Windows Null Path Check
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test the Windows null path marker (`NUL`). This check is **case-insensitive**.
-
-Standard Windows null path (Uppercase)
-
-.. code:: python
-
-    >>> is_null_path("NUL")
+    >>> PatchLine("This is a test line.  \n").has_trailing_whitespace
     True
 
-Windows null path (Lowercase)
-
-.. code:: python
-
-    >>> is_null_path("nul")
+    >>> patchline_ws = PatchLine("This is a test line.\n   ")
+    >>> patchline_ws.has_trailing_whitespace
     True
 
-Windows null path (Mixed case)
+    >>> patchline_ws
+    PatchLine(Content: 'This is a test line.\n   ')
+
+    >>> patchline_ws.content
+    'This is a test line.\n   '
+
+
+Class FileLine 
+===============
 
 .. code:: python
 
-    >>> is_null_path("NuL")
+    >>> from ftw.patch.ftw_patch import FileLine
+
+    >>> fileline = FileLine("  def func( a,    b):   \n")
+    >>> fileline 
+    FileLine(Content: '  def func( a,    b):   ', Prefix: '')
+
+    >>> fileline.content
+    '  def func( a,    b):   '
+
+    >>> fileline.prefix
+    ''
+
+    >>> fileline.normalized_ws_content
+    '  def func( a, b):'
+
+    >>> fileline.ignore_all_ws_content
+    'deffunc(a,b):'
+
+    >>> fileline.has_newline
     True
 
-3. Invalid Paths and Types
-~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Ensure that invalid path strings and unexpected types (like `None` or numbers) are correctly rejected and return `False`.
+    >>> fileline.line_string
+    '  def func( a,    b):   \n'
 
-
-A regular file path
-
-.. code:: python
-
-    >>> is_null_path("/etc/hosts")
+    >>> fileline_nl = FileLine("    return True")
+    >>> fileline_nl.has_newline
     False
 
-Empty string
+    >>> fileline_nl.line_string
+    '    return True'
 
-.. code:: python
 
-    >>> is_null_path("")
+    >>> fileline.has_trailing_whitespace
+    True
+
+    >>> fileline.is_empty
     False
 
-Invalid type (NoneType), testing the robust handling
+    >>> FileLine("\n").is_empty
+    True
 
-.. code:: python
+    >>> FileLine("").is_empty
+    True
 
-    >>> is_null_path(None)
+    >>> FileLine(" ").is_empty
     False
 
-Invalid type (Number)
-
-.. code:: python
-
-    >>> is_null_path(123)
+    >>> FileLine("def test(self):").has_newline
     False
-
----
 
 FileLine Class
 --------------------
 .. _ftw_patch-fileline-class:
+
+:Inherits: `PatchLine`
+:Purpose: Represents a single line within a code file.
 
 The :py:class:`ftw.patch.ftw_patch.FileLine` class represents a single line of text from a 
 file. Its core function is to immediately **strip the trailing newline character** from 
@@ -317,15 +315,17 @@ The expected result must be an empty string, confirming complete removal.
 
 
 
+HunkLine Class
+--------------
 
-HunkLine
---------
+:Inherits: `PatchLine`
+:Purpose: Represents a single content line within a hunk block of a unified diff.
 
 The HunkLine class is implemented in the Patch Parser to encapsulate hunk line content and manage whitespace normalization.
 
 .. code:: python
 
-   >>> from ftw.patch.ftw_patch import HunkLine, PatchParseError
+   >>> from ftw.patch.ftw_patch import HunkLine
 
 Test Case 1: Basic Initialization and Properties
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -415,51 +415,288 @@ Tests an explicit blank context line (' '), which is important for the Blank Lin
    >>> hl_blank.is_context
    True
 
-HunkContentData Named Tuple
-----------------------------------
-.. _ftw_patch-hunkcontentdata-namedtuple:
 
-The :py:class:`ftw.patch.ftw_patch.HunkContentData` **Named Tuple** serves as a temporary container to store the parsed hunk information **before** it is compiled into the final :py:class:`Hunk` dataclass. It holds the raw list of lines as well as boolean flags that store the state of the line ending (**Newline**) for the original and new file content.
-
-Attributes and Demonstration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The Named Tuple is immutable and stores three main components: the parsed hunk lines and two boolean values indicating whether the last line of the original and new file content, respectively, ends with a newline character.
-
-1.  **Import the Named Tuple** and the necessary :py:class:`FileLine` class.
+HunkHeadLine Class
+------------------
+:Inherits: `PatchLine`
+:Purpose: Represents a hunk header line within a patch (starting with '@@ ').
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import HunkContentData, FileLine
-
-2.  **Initialize a Named Tuple**. We store three lines (two context and one addition line) and set the flags for the newline status.
+    >>> from ftw.patch.ftw_patch import HunkHeadLine
+    >>> hhline1 = HunkHeadLine("@@ -1,2 +1,3 @@")
+    >>> hhline1
+    HunkHeadLine(Content: '-1,2 +1,3', Prefix: '@@ ')
 
 .. code:: python
 
-    >>> lines = [FileLine(" Line 1\\n"), FileLine("+Added Line 2\\n"), FileLine(" Line 3\\n")]
-    >>> content_data = HunkContentData(
-    ...     lines=lines,
-    ...     original_has_newline=True,
-    ...     new_has_newline=False
-    ... )
-    >>> content_data.new_has_newline
+    >>> hhline1.prefix
+    '@@ '
+
+    >>> hhline1.old_start
+    1
+
+    >>> hhline1.old_len
+    2
+
+    >>> hhline1.new_start
+    1
+
+    >>> hhline1.new_len
+    3
+
+    >>> hhline1.coords
+    (1, 2, 1, 3)
+
+    >>> hhline1.content
+    '-1,2 +1,3'
+
+    >>> hhline1.info
+    ''
+
+
+    >>> hhline2 = HunkHeadLine("@@ -10,4 +10,6 @@ class DatabaseConnector:")
+    >>> hhline2
+    HunkHeadLine(Content: '-10,4 +10,6', Prefix: '@@ ')
+
+.. dropdown:: Repeated Test for Properties, see above.
+    :chevron: down-up
+    :color: info
+
+    .. code:: python
+    
+        >>> hhline2.prefix
+        '@@ '
+
+        >>> hhline2.old_start
+        10
+
+        >>> hhline2.old_len
+        4
+
+        >>> hhline2.new_start
+        10
+
+        >>> hhline2.new_len
+        6
+
+        >>> hhline2.coords
+        (10, 4, 10, 6)
+
+        >>> hhline2.content
+        '-10,4 +10,6'
+
+.. code:: python
+
+    >>> hhline2.info
+    ' class DatabaseConnector:'
+
+Exception: Invalid HunkHeadLine
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Raised when a `HunkHeadLine` is initialized with a prefix other than '@@ '.
+
+    >>> hhline_bad = HunkHeadLine("@ -10,4 +10,6 @@")
+    Traceback (most recent call last):
+     ...
+    ValueError: Invalid HunkHeadLine: Expected '@@ ', got '@ -'
+
+Exception: Invalid Hunk coordinates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Raised when a `HunkHeadLine` is initialized with incorrect coords.
+
+    >>> hhline_bad = HunkHeadLine("@@ -10,4 +I0,6 @@")
+    Traceback (most recent call last):
+        ...
+    ValueError: Invalid Hunk coordinates: '-10,4 +I0,6'
+
+
+
+
+HeadLine Class
+--------------
+:Inherits: `PatchLine`
+:Purpose: Represents a file header line within a patch (starting with '--- ' or '+++ ')
+
+.. code:: python
+
+    >>> from ftw.patch.ftw_patch import HeadLine
+
+Test Cases for staticmethode check_is_null_path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section documents the `check_is_null_path` staticmethode from HeadLine class, which checks 
+if a given path represents a **null path marker** (like `/dev/null` or `NUL`) used in patch 
+files to signify file deletion or creation.
+
+
+1. POSIX Null Path Check
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Test the standard POSIX null path marker. This check is **case-sensitive**.
+
+The standard POSIX null path string
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path("/dev/null")
+    True
+
+
+Path object input
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path(Path("/dev/null"))
+    True
+
+POSIX path with incorrect casing (should fail)
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path("/dev/Null")
     False
 
-3.  **Verify Immutability and ``__repr__``** (Named tuples cannot be modified after creation).
+2. Windows Null Path Check
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Test the Windows null path marker (`NUL`). This check is **case-insensitive**.
+
+Standard Windows null path (Uppercase)
 
 .. code:: python
 
-    >>> content_data # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    HunkContentData(lines=[FileLine(...), 
-                    FileLine(...), ...], 
-                    original_has_newline=True, 
-                    new_has_newline=False)
-    
-    >>> try:
-    ...     content_data.new_has_newline = True
-    ... except AttributeError as e:
-    ...     print(f"Error: {e}")
-    Error: can't set attribute
+    >>> HeadLine.check_is_null_path("NUL")
+    True
+
+Windows null path (Lowercase)
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path("nul")
+    True
+
+Windows null path (Mixed case)
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path("NuL")
+    True
+
+3. Invalid Paths and Types
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Ensure that invalid path strings and unexpected types (like `None` or numbers) are correctly rejected and return `False`.
+
+
+A regular file path
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path("/etc/hosts")
+    False
+
+Empty string
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path("")
+    False
+
+Invalid type (NoneType), testing the robust handling
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path(None)
+    False
+
+Invalid type (Number)
+
+.. code:: python
+
+    >>> HeadLine.check_is_null_path(123)
+    False
+
+---
+
+
+Test Cases for for Method and Properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+    >>> hline1 = HeadLine("--- target/file.txt\n")
+    >>> hline1
+    HeadLine(Content: 'target/file.txt', Prefix: '--- ')
+
+    >>> hline1.content
+    'target/file.txt'
+
+    >>> hline1.prefix
+    '--- '
+
+    >>> hline1.is_null_path
+    False
+
+    >>> hline1.is_orig
+    True
+
+    >>> hline1.is_new
+    False
+
+    >>> hline1.info
+
+    >>> str(hline1.get_path(1)) # doctest: +ELLIPSIS
+    'file.txt'
+
+
+    >>> hline2 = HeadLine("+++ b/src/new_module.py\t(metadata: created on 2025-12-21)\n")
+    >>> hline2
+    HeadLine(Content: 'b/src/new_module.py', Prefix: '+++ ')
+
+    >>> hline2.content
+    'b/src/new_module.py'
+
+    >>> hline2.prefix
+    '+++ '
+
+    >>> hline2.is_null_path
+    False
+
+    >>> hline2.is_orig
+    False
+
+    >>> hline2.is_new
+    True
+
+    >>> hline2.info
+    '(metadata: created on 2025-12-21)'
+
+    >>> str(hline2.get_path(1))
+    'src/new_module.py'
+
+    >>> HeadLine("--- /dev/null\n").is_null_path
+    True
+
+Exception: Strip level
+~~~~~~~~~~~~~~~~~~~~~~
+
+Raised when a strip level is equal or greater then the parts of the path.
+
+.. code:: python
+
+    >>> hline1.get_path(2) # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+        ...
+    ValueError: Strip level -p2 is too high for 
+    path 'target/file.txt' (only 2 segments available).
+
+
+
+
+
 
 Hunk Class
 ----------
@@ -475,51 +712,124 @@ Method: Initialization and Attributes
 
 The dataclass is initialized with the key statistics derived from the **hunk header** and the list of :py:class:`FileLine` objects containing the actual changes.
 
-1. **Import the Hunk dataclass** and the necessary :py:class:`FileLine` class.
+1. **Import the Hunk class** 
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import Hunk, HunkLine
+    >>> from ftw.patch.ftw_patch import Hunk
 
 2. **Initialize a standard Hunk** that deletes 2 lines and adds 3 lines, resulting in a net increase of 1 line. The newline metadata is also stored.
 
 .. code:: python
 
-    >>> lines = [HunkLine("-Old Line 1\\n"), 
-    ...          HunkLine("-Old Line 2\\n"), 
-    ...          HunkLine("+New Line A\\n"), 
-    ...          HunkLine("+New Line B\\n"), 
-    ...          HunkLine("+New Line C\\n")]
+    >>> hunk1 = Hunk(hhline1)
+    >>> hunk1
+    Hunk(header=(1, 2, 1, 3), lines=0)
+
+    >>> hunk1.add_line(HunkLine("-Old Line 1\n"))
+    >>> hunk1.add_line(HunkLine("-Old Line 2\n"))
+    >>> hunk1.add_line(HunkLine("+New Line A\n"))
+    >>> hunk1.add_line(HunkLine("+New Line B\n"))
+    >>> hunk1.add_line(HunkLine("+New Line C\n"))
+
+    >>> hunk1
+    Hunk(header=(1, 2, 1, 3), lines=5)
+
+
     
-    >>> hunk1 = Hunk(
-    ...     original_start=10, 
-    ...     original_length=2, 
-    ...     new_start=10, 
-    ...     new_length=3, 
-    ...     lines=lines,
-    ...     original_has_newline=True,
-    ...     new_has_newline=True
-    ... )
+    >>> hunk1.old_start
+    1
     
-    >>> hunk1.original_start
-    10
+    >>> hunk1.new_start
+    1
     
-    >>> hunk1.new_length
-    3
-    
-    >>> len(hunk1.lines)
+    >> len(hunk1)
     5
 
-3. **Verify the output of the ``__repr__`` method**, which provides essential debugging information.
+    >>> hunk1[2]
+    HunkLine(Content: 'New Line A', Prefix: '+')
+
+    >>> for line in hunk1:
+    ...     line
+    HunkLine(Content: 'Old Line 1', Prefix: '-')
+    HunkLine(Content: 'Old Line 2', Prefix: '-')
+    HunkLine(Content: 'New Line A', Prefix: '+')
+    HunkLine(Content: 'New Line B', Prefix: '+')
+    HunkLine(Content: 'New Line C', Prefix: '+')
+
+
+The DiffCodeFile Class
+----------------------
+
+A ``DiffCodeFile`` represents all changes within a single source file. It is typically created by the parser, but it can also be used independently. It stores header information and acts as a container for hunks.
 
 .. code:: python
 
-    >>> hunk1 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Hunk(original_start=10, original_length=2, 
-        new_start=10, new_length=3, 
-        lines=[HunkLine(...), HunkLine(...), ...], 
-        original_has_newline=True, new_has_newline=True)
+    >>> from ftw.patch.ftw_patch import DiffCodeFile
 
+Manual initialization (as the parser would do it)
+
+.. code:: python
+
+    >>> source = HeadLine("--- a/old_name.py\n")
+    >>> target = HeadLine("+++ b/new_name.py\n")
+    >>> diff_file = DiffCodeFile(source)
+
+    >>> diff_file
+    DiffCodeFile(orig=a/old_name.py, hunks=0)
+
+    >>> diff_file.new_header = target
+
+1. Testing Attributes
+
+.. code:: python
+
+    >>> diff_file.orig_header
+    HeadLine(Content: 'a/old_name.py', Prefix: '--- ')
+
+    >>> diff_file.new_header
+    HeadLine(Content: 'b/new_name.py', Prefix: '+++ ')
+
+
+2. Testing Container Protocols (empty state)
+
+.. code:: python
+
+    >>> len(diff_file)
+    0
+    >>> list(diff_file)
+    []
+
+3. Adding Data
+
+    >>> hunk = Hunk(hhline1)
+    >>> diff_file.add_hunk(hunk)
+    >>> len(diff_file)
+    1
+
+    >>> diff_file.add_hunk(Hunk(hhline2))
+    >>> len(diff_file)
+    2
+
+
+4. Testing __getitem__
+
+.. code:: python
+
+    >>> diff_file[0]
+    Hunk(header=(1, 2, 1, 3), lines=0)
+
+
+    >>> diff_file[1]
+    Hunk(header=(10, 4, 10, 6), lines=0)
+
+    >>> diff_file
+    DiffCodeFile(orig=a/old_name.py, hunks=2)
+
+    >>> for code_file in diff_file:
+    ...     code_file
+    Hunk(header=(1, 2, 1, 3), lines=0)
+    Hunk(header=(10, 4, 10, 6), lines=0)
 
 .. _ftw-patch-get-argparser-func:
 
@@ -555,7 +865,9 @@ Verify default boolean flags:
     >>> args.verbose
     0
 
-Verify default integers and path settings:
+
+
+Verify integers and path settings:
 
 .. code:: python
 
@@ -636,7 +948,7 @@ Test for non-numeric input, which should raise a `SystemExit` error:
 .. _ftw-patch-dry-run:
 
 Test Case 3: Handling Dry Run (--dry-run)
------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This test confirms that the boolean flag `dry_run` is correctly set.
 
@@ -683,617 +995,203 @@ Test with the long flag (`--verbose`):
 
 ---
 
-
 PatchParser Class
 -------------------
 
 The :py:class:`ftw.patch.ftw_patch.PatchParser` class is responsible for processing the patch file. It reads the patch format (typically Unified Diff) and divides it into logical units (the file data tuples).
 
-Method: Initialization and ``iter_files``
+.. code:: python
+
+    >>> from ftw.patch.ftw_patch import PatchParser, FtwPatchError
+
+
+Line Classification with the PatchParser Factory
+-------------------------------------------------
+
+The :py:meth:`PatchParser.create_line` staticmethod acts as a central factory. It analyzes the prefix of a raw string to determine its semantic role within a patch. Instead of working with plain text, the parser converts each line into a specialized object (such as HeadLine or HunkHeadLine).
+
+This approach ensures that the specific logic for headers, coordinates, and code changes is encapsulated within the correct class. If a line does not match any known pattern, the factory provides a generic PatchLine as a fallback.
+
+The following examples demonstrate how different prefixes trigger the creation of specific objects:
+
+A file header starts with `'---'` or `'+++'`
+
+.. code:: python
+
+    >>> PatchParser.create_line("--- a/old.py")
+    HeadLine(Content: 'a/old.py', Prefix: '--- ')
+
+Hunk headers start with '@@'
+
+.. code:: python
+
+    >>> PatchParser.create_line("@@ -1,2 +1,3 @@")
+    HunkHeadLine(Content: '-1,2 +1,3', Prefix: '@@ ')
+
+Content lines start with '+', '-', or a space
+
+.. code:: python
+
+    >>> PatchParser.create_line("+new_code()")
+    HunkLine(Content: 'new_code()', Prefix: '+')
+
+Unknown lines fall back to a generic PatchLine
+
+.. code:: python
+
+    >>> PatchParser.create_line("Index: manifest.txt")
+    PatchLine(Content: 'Index: manifest.txt')
+
+
+
+
+Streaming Line Transformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``PatchParser.get_lines`` method is a generator that processes an entire stream of text. It iterates through the input line by line, strips trailing newlines, and uses the factory to yield specialized objects. 
+
+This streaming approach allows the parser to handle very large patches efficiently without loading the entire file into memory.
+
+.. code:: python
+
+    >>> raw_input = [
+    ...     "--- a/file.py",
+    ...     "@@ -1,1 +1,1 @@",
+    ...     "+new line"
+    ... ]
+    >>> lines = list(PatchParser.get_lines(raw_input))
+    >>> lines[0]
+    HeadLine(Content: 'a/file.py', Prefix: '--- ')
+    >>> lines[1]
+    HunkHeadLine(Content: '-1,1 +1,1', Prefix: '@@ ')
+    >>> lines[2]
+    HunkLine(Content: 'new line', Prefix: '+')
+
+
+Method: Initialization 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. dropdown:: Setup and temporary patch file ..
-    :chevron: down-up
-    :color: info
-
-    .. code:: python
-
-        >>> import tempfile
-        >>> from pathlib import Path
-        
-        >>> # 1. Create a temporary directory and a valid patch file
-        >>> temp_dir = Path(tempfile.mkdtemp())
-        >>> patch_content = """--- a/old_file.txt
-        ... +++ b/new_file.txt
-        ... @@ -1,2 +1,3 @@
-        ...  Context Line 1
-        ... -Deletion Line 2
-        ... +Addition Line 2a
-        ... +Addition Line 2b
-        ...  Context Line 3
-        ... """
-        >>> patch_file = temp_dir / "test.patch"
-        >>> with patch_file.open("w") as f:
-        ...     _ = f.write(patch_content)
 
 1. Initialize the Parser
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import PatchParser, FtwPatchError
-    >>> patch_parser = PatchParser(patch_file)
+    >>> patch_parser = PatchParser()
     >>> patch_parser # doctest: +ELLIPSIS
-    PatchParser(patch_file_path=PosixPath(...))
+    PatchParser()
 
-3. Iteration and Verification of the parsed data using ``iter_files()``.
+
+High-Level File Iteration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``iter_files`` method is the primary entry point for processing complete patch sets. It implements a high-speed state machine that assembles raw lines into structured objects: ``DiffCodeFile``, ``Hunk``, and specialized ``PatchLine`` types.
+
+The parser is strict: it ensures that headers, hunks, and content lines appear in the correct logical order. If the sequence is corrupted, it raises an ``FtwPatchError``.
 
 .. code:: python
 
-    >>> results = list(patch_parser.iter_files())
-    >>> len(results)
+    >>> patch_data = [
+    ...     "--- a/test.py\n",
+    ...     "+++ b/test.py\n",
+    ...     "@@ -1,1 +1,1 @@\n",
+    ...     " print('Hello World')\n"
+    ... ]
+
+    >>> files = list(patch_parser.iter_files(patch_data))
+
+    >>> len(files)
     1
-    >>> original_path, new_path, hunks = results[0]
-    
-Verification of the paths
+    >>> files[0]
+    DiffCodeFile(orig=a/test.py, hunks=1)
+
+
+Validation and Error Handling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The parser monitors the state of the diff and prevents invalid structures, such as content lines appearing before a hunk header or missing file headers.
+
+Missing '---' header before '@@'
 
 .. code:: python
 
-    >>> str(original_path)
-    'a/old_file.txt'
-    >>> str(new_path)
-    'b/new_file.txt'
-
-Verification of the Hunk content
-
-.. code:: python
-    
-    >>> len(hunks)
-    1
-    >>> hunks[0].original_length
-    2
-    >>> hunks[0].new_length
-    3
-    >>> len(hunks[0].lines)
-    5
-
-.. note::
-    The :py:meth:`~PatchParser.iter_files` method internally orchestrates the entire parsing process by calling several private methods which are implicitly tested here:
-
-    * :py:meth:`~PatchParser._read_file_header` (to identify file paths).
-    * :py:meth:`~PatchParser._read_hunk_header` (to identify hunk statistics).
-    * :py:meth:`~PatchParser._read_hunk_content` (to parse :py:class:`FileLine` objects and newline metadata).
-    * :py:meth:`~PatchParser._read_file` (utility method to consume and return the current line from the patch file).
-    * :py:meth:`~PatchParser._peek_line` (utility method to look ahead at the next line without advancing the position).
-
-Method: Error Handling
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. dropdown:: Setup for invalid patch file ..
-    :chevron: down-up
-    :color: info
-
-    .. code:: python
-
-        >>> invalid_patch_content = """--- a/old_file.txt
-        ... +++ b/new_file.txt
-        ... -Deletion Line
-        ... """
-        >>> invalid_file = temp_dir / "invalid.patch"
-        >>> with invalid_file.open("w") as f:
-        ...     _ = f.write(invalid_patch_content)
-        >>> invalid_parser = PatchParser(invalid_file)
-
-2. Test the error handling (Missing Hunk Header). The iterator should raise an ``FtwPatchError``.
-
-.. code:: python
-
-    >>> try:
-    ...     result = list(invalid_parser.iter_files())
-    ... except FtwPatchError as e:
-    ...     print(f"Expected Error: {e!s}")
-    
-    >>> len(result)
-    0
-
-
-
-.. _ftw-patch-class-init:
-
-FtwPatch Class Initialization
------------------------------
-
-The :py:class:`ftw.patch.ftw_patch.FtwPatch` class encapsulates the patching logic.
-
-First, import the class and its custom exception:
-
-.. code:: python
-
-    >>> from ftw.patch.ftw_patch import FtwPatch, FtwPatchError
-
-Instantiate the class using the default `args` namespace object:
-
-.. code:: python
-
-    >>> args.dry_run
-    False
-    >>> ftw_app = FtwPatch(args=args)
-
-Check if initialization correctly mapped the arguments:
-
-.. code:: python
-
-    >>> ftw_app.patch_file_path.name
-    'patch.diff'
-    >>> ftw_app.strip_count
-    0
-    >>> str(ftw_app.target_directory) 
-    '.'
-
----
-
-.. _ftw-patch-run-method:
-
-FtwPatch.run() Method (Applying the Patch)
-------------------------------------------
-
-This section tests the core application of a patch file.
-
-.. dropdown:: Setup for patching ...
-    :chevron: down-up
-    :color: info
-
-    .. code-block:: python
-
-        >>> target_dir = Path("target")
-        >>> target_dir.mkdir(exist_ok=True)
-        >>> target_file = target_dir / "file.txt"
-        >>> target_file.write_text("Original content.\nSecond line.\n")
-        31
-
-        >>> patch_content = """--- target/file.txt
-        ... +++ target/file.txt
-        ... @@ -1,2 +1,2 @@
-        ... -Original content.
-        ... -Second line.
-        ... +New content.
-        ... +Third line added.
-        ... """
-        >>> patch_file_path = Path("../testinput/patch.diff")
-        >>> patch_file_path.write_text(patch_content)
-        122
-        
-        >>> print(target_file.read_text())
-        Original content.
-        Second line.
-        <BLANKLINE>
-
-The target file content before patching:
-
-.. code:: python
-
-    >>> target_file.read_text()
-    'Original content.\nSecond line.\n'
-
-Run Test Case 1: Default successful run (`verbose=0`). The current working directory (CWD) is temporarily changed to `TEST_CWD` for the patch application:
-
-.. code:: python
-
-    >>> args = parser.parse_args([str(patch_file_path.resolve())])
-    >>> ftw_app = FtwPatch(args=args)
-    >>> ftw_app.run()# doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch from ...Path(...patch.diff') in directory ...Path('.') 
-    (strip=0, ws_norm=False, bl_ignore=False, all_ws_ignore=False).
-    <BLANKLINE>
-    --- Processing file: ...Path('target/file.txt') -> ...Path('target/file.txt') (1 hunks)
-     - Applying Hunk 1/1 (@ Line 1: 2 -> 2)
-     -> Patch successfully verified and stored in memory (2 lines).
-    <BLANKLINE>
-    Starting write/delete phase: Applying changes to file system...
-     -> Successfully wrote ...Path('target/file.txt').
-    <BLANKLINE>
-    Successfully processed 1 file changes.
-    0
-
-Verify the patch application:
-
-.. code:: python
-
-    >>> target_file.read_text()
-    'New content.\nThird line added.\n'
-
-Run Test Case 2: Dry Run (Should not change content). First, revert the target file to its original state:
-
-.. code:: python
-
-    >>> target_file.write_text("Original content.\nSecond line.\n") 
-    31
-
-Execute the dry run:
-
-.. code:: python
-
-    >>> args_dry = parser.parse_args(["--dry-run", str(patch_file_path.resolve())])
-    >>> ftw_app_dry = FtwPatch(args=args_dry)
-    >>> ftw_app_dry.run() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch from ...Path(...) in directory ...Path('.') 
-    (strip=0, ws_norm=False, bl_ignore=False, all_ws_ignore=False).
-    <BLANKLINE>
-    --- Processing file: ...Path('target/file.txt') -> ...Path('target/file.txt') (1 hunks)
-     - Applying Hunk 1/1 (@ Line 1: 2 -> 2)
-     -> Patch successfully verified and stored in memory (2 lines).
-    <BLANKLINE>
-    Dry run completed. No files were modified.
-    <BLANKLINE>
-    Successfully processed 1 file changes.
-    0
-    
-Verify the content remains unchanged:
-
-.. code:: python
-
-    >>> target_file.read_text()
-    'Original content.\nSecond line.\n'
-
----
-
-FtwPatch.run() Test Case 3: Strip Count (-p / --strip)
-------------------------------------------------------
-
-This test verifies the effect of `strip_count` on path resolution, simulating a patch created from a repository root.
-
-.. dropdown:: Setup for strip count test ...
-    :chevron: down-up
-    :color: info
-
-    .. code-block:: python
-        
-        >>> target_file_deep = Path("project/src/file_strip.py")
-        >>> target_file_deep.parent.mkdir(parents=True, exist_ok=True)
-        >>> target_file_deep.write_text("def old_function(): pass\n")
-        25
-
-        >>> strip_patch_content = """--- a/project/src/file_strip.py
-        ... +++ b/project/src/file_strip.py
-        ... @@ -1 +1 @@
-        ... -def old_function(): pass
-        ... +def new_function(): pass
-        ... """
-        >>> strip_patch_path = Path("../testinput/strip.diff")
-        >>> strip_patch_path.write_text(strip_patch_content)
-        128
-
-        >>> print(target_file_deep.read_text())
-        def old_function(): pass
-        <BLANKLINE>
-
-Target file content before stripping:
-
-.. code:: python
-
-    >>> target_file_deep.read_text()
-    'def old_function(): pass\n'
-
-Run Test Case: Strip Count `p=1`. This strips the leading path component ('a/') from the patch file:
-
-.. code:: python
-
-    >>> args_strip = parser.parse_args(["-p", "1", str(strip_patch_path.resolve())])
-    >>> ftw_app_strip = FtwPatch(args=args_strip)
-    >>> ftw_app_strip.run() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch from ...Path(...) in directory ...Path('.') 
-    (strip=1, ws_norm=False, bl_ignore=False, all_ws_ignore=False).
-    <BLANKLINE>
-    --- Processing file: ...Path('project/src/file_strip.py') -> ...Path('project/src/file_strip.py') (1 hunks)
-     - Applying Hunk 1/1 (@ Line 1: 1 -> 1)
-     -> Patch successfully verified and stored in memory (1 lines).
-    <BLANKLINE>
-    Starting write/delete phase: Applying changes to file system...
-     -> Successfully wrote ...Path('project/src/file_strip.py').
-    <BLANKLINE>
-    Successfully processed 1 file changes.
-    0
-    
-Verify the patch application:
-
-.. code:: python
-
-    >>> target_file_deep.read_text()
-    'def new_function(): pass\n'
-
----
-
-FtwPatch.run() Test Case 4: Whitespace Normalization
-----------------------------------------------------
-
-This section tests the FTW-specific normalization flags using a patch that intentionally contains differences in spacing and blank lines, causing a standard patch failure.
-
-.. dropdown:: Setup for Whitespace Test ...
-    :chevron: down-up
-    :color: info
-
-    .. code-block:: python
-        
-        >>> ws_target_file = Path("ws_target.py")
-        >>> ws_target_file.write_text("def fn(): \n    pass  # End space\n\n    return\n\n\n")
-        47
-
-        >>> ws_patch_content = """--- ws_target.py
-        ... +++ ws_target.py
-        ... @@ -1,5 +1,4 @@
-        ...  def fn():
-        ... -    pass  # End space
-        ... -
-        ... -    return
-        ... +    pass   # More space
-        ... +    return
-        ... """
-        >>> ws_patch_path = Path("../testinput/ws_test.diff")
-        >>> ws_patch_path.write_text(ws_patch_content)
-        135
-
-        >>> print(ws_target_file.read_text())
-        def fn(): 
-            pass  # End space
-        <BLANKLINE>
-            return
-        <BLANKLINE>
-        <BLANKLINE>
-        <BLANKLINE>
-
-
-Target file content before testing:
-
-.. code:: python
-
-    >>> ws_target_file.read_text()
-    'def fn(): \n    pass  # End space\n\n    return\n\n\n'
-
-Run Test Case 4a: Default Run. The patch should fail due to whitespace and blank line mismatches. We use `-v` to show the failure log:
-
-.. code:: python
-
-    >>> args_fail = parser.parse_args(["-v", str(ws_patch_path.resolve())])
-    >>> ftw_app_fail = FtwPatch(args=args_fail)
-    >>> ftw_app_fail.run() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch...
-    (strip=0, ws_norm=False, bl_ignore=False, all_ws_ignore=False).
-    <BLANKLINE>
-    --- Processing file: ...Path('ws_target.py') -> ...Path('ws_target.py') (1 hunks)
-     - Applying Hunk 1/1 (@ Line 1: 5 -> 4)
-    <BLANKLINE>
-    Patch failed: Context mismatch in file 'ws_target.py' at expected line 1: Expected ''def fn():'', found ''def fn(): ''.
-    1
-    
-    
-Verify failure (Content must be unchanged):
-
-.. code:: python
-
-    >>> ws_target_file.read_text()
-    'def fn(): \n    pass  # End space\n\n    return\n\n\n'
-
-Run Test Case 4b: Normalize Non-Leading Whitespace. Revert the file and apply the patch using `--normalize-ws`. This ignores differences in spaces/tabs within lines:
-
-.. code:: python
-
-    >>> ws_target_file.write_text("def fn():\n    pass  # End space\n\n    return\n\n\n")
-    46
-
-.. code:: python
-
-    >>> args_norm = parser.parse_args(["--normalize-ws", str(ws_patch_path.resolve())])
-    >>> ftw_app_norm = FtwPatch(args=args_norm)
-    >>> ftw_app_norm.run() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch from ...Path('...') in directory ...Path('.') 
-    (strip=0, ws_norm=True, bl_ignore=False, all_ws_ignore=False).
-    <BLANKLINE>
-    --- Processing file: ...Path('ws_target.py') -> ...Path('ws_target.py') (1 hunks)
-     - Applying Hunk 1/1 (@ Line 1: 5 -> 4)
-     -> Patch successfully verified and stored in memory (5 lines).
-    <BLANKLINE>
-    Starting write/delete phase: Applying changes to file system...
-     -> Successfully wrote ...Path('ws_target.py').
-    <BLANKLINE>
-    Successfully processed 1 file changes.
-    0
-    
-Verify success:
-
-.. code:: python
-
-    >>> ws_target_file.read_text()
-    'def fn():\n    pass   # More space\n    return\n\n\n'
-
-Run Test Case 4c: Ignore All Whitespace. Revert the file and apply the patch using `--ignore-all-ws`. This overrides other flags and handles all whitespace differences, including blank lines:
-
-.. dropdown:: Setup testfile
-    :chevron: down-up
-
-    .. code:: python
-
-        >>> ws_target_file.write_text("def fn():\n    pass  # End space\n\n    return\n\n\n")
-        46
-
-.. code:: python
-
-    >>> args_all_ws = parser.parse_args(["--ignore-all-ws", str(ws_patch_path.resolve())])
-    >>> ftw_app_all_ws = FtwPatch(args=args_all_ws)
-    >>> ftw_app_all_ws.run() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch from ...Path('...') in directory ...Path('.') 
-    (strip=0, ws_norm=False, bl_ignore=False, all_ws_ignore=True).
-    <BLANKLINE>
-    --- Processing file: ...Path('ws_target.py') -> ...Path('ws_target.py') (1 hunks)
-     - Applying Hunk 1/1 (@ Line 1: 5 -> 4)
-     -> Patch successfully verified and stored in memory (5 lines).
-    <BLANKLINE>
-    Starting write/delete phase: Applying changes to file system...
-     -> Successfully wrote ...Path('ws_target.py').
-    <BLANKLINE>
-    Successfully processed 1 file changes.
-    0
-
-Verify success:
-
-.. code:: python
-
-    >>> ws_target_file.read_text()
-    'def fn():\n    pass   # More space\n    return\n\n\n'
-
-
-
-FtwPatch.run() Test Case 5: Target File Missing
------------------------------------------------
-
-This test verifies the handling of a patch targeting a non-existent file when no creation flag is used.
-
-.. dropdown:: Setup testfile
-    :chevron: down-up
-    :color: info
-
-    .. code:: python
-
-        >>> missing_target_patch_content = """--- missing_file.txt
-        ... +++ missing_file.txt
-        ... @@ -0,0 +1,1 @@
-        ... +New content.
-        ... """
-        >>> missing_patch_path = Path("../testinput/missing.diff")
-        >>> missing_patch_path.write_text(missing_target_patch_content)
-        72
-
-    >>> args_missing = parser.parse_args([str(missing_patch_path.resolve())])
-    >>> ftw_app_missing = FtwPatch(args=args_missing)
-    >>> ftw_app_missing.run() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch...
-    (strip=0, ws_norm=False, bl_ignore=False, all_ws_ignore=False).
-    <BLANKLINE>
-    --- Processing file: ...Path('missing_file.txt') -> ...Path('missing_file.txt') (1 hunks)
-    <BLANKLINE>
-    Patch failed: Original file not found for patching: ...Path('missing_file.txt')
-    1
-
----
-
-Tests for Pure Deletion Diff Patches
-------------------------------------
-
-Patches can also contain instructions that initiate the **deletion of a file**. This instruction is composed of two header lines in the unified diff format. Note that for **Windows operating systems**, `nul` should be used instead of `/dev/null`.
-
-First, we set up the target directory where the file will be located.
-
-.. dropdown:: Setup testfile
-    :chevron: down-up
-    :color: info
-
-    .. code:: python
-        
-
-        >>> target_dir = Path("target")
-        >>> target_dir.mkdir(exist_ok=True)
-
-Next, we define the content of a **pure deletion patch**. The `+++ /dev/null` line signals that the new version of the file is empty, instructing the patching utility to delete the original file. We also define the target file's path.
-
-.. code:: python
-
-    >>> del_patch_content = """--- a/file_to_delete.txt
-    ... +++ /dev/null
-    ... """
-
-    >>> target_file = target_dir / "file_to_delete.txt"
-
-To make the patch applicable, we first create the target file temporarily and write the deletion patch content to a file.
-
-.. dropdown:: Setup testfile
-    :chevron: down-up
-    :color: info
-
-    .. code:: python
-
-        >>> target_file.write_text("Diese Datei wird gelöscht.")
-        26
-        >>> del_patch_path = Path("../testinput/del_test.diff")
-        >>> del_patch_path.write_text(del_patch_content)
-        39
-
-Now, we parse the command line arguments required to apply the patch. We specify the patch file path, the target directory, and set the strip count (`-p 1`).
-
-.. code:: python
-
-    >>> args = parser.parse_args([
-    ...     str(del_patch_path), 
-    ...     "-d", str(target_dir), 
-    ...     "-p", "1"
-    ... ])
-
-We initialize the **`FtwPatch`** object with the parsed arguments.
-
-.. code:: python
-
-    >>> ftw_patcher = FtwPatch(args)
-
-Before applying the patch, we verify that the file designated for deletion currently **exists** in the target directory.
-
->>> target_file.is_file()
-True
-
-Apply the patch. The output confirms that the file is marked for deletion and successfully removed during the write/delete phase.
-
-.. code:: python
-
-    >>> ftw_patcher.apply_patch() # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    Applying patch ...
-    --- Processing file: ...Path('file_to_delete.txt') -> '/dev/null' ...
-        -> Marked for deletion.
-    Starting write/delete phase: Applying changes to file system...
-        -> Successfully deleted ...Path('...file_to_delete.txt').
-    Successfully processed 1 file changes.
-    0
-
-After successful patching, the target file **should no longer exist** on the file system.
-
-.. code:: python
-
-    >>> target_file.is_file()
-    False
-
-
-If the patch is accidentally used again, or if the file did not exist before the first application (as is the case now), the patching utility **will throw an error**. This tests the deletion error path (Lücken **1103–1106**) where the file to be deleted is not found.
-
-.. code:: python
-
-
-    >>> ftw_patcher.apply_patch() 
+    >>> broken_patch = ["@@ -1,1 +1,1 @@\\n", " content\\n"]
+    >>> list(patch_parser.iter_files(broken_patch))
     Traceback (most recent call last):
-            ...
-    ftw.patch.ftw_patch.FtwPatchError: File to be deleted not found: PosixPath('target/file_to_delete.txt')
+        ...
+    ftw.patch.ftw_patch.FtwPatchError: Line 1: Found '@@' before file headers
 
 
+Processing Complex Patches
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+In real-world scenarios, a single patch often contains changes for multiple files, and each file may contain several hunks. The ``PatchParser`` handles these transitions automatically.
 
+The following example demonstrates a stream containing two different files:
 
+.. code:: python
 
-
-
-FtwPatch Cleanup
---------------------
-
-.. dropdown:: Cleanup of all temporary files and directories created during testing.
-    :chevron: down-up
-    :color: info
+    >>> complex_patch = [
+    ...     "--- a/config.py\n", 
+    ...     "+++ b/config.py\n",
+    ...     "@@ -1,1 +1,2 @@\n", 
+    ...     "-DEBUG = False\n", 
+    ...     "+DEBUG = True\n",
+    ...     "@@ -10,1 +12,1 @@\n", 
+    ...     "  VERSION = '1.0'\n",
+    ...     "--- a/main.py\n", 
+    ...     "+++ b/main.py\n",
+    ...     "@@ -5,1 +5,1 @@\n", 
+    ...     "-print('start')\n", 
+    ...     "+print('running')\n"
+    ... ]
+    >>> parser = PatchParser()
+    >>> files = list(parser.iter_files(complex_patch))
     
-    .. code:: python
+    >>> # Verify the first file and its two hunks
+    >>> config_file = files[0]
+    >>> config_file
+    DiffCodeFile(orig=a/config.py, hunks=2)
 
-        >>> for file_ in target_dir.iterdir():
-        ...     file_.unlink()
-        >>> target_dir.rmdir()
-        >>> target_file_deep.unlink(missing_ok=True)
-        >>> target_file_deep.parent.rmdir()
-        >>> target_file_deep.parent.parent.rmdir()
-        >>> ws_target_file.unlink(missing_ok=True)
-        >>> patch_file_path.unlink(missing_ok=True)
-        >>> strip_patch_path.unlink(missing_ok=True)
-        >>> ws_patch_path.unlink(missing_ok=True)
-        >>> missing_patch_path.unlink(missing_ok=True)
+    >>> len(config_file)
+    2
+
+    >>> config_file.hunks # doctest: +NORMALIZE_WHITESPACE
+    [Hunk(header=(1, 1, 1, 2), lines=2), 
+     Hunk(header=(10, 1, 12, 1), lines=1)]
+
+    >>> len(config_file.hunks[0])
+    2
+
+    >>> config_file.hunks[0].lines # doctest: +NORMALIZE_WHITESPACE
+    [HunkLine(Content: 'DEBUG = False', Prefix: '-'), 
+     HunkLine(Content: 'DEBUG = True', Prefix: '+')]
+
+    >>> # Verify the second file
+    >>> main_file = files[1]
+    >>> main_file
+    DiffCodeFile(orig=a/main.py, hunks=1)
+
+    >>> len(main_file)
+    1
+
+    >>> main_file.hunks
+    [Hunk(header=(5, 1, 5, 1), lines=2)]
+
+    >>> len(main_file.hunks[0])
+    2
+
+    >>> main_file.hunks[0].lines # doctest: +NORMALIZE_WHITESPACE
+    [HunkLine(Content: "print('start')", Prefix: '-'), 
+     HunkLine(Content: "print('running')", Prefix: '+')]
 
 
+Robustness: Empty Streams
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``PatchParser`` is designed to handle empty input streams without raising errors. If the provided iterable is empty, the generator simply terminates, yielding no objects. This behavior is crucial for processing potentially empty patch files or filtered streams.
+
+.. code:: python
+
+    >>> empty_stream = []
+    >>> list(parser.iter_files(empty_stream))
+    []
 

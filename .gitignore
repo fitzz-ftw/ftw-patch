@@ -1,11 +1,24 @@
 venv
+.venv
+
 *.egg-info
 .pytest_cache
 __pycache__
+
+.mypy_cache
+
+# Sphinx generated files
 doc/build
-doc/doc
+
+# Doctest generated files
 doc/source/devel/testhome
 .coverage
+
+# Build generated files
 dist
-src/ftw_patch/_version.py
+
+# Setupzools.scm generated file
 src/ftw/patch/_version.py
+
+# Autosummary generated files
+doc/source/devel/api/

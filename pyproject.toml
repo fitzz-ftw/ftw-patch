@@ -19,9 +19,34 @@ name = "ftw-patch"
 dynamic = ["version"]
 description = "Ein Unicode resistenter Ersatz für patch."
 readme = "README.md"
+requires-python = ">=3.9"
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Text Processing :: Filters",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
+
+
+# [project.urls]
+# Homepage = "https://github.com/FitzzTeXnikWelt/ftw-patch"
+# Documentation = "https://ftw-patch.readthedocs.io/"
+# Repository = "https://github.com/FitzzTeXnikWelt/ftw-patch.git"
+# Issues = "https://github.com/FitzzTeXnikWelt/ftw-patch/issues"
+
+
+
 
 [project.scripts]
-ftwpatch = "ftw_patch.ftw_patch:prog_ftw_patch"
+ftwpatch = "ftw.patch.ftw_patch:prog_ftw_patch"
 
 [project.optional-dependencies]
 doc =[
@@ -43,7 +68,7 @@ test=[
 ]
 lint=["ruff",]
 dev = [
-    "ftw_patch[test,doc,lint]",
+    "ftw-patch[test,doc,lint]",
 ]
 
 
@@ -61,7 +86,7 @@ egg_base = "."
 
 [tool.ruff]
 src = ["src"]
-line-length = 88
+line-length = 100
 
 [tool.ruff.lint]
 # E/W = Pycodestyle (Standard-Fehler/Warnungen)
