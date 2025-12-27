@@ -61,5 +61,12 @@
         }
     },
     "git.followTagsWhenSync": true,
-    "liveServer.settings.root": "/doc/build/html/"
+    "liveServer.settings.root": "/doc/build/dirhtml/",
+    "esbonio.sphinx.pythonCommand": {
+        "command": [
+            "python",
+            "-m",
+            "esbonio.sphinx_agent"
+        ]
+    }
 }
