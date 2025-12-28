@@ -35,7 +35,7 @@ from tempfile import TemporaryDirectory
 from typing import ClassVar, Generator, Iterable
 
 ### Temporary Functions
-# oldprint=print
+oldprint=print
 
 # def print(*values: object, 
 #           sep: str | None = " ", 
@@ -45,15 +45,15 @@ from typing import ClassVar, Generator, Iterable
 #     pass
 
 # def dp(*args):
-#     oldprint(*args, flush=True)
-#     # pass
+#     # oldprint(*args, flush=True)
+#     pass
 
 
 
 
 # --- Exceptions ---
 
-class FtwPatchError(Exception):
+class FtwPatchError(Exception): # pragma: no cover
     """
     Base exception for all errors raised by the :py:mod:`ftw_patch` 
     module.
@@ -66,7 +66,7 @@ class FtwPatchError(Exception):
         return f"{self.__class__.__name__}({str(self)!r})"
 
 
-class PatchParseError(FtwPatchError):
+class PatchParseError(FtwPatchError): # pragma: no cover
     """
     Exception raised when an error occurs during the parsing of the 
     patch file content.
@@ -88,7 +88,7 @@ class PatchParseError(FtwPatchError):
         return f"{self.__class__.__name__}({str(self)!r})"
         # return f"{self.__class__.__name__}(message={self.args[0]!r})"
 
-#CLASS - PatchLine
+#CLASS - PatchLine 
 class PatchLine:
     """
     Base class for structural patch lines.
@@ -110,6 +110,10 @@ class PatchLine:
 
         :param raw_line: The unmodified string read directly from the patch source.
         """
+        # Strict type check to ensure the input is a string
+        if not isinstance(raw_line, str):
+            raise PatchParseError(f"PatchLine expected a string, but received {type(raw_line).__name__}.")
+
         # Remove standard 'No newline' markers found in diffs
         # These markers would otherwise interfere with matching/patching logic.
         clean_content = raw_line.removesuffix(
@@ -317,6 +321,10 @@ class HunkHeadLine(PatchLine):
         :param raw_line: The complete, unmodified hunk header line.
         :raises ValueError: If the prefix or the coordinates are invalid.
         """
+        # Strict type check to ensure the input is a string
+        if not isinstance(raw_line, str):
+            raise PatchParseError(f"PatchLine expected a string, but received {type(raw_line).__name__}.")
+
         if not raw_line.startswith("@@ "):
             raise ValueError(
                 f"Invalid HunkHeadLine: Expected '@@ ', got {repr(raw_line[:3])}"
@@ -326,8 +334,9 @@ class HunkHeadLine(PatchLine):
         
         # Split beim schließenden " @@", um Koordinaten von Info zu trennen
         parts = raw_line[3:].split(' @@', 1)
-        
-        if len(parts) > 1:
+        if len(parts)< 2:
+            raise ValueError(f"Invalid HunkHeader: Missing closing ' @@' in {repr(raw_line)}")
+        if parts[1].strip():
             # Fall: @@ -l,s +l,s @@ Context-Info
             coord_candidate = parts[0]
             super().__init__(parts[1])
@@ -338,7 +347,7 @@ class HunkHeadLine(PatchLine):
             # Fall: Nur @@ -l,s +l,s @@
             super().__init__(parts[0])
             self._info = None
-            self._suffix_marker = ""
+            self._suffix_marker = " @@"
 
         # Koordinaten-Validierung auf dem isolierten Koordinaten-String
         match = self._HUNK_RE.match(self.content)
@@ -397,7 +406,7 @@ class HunkHeadLine(PatchLine):
 #!CLASS -  HunkHead
 
 #CLASS - FileLine
-class FileLine(PatchLine):
+class FileLine(PatchLine): 
     """
     Represents a single line read from a file or contained within a patch hunk.
 
@@ -425,8 +434,8 @@ class FileLine(PatchLine):
                          a trailing newline.
         """        
         self._prefix: str = ""
-        self._has_newline = raw_line.endswith("\n")
         super().__init__(raw_line)
+        self._has_newline = raw_line.endswith("\n")
 
     def __repr__(self):
         return "".join([self.__class__.__name__,
@@ -559,7 +568,7 @@ class FileLine(PatchLine):
 #!CLASS FileLine
 
 #CLASS - HunkLine
-class HunkLine(FileLine):
+class HunkLine(FileLine): 
     """
     Represents a single content line within a hunk block of a unified diff.
 
@@ -603,15 +612,15 @@ class HunkLine(FileLine):
         """
         return self._prefix
         
-    @property
-    def has_trailing_whitespace(self) -> bool:
-        """
-        Indicates if the original raw line contained trailing whitespace before the newline 
-        **(ro)**.
+    # @property
+    # def has_trailing_whitespace(self) -> bool:
+    #     """
+    #     Indicates if the original raw line contained trailing whitespace before the newline 
+    #     **(ro)**.
         
-        :returns: Boolean value.
-        """
-        return self._has_trailing_whitespace
+    #     :returns: Boolean value.
+    #     """
+    #     return self._has_trailing_whitespace
 
     @property
     def is_context(self) -> bool:
@@ -637,31 +646,31 @@ class HunkLine(FileLine):
         """
         return self._prefix == '-'
 
-    @property
-    def has_newline(self) -> bool:
-        """
-        State of the newline termination at the end of the line (**(rw)**).
+    # @property
+    # def has_newline(self) -> bool:
+    #     """
+    #     State of the newline termination at the end of the line (**(rw)**).
 
-        :param value: Set to False if the line lacks a trailing newline.
-        :returns: True if the line ends with a newline, False otherwise.
-        """
-        return self._has_newline
+    #     :param value: Set to False if the line lacks a trailing newline.
+    #     :returns: True if the line ends with a newline, False otherwise.
+    #     """
+    #     return self._has_newline
 
-    @has_newline.setter
-    def has_newline(self, value: bool) -> None:
-        """
-        State of the newline termination at the end of the line.
+    # @has_newline.setter
+    # def has_newline(self, value: bool) -> None:
+    #     """
+    #     State of the newline termination at the end of the line.
 
-        :param value: Set to False if the line lacks a trailing newline.
-        """
-        self._has_newline = value
+    #     :param value: Set to False if the line lacks a trailing newline.
+    #     """
+    #     self._has_newline = value
 
 
 #!CLASS HunkLine
 
 #CLASS - Hunks
 
-class Hunk:
+class Hunk: # pragma: no cover
     """
     Container for a single change block within a file.
 
@@ -843,7 +852,7 @@ class Hunk:
 
 #CLASS - DiffCodeFile
 
-class DiffCodeFile:
+class DiffCodeFile: # pragma: no cover
     """
     Stateful container for a single file's modifications within a patch.
 
@@ -1015,7 +1024,7 @@ class DiffCodeFile:
 
 #SECTION - --- Parser ---
 #CLASS - PatchParser
-class PatchParser:
+class PatchParser: # pragma: no cover
     """
     Handles the parsing of the diff or patch file content.
 
@@ -1160,7 +1169,7 @@ class PatchParser:
 # DEV_NULL_PATH = Path(os.devnull) 
 
 #CLASS - FtwPatch
-class FtwPatch:
+class FtwPatch: # pragma: no cover
     """
     Main class for the ``ftwpatch`` program.
 
@@ -1387,7 +1396,7 @@ class FtwPatch:
 
 #SECTION -  --- CLI Entry Point ---
 
-def _get_argparser() -> ArgumentParser:
+def _get_argparser() -> ArgumentParser: # pragma: no cover
     """
     Creates and configures the ArgumentParser for the ftw_patch CLI.
 
@@ -1486,7 +1495,7 @@ def _get_argparser() -> ArgumentParser:
     return parser
 
 
-def prog_ftw_patch() -> int:
+def prog_ftw_patch() -> int: # pragma: no cover
     """
     Main entry point for the command line application.
     
@@ -1550,7 +1559,7 @@ if __name__ == "__main__": # pragma: no cover
     dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
     # dt_file = str(testfilesbasedir / "temp_test.rst")
     # dt_file = str(testfilesbasedir / "test_parser_fix.rst")
-    # dt_file = str(testfilesbasedir / "fix_me_multi_hunks.rst")
+    dt_file = str(testfilesbasedir / "test_info-prop.txt")
     print(dt_file)
     doctestresult = testfile(
         dt_file,

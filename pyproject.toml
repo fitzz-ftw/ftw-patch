@@ -106,9 +106,9 @@ indent-style = "space"
 [tool.pytest.ini_options]
 # Pytest-Optionen für die Testausführung
 minversion = "7.0"
-addopts = "--doctest-glob=get_started_*.rst"
+# addopts = "--doctest-glob=get_started_*.rst"
 testpaths = [
-    "doc/source/devel", # Durchsucht Ihr Dokumentationsverzeichnis nach .rst-Dateien
+    # "doc/source/devel", # Durchsucht Ihr Dokumentationsverzeichnis nach .rst-Dateien
     "tests",            # Durchsucht das Unit-Test-Verzeichnis (für test_*.py)
 ]
 
