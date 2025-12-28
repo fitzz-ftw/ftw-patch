@@ -28,6 +28,7 @@ Ein Unicode resistenter Ersatz für patch.
 """
 import re
 import sys
+import tempfile
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from shutil import copy2, move
@@ -35,7 +36,7 @@ from tempfile import TemporaryDirectory
 from typing import ClassVar, Generator, Iterable
 
 ### Temporary Functions
-oldprint=print
+# oldprint=print
 
 # def print(*values: object, 
 #           sep: str | None = " ", 
@@ -60,7 +61,7 @@ class FtwPatchError(Exception): # pragma: no cover
 
     **Inheritance Hierarchy**
         * :py:class:`FtwPatchError`
-        * :py:class:`builtins.Exception`
+        * :py:class:`Exception`
     """
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({str(self)!r})"
@@ -74,7 +75,7 @@ class PatchParseError(FtwPatchError): # pragma: no cover
     **Inheritance Hierarchy**
         * :py:class:`PatchParseError`
         * :py:class:`FtwPatchError`
-        * :py:class:`builtins.Exception`
+        * :py:class:`Exception`
     """
     def __init__(self, message: str) -> None:
         """
@@ -670,7 +671,7 @@ class HunkLine(FileLine):
 
 #CLASS - Hunks
 
-class Hunk: # pragma: no cover
+class Hunk: 
     """
     Container for a single change block within a file.
 
@@ -785,7 +786,7 @@ class Hunk: # pragma: no cover
         """
         # 1. Indizierung vorbereiten (old_start aus dem Unified Diff Header)
         # Wir korrigieren auf 0-basierten Index
-        start_idx = self.header.old_start - 1
+        start_idx = self.old_start - 1
         
         # 2. Erwarteten Kontext extrahieren
         expected_hunk_lines = [lin for lin in self.lines if not lin.is_addition]
@@ -793,7 +794,7 @@ class Hunk: # pragma: no cover
         # 3. Validierung der Grenzen
         if start_idx < 0 or (start_idx + len(expected_hunk_lines)) > len(lines):
             raise FtwPatchError(
-                f"Hunk starting at line {self.header.old_start} exceeds file bounds. "
+                f"Hunk starting at line {self.old_start} exceeds file bounds. "
                 f"File has {len(lines)} lines."
             )
             
@@ -802,7 +803,7 @@ class Hunk: # pragma: no cover
         # 4. Inhalts-Check mit Whitespace-Logik (ruft interne Methode auf)
         if not self._compare_context(expected_hunk_lines, actual_file_lines, options):
             raise FtwPatchError(
-                f"Hunk mismatch at line {self.header.old_start}. "
+                f"Hunk mismatch at line {self.old_start}. "
                 "The actual file content does not match the hunk's context."
             )
 
@@ -852,7 +853,7 @@ class Hunk: # pragma: no cover
 
 #CLASS - DiffCodeFile
 
-class DiffCodeFile: # pragma: no cover
+class DiffCodeFile: 
     """
     Stateful container for a single file's modifications within a patch.
 
@@ -963,7 +964,7 @@ class DiffCodeFile: # pragma: no cover
         :raises FtwPatchError: If any hunk fails to apply.
         """
         # 1. Datei einlesen (Lesender Zugriff)
-        current_lines = self._read_file(self.source_path)
+        current_lines = self._read_file(self.get_source_path(strip=options.strip_count))
 
         # 2. Hunks sortieren (wie besprochen: rückwärts)
         sorted_hunks = sorted(self.hunks, key=lambda h: h.old_start, reverse=True)
@@ -974,6 +975,28 @@ class DiffCodeFile: # pragma: no cover
 
         # Wir geben die fertigen Objekte einfach an den Controller zurück
         return current_lines
+
+    def get_source_path(self, strip: int = 0) -> Path:
+        """
+        Determine the source file path based on the header and strip level.
+
+        :param strip: Number of path components to remove from the start.
+        :returns: A Path object for the source file.
+        """
+        # Wir delegieren die Arbeit an das HeadLine-Objekt
+        return Path(self.orig_header.get_path(strip))
+
+    @property
+    def _temp_path(self) -> Path:
+        """
+        Generates a unique path for the staging file **(ro)**.
+
+        The path is located in the system's temporary directory and includes
+        the object's ID to avoid collisions during concurrent processing.
+
+        :returns: A Path object for a temporary staging file.
+        """
+        return Path(tempfile.gettempdir()) / f"ftw_patch_{id(self)}.tmp"
 
     def _read_file(self, path: Path) -> list[FileLine]:
         """
@@ -1004,7 +1027,7 @@ class DiffCodeFile: # pragma: no cover
         :returns: The Path to the generated temporary file.
         :raises FtwPatchError: If writing to the staging area fails.
         """
-        temp_file = self._get_temp_path() 
+        temp_file = self._temp_path 
         
         try:
             with temp_file.open('w', encoding='utf-8') as f:
@@ -1184,7 +1207,7 @@ class FtwPatch: # pragma: no cover
         :param args: The argparse.Namespace object containing command-line arguments.
                      Expected attributes: patch_file, strip_count, target_directory,
                      normalize_whitespace, ignore_blank_lines, ignore_all_whitespace.
-        :raises builtins.FileNotFoundError: If the patch file does not exist.
+        :raises FileNotFoundError: If the patch file does not exist.
         :raises FtwPatchError: If any internal error occurs during setup.
         """
         self._args = args
