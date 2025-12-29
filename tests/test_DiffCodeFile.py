@@ -3,7 +3,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from ftw.patch.ftw_patch import DiffCodeFile, FileLine, FtwPatchError, HeadLine, Hunk, HunkHeadLine
+from ftw.patch.ftw_patch import (
+    DiffCodeFile,
+    FileLine,
+    FtwPatchError,
+    HeadLine,
+    Hunk,
+    HunkHeadLine,
+    PatchParseError,
+)
 
 
 class TestDiffCodeFile:
@@ -214,3 +222,15 @@ class TestDiffCodeFile:
         assert result[0].content == "patched content"
         mock_path.open.assert_called_once()
         mock_hunk.apply.assert_called_once()
+
+    def test_diff_code_file_init_with_wrong_header_type(self):
+        """
+        Ensure DiffCodeFile rejects initialization with a 'new' header (+++).
+        It must always start with an 'original' header (---).
+        """
+        # Create a 'new' header line
+        wrong_header = self.header_new
+        
+        # Verification: Must raise FtwPatchError
+        with pytest.raises(PatchParseError, match="must start with an original header"):
+            DiffCodeFile(wrong_header)

@@ -46,7 +46,7 @@ from typing import ClassVar, Generator, Iterable
 #     pass
 
 # def dp(*args):
-#     # oldprint(*args, flush=True)
+    # oldprint(*args, flush=True)
 #     pass
 
 
@@ -793,7 +793,7 @@ class Hunk:
         
         # 3. Validierung der Grenzen
         if start_idx < 0 or (start_idx + len(expected_hunk_lines)) > len(lines):
-            raise FtwPatchError(
+            raise PatchParseError(
                 f"Hunk starting at line {self.old_start} exceeds file bounds. "
                 f"File has {len(lines)} lines."
             )
@@ -802,7 +802,7 @@ class Hunk:
 
         # 4. Inhalts-Check mit Whitespace-Logik (ruft interne Methode auf)
         if not self._compare_context(expected_hunk_lines, actual_file_lines, options):
-            raise FtwPatchError(
+            raise PatchParseError(
                 f"Hunk mismatch at line {self.old_start}. "
                 "The actual file content does not match the hunk's context."
             )
@@ -875,6 +875,17 @@ class DiffCodeFile:
         if not isinstance(orig_header, HeadLine):
             raise TypeError(f"orig_header must be HeadLine, got {type(orig_header).__name__}")
         
+        if  not orig_header.is_orig:
+            msg_info = "".join([
+                    f"{orig_header.prefix}",
+                    f"{orig_header.content}",
+                    f"{orig_header.info if orig_header.info else ''}"
+                ])
+            raise PatchParseError(
+                f"DiffCodeFile must start with an original header (---), "
+                f"got '{msg_info}'"
+            ) 
+
         self._orig_header = orig_header
         self._new_header: HeadLine | None = None
         self._hunks: list[Hunk] = []
@@ -1013,7 +1024,7 @@ class DiffCodeFile:
             with path.open('r', encoding='utf-8') as f:
                 return [FileLine(line) for line in f]
         except (OSError, IOError) as e:
-            raise FtwPatchError(f"Could not read file {path}: {e}")
+            raise PatchParseError(f"Could not read file {path}: {e}")
 
     def _write_to_staging(self, lines: list[FileLine]) -> Path:
         """
@@ -1035,7 +1046,7 @@ class DiffCodeFile:
                     f.write(line.line_string)
             return temp_file
         except (OSError, IOError) as e:
-            raise FtwPatchError(f"Could not write to staging file {temp_file}: {e}")
+            raise PatchParseError(f"Could not write to staging file {temp_file}: {e}")
 
     def __repr__(self) -> str:
         return " ".join([f"{self.__class__.__name__}(orig={self._orig_header.content},", 
@@ -1047,7 +1058,7 @@ class DiffCodeFile:
 
 #SECTION - --- Parser ---
 #CLASS - PatchParser
-class PatchParser: # pragma: no cover
+class PatchParser: 
     """
     Handles the parsing of the diff or patch file content.
 
@@ -1125,10 +1136,9 @@ class PatchParser: # pragma: no cover
         """
         current_file: DiffCodeFile | None = None
         current_hunk: Hunk | None = None
-
+        line_no = 0
         try:
             for line_no, raw_line in enumerate(stream, start=1):
-                
                 # --- THE SIEVE (Inline for maximum performance) ---
                 # 1. Handle File Headers
                 if raw_line.startswith(('--- ', '+++ ')):
@@ -1139,16 +1149,20 @@ class PatchParser: # pragma: no cover
                             yield current_file
                         current_file = DiffCodeFile(line)
                         current_hunk = None
+                        continue
                     
                     elif line.is_new:
                         if current_file is None:
-                            raise FtwPatchError(f"Line {line_no}: Found '+++' before '---'")
+                            raise PatchParseError(f"Line {line_no}: Found '+++' before '---'")
                         current_file.new_header = line
+                        continue
+                    else:
+                        pass  # pragma: no cover
 
                 # 2. Handle Hunk Headers
-                elif raw_line.startswith('@@'):
+                elif raw_line.startswith('@@ '):
                     if current_file is None:
-                        raise FtwPatchError(f"Line {line_no}: Found '@@' before file headers")
+                        raise PatchParseError(f"Line {line_no}: Found '@@' before file headers")
                     
                     current_hunk = Hunk(HunkHeadLine(raw_line))
                     current_file.add_hunk(current_hunk)
@@ -1156,15 +1170,15 @@ class PatchParser: # pragma: no cover
                 # 3. Handle Valid Content Lines
                 elif raw_line.startswith(('+', '-', ' ')):
                     if current_hunk is None:
-                        raise FtwPatchError(f"Line {line_no}: Found content line before '@@' header")  # noqa: E501
+                        raise PatchParseError(f"Line {line_no}: Found content line before '@@' header")  # noqa: E501
                     
                     current_hunk.add_line(HunkLine(raw_line))
 
                 # 4. Handle Metadata and Noise
                 else:
                     # STRICT RULE: No unrecognized lines allowed inside a hunk block
-                    if current_hunk:
-                        raise FtwPatchError(
+                    if current_hunk is not None:
+                        raise PatchParseError(
                             f"Line {line_no}: Invalid line within hunk. Missing prefix (' ', '+', '-')."  # noqa: E501
                         )
                     # Lines outside of hunks (Git metadata, empty lines) are safely ignored
@@ -1179,7 +1193,7 @@ class PatchParser: # pragma: no cover
             raise
         except Exception as e:
             # Wrap any unexpected low-level errors
-            raise FtwPatchError(f"Unexpected error at line {line_no}: {str(e)}")
+            raise PatchParseError(f"Unexpected error at line {line_no}: {str(e)}")
 
 #!CLASS - PatchParser
 #!SECTION - Parsers
@@ -1370,7 +1384,7 @@ class FtwPatch: # pragma: no cover
             # Rollback: delete partial backups if one fails
             for bak in created_backups:
                 bak.unlink(missing_ok=True)
-            raise FtwPatchError(f"Mandatory backup failed: {e}. Aborting before patch.")
+            raise PatchParseError(f"Mandatory backup failed: {e}. Aborting before patch.")
 
     def _commit_changes(
         self, 
@@ -1399,7 +1413,7 @@ class FtwPatch: # pragma: no cover
                 move(str(patched), str(original))
         except (OSError, IOError) as e:
             # If move fails, backups are kept for safety
-            raise FtwPatchError(
+            raise PatchParseError(
                 f"Critical error during file move: {e}. "
                 "Backups have been preserved for recovery."
             )
@@ -1582,7 +1596,7 @@ if __name__ == "__main__": # pragma: no cover
     dt_file = str(testfilesbasedir / "get_started_ftw_patch.rst")
     # dt_file = str(testfilesbasedir / "temp_test.rst")
     # dt_file = str(testfilesbasedir / "test_parser_fix.rst")
-    dt_file = str(testfilesbasedir / "test_info-prop.txt")
+    # dt_file = str(testfilesbasedir / "parser_validation.txt")
     print(dt_file)
     doctestresult = testfile(
         dt_file,
