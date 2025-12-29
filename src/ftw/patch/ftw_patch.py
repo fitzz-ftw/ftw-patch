@@ -1206,7 +1206,7 @@ class PatchParser:
 # DEV_NULL_PATH = Path(os.devnull) 
 
 #CLASS - FtwPatch
-class FtwPatch: # pragma: no cover
+class FtwPatch: 
     """
     Main class for the ``ftwpatch`` program.
 
@@ -1311,7 +1311,7 @@ class FtwPatch: # pragma: no cover
         :returns: Exit code (0 for success, 1 or 2 for errors).
         """
         try:
-            return self.apply_patch()
+            return self.apply()
         except FtwPatchError as e:
             print(f"\nPatch failed: {e}")
             return 1
@@ -1392,11 +1392,13 @@ class FtwPatch: # pragma: no cover
         options: Namespace
     ) -> bool:
         """
-        Finalize the patching process by backing up and moving staged files.
+        Move patched files to their final destination and clean up.
         
-        1. Always creates backups.
-        2. Moves patched files to their original location.
-        3. Deletes backups unless 'backup' option is explicitly set to True.
+        :param results: List of tuples containing (original_path, staged_path).
+        :param options: Command line arguments to check for backup retention.
+        :raises OSError: If moving a file fails (Setter).
+        :raises FtwPatchError: If the transaction fails and rollback is triggered.
+        :returns: True if all files were moved successfully, False otherwise.
         """
         originals = [r[0] for r in results]
         
