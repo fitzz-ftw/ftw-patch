@@ -25,7 +25,8 @@ class TestFtwPatch:
             normalize_whitespace=True,
             ignore_blank_lines=False,
             ignore_all_whitespace=True,
-            dry_run=True
+            dry_run=True,
+            verbose = 0
         )
 
     ## --- Tests für Initialisierung und Properties ---
@@ -52,11 +53,12 @@ class TestFtwPatch:
         assert app.ignore_blank_lines is False
         assert app.ignore_all_whitespace is True
         assert app.dry_run is True
+        assert app.verbose == 0
 
     def test_repr_format(self, valid_args):
         """Prüft die __repr__ Methode für Debugging-Zwecke."""
         app = FtwPatch(valid_args)
-        assert "FtwPatch(args=Namespace" in repr(app)
+        assert "FtwPatch(patch_file=" in repr(app)
 
     ## --- Tests für die run() Methode (Error Handling) ---
 
@@ -240,3 +242,191 @@ class TestFtwPatch:
         
         # Assert: Backup must still exist
         assert bak_file.exists()
+
+    def test_get_patch_stream_success(self, valid_args, tmp_path):
+        """Tests if the stream is opened correctly for a valid file."""
+        patch_file = tmp_path / "test.patch"
+        patch_file.write_text("patch content")
+        valid_args.patch_file = patch_file
+        app = FtwPatch(valid_args)
+        
+        with app._get_patch_stream() as stream:
+            assert stream.read() == "patch content"
+
+    def test_get_patch_stream_deleted_after_init(self, valid_args, tmp_path):
+        """
+        Tests the (Indirect) FileNotFoundError if the file is removed 
+        between instantiation and the actual stream request.
+        """
+        # 1. Setup: Create file so __init__ check passes
+        patch_file = tmp_path / "temporary.patch"
+        patch_file.write_text("dummy content")
+        valid_args.patch_file = patch_file
+        
+        # 2. Instantiation (proactive check succeeds)
+        app = FtwPatch(valid_args)
+        
+        # 3. Action: Delete the file to provoke the TOCTOU error
+        patch_file.unlink()
+        
+        # 4. Verification: _get_patch_stream must now raise FileNotFoundError
+        with pytest.raises(FileNotFoundError):
+            app._get_patch_stream()
+
+    def test_parsed_files_caching_logic(self, valid_args, tmp_path):
+        """
+        Tests that _parse is only called when _patch_files is None and 
+        results are cached thereafter.
+        """
+        patch_file = tmp_path / "caching.patch"
+        patch_file.write_text("--- a/app.py\n+++ b/app.py\n") # Minimal diff
+        valid_args.patch_file = patch_file
+        app = FtwPatch(valid_args)
+        
+        # 1. First access: Should trigger _parse
+        assert app._patch_files is None
+        files_first_call = app.parsed_files
+        assert app._patch_files is not None
+        
+        # 2. Second access: Should return cached list without re-parsing
+        # We can verify this by checking if the object ID remains the same
+        files_second_call = app.parsed_files
+        assert files_first_call is files_second_call
+
+    def Test_apply_successful_patch(self, valid_args, tmp_path):
+        """
+        Covers lines 1329-1354: Tests the core patching logic.
+        Verifies that a valid patch is applied to a source file and
+        results in a correctly staged temporary file.
+        """
+        app = FtwPatch(valid_args)
+        
+        # 1. Setup: Source file to be patched
+        source_file = tmp_path / "app.py"
+        source_content = "def hello():\n    print('hello')\n"
+        source_file.write_text(source_content)
+        
+        # 2. Setup: A simple unified diff patch
+        # Note: Ensure the paths in the patch match the file name
+        patch_content = (
+            "--- app.py\n"
+            "+++ app.py\n"
+            "@@ -1,2 +1,2 @@\n"
+            " def hello():\n"
+            "-    print('hello')\n"
+            "+    print('world')\n"
+        )
+        patch_file = tmp_path / "fix.patch"
+        patch_file.write_text(patch_content)
+        
+        # Update app args to point to the new patch file
+        # Check if your class uses self.args or self._args internally
+        app._args.patch_file = patch_file
+        
+        # 3. Execution - Passing the required options argument
+        results = app.apply(valid_args)
+        
+        # 4. Assertions
+        assert len(results) == 1
+        original_path, staged_path = results[0]
+        
+        # We check if the staged path is indeed a file and has the new content
+        assert original_path.name == "app.py"
+        assert staged_path.exists()
+        
+        patched_content = staged_path.read_text()
+        assert "print('world')" in patched_content
+
+
+
+
+    def test_apply_full_staging_workflow(self, valid_args, tmp_path, mocker):
+        """
+        Tests the staging workflow by intercepting _commit_changes.
+        Verification happens inside the mock to ensure files exist 
+        before the TemporaryDirectory is destroyed.
+        """
+        # 1. Setup
+        patch_file = tmp_path / "test.patch"
+        patch_file.write_text("--- a/app.py\n+++ b/app.py\n")
+        valid_args.patch_file = patch_file
+        valid_args.dry_run = False
+        app = FtwPatch(valid_args)
+        
+        # Mock internal file objects
+        mock_file = mocker.Mock()
+        mock_file.get_source_path.return_value = Path("app.py")
+        mock_line = mocker.Mock()
+        mock_line.line_string = "new line content\n"
+        mock_file.apply.return_value = [mock_line]
+        
+        mocker.patch.object(FtwPatch, "parsed_files", new_callable=mocker.PropertyMock, 
+                            return_value=[mock_file])
+
+        # 2. The Interceptor Function
+        def verify_files_at_commit_time(staged_results, options):
+            """This function is called INSTEAD of the real _commit_changes."""
+            assert len(staged_results) == 1
+            orig, staged = staged_results[0]
+            
+            # HERE is the moment of truth:
+            assert staged.exists(), f"File {staged} must exist during commit!"
+            assert staged.read_text() == "new line content\n"
+
+        # Inject the interceptor
+        mock_commit = mocker.patch.object(app, "_commit_changes", side_effect=verify_files_at_commit_time)
+        
+        # 3. Execute
+        app.apply(valid_args)
+        
+        # 4. Final check: Ensure the interceptor was actually triggered
+        mock_commit.assert_called_once()
+
+    def test_apply_exception_re_raise(self, valid_args, tmp_path, mocker):
+        """
+        Covers the exception re-raise block (Lines 1423-1425).
+        Verifies that a FtwPatchError inside the staging loop is 
+        properly passed through.
+        """
+        # 1. Setup: Valid instance
+        patch_file = tmp_path / "test.patch"
+        patch_file.write_text("--- a/f.py\n+++ b/f.py\n")
+        valid_args.patch_file = patch_file
+        app = FtwPatch(valid_args)
+
+        # 2. Provoke failure: Let the property raise an error when accessed
+        mocker.patch.object(
+            FtwPatch, 
+            "parsed_files", 
+            new_callable=mocker.PropertyMock,
+            side_effect=FtwPatchError("Simulated failure during loop")
+        )
+
+        # 3. Verification: The 'except' block must catch and raise it
+        with pytest.raises(FtwPatchError) as exc_info:
+            app.apply(valid_args)
+        
+        assert "Simulated failure during loop" in str(exc_info.value)
+
+    def test_apply_honors_dry_run_protection(self, valid_args, mocker):
+        """
+        Verifies that _commit_changes is never called when dry_run is True.
+        This is a critical safety check to prevent accidental file writes.
+        """
+        # 1. Setup: Ensure dry_run is active
+        valid_args.dry_run = True
+        app = FtwPatch(valid_args)
+        
+        # Mock _commit_changes to detect if it's accidentally called
+        mock_commit = mocker.patch.object(app, "_commit_changes")
+        
+        # Mock parsed_files to avoid actual parsing logic in this safety test
+        mocker.patch.object(FtwPatch, "parsed_files", new_callable=mocker.PropertyMock, 
+                            return_value=[])
+
+        # 2. Execute
+        app.apply(valid_args)
+
+        # 3. Verification
+        # The method must return before reaching _commit_changes
+        mock_commit.assert_not_called()
