@@ -1,0 +1,3 @@
+DEBUG = False
+# ... some lines ...
+VERSION = '1.0'
