@@ -1,5 +1,5 @@
 [build-system]
-requires = [ "setuptools>=61.0", "setuptools-scm>=8.0" ]
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -7,8 +7,8 @@ include-package-data = true
 [tool.setuptools.package-dir]
 "" = "src"
 [tool.setuptools.packages.find]
-where = [ "src" ]
-include = [ "ftw*" ]
+where = ["src"]
+include = ["ftw*"]
 namespaces = true
 
 [tool.setuptools_scm]
@@ -16,11 +16,11 @@ write_to = "src/ftw/patch/_version.py"
 
 [project]
 name = "ftw-patch"
-dynamic = [ "version" ]
+dynamic = ["version"]
 description = "Ein Unicode resistenter Ersatz für patch."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [ "platformdirs" ]
+dependencies = ["platformdirs"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -30,7 +30,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Operating System :: OS Independent"
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Operating System :: OS Independent",
 ]
 
 
@@ -39,8 +41,6 @@ classifiers = [
 # Documentation = "https://ftw-patch.readthedocs.io/"
 # Repository = "https://github.com/FitzzTeXnikWelt/ftw-patch.git"
 # Issues = "https://github.com/FitzzTeXnikWelt/ftw-patch/issues"
-
-
 
 
 [project.scripts]
@@ -58,17 +58,11 @@ doc = [
     "sphinxcontrib-plantuml",
     "sphinx-copybutton",
     "sphinx-rtd-theme",
-    "sphinx-design"
+    "sphinx-design",
 ]
-test = [
-    "pytest",
-    "pytest-mock",
-    "pytest-cov"
-]
-lint = [ "ruff", ]
-dev = [
-    "ftw-patch[test,doc,lint]",
-]
+test = ["pytest", "pytest-mock", "pytest-cov"]
+lint = ["ruff"]
+dev = ["ftw-patch[test,doc,lint]"]
 
 
 [[project.authors]]
@@ -94,7 +88,7 @@ exclude = ["pyproject.toml"]
 # I = isort (Sortierung der Imports)
 # B = flake8-bugbear (findet potenzielle Design-Fehler)
 select = ["E", "W", "F", "I", "B"]
-ignore = ["W293","W291", "B904"]
+ignore = ["W293", "W291", "B904"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["ftw"]
@@ -106,17 +100,14 @@ indent-style = "space"
 [tool.pytest.ini_options]
 # Pytest-Optionen für die Testausführung
 minversion = "7.0"
-# addopts = "--doctest-glob=get_started_*.rst"
+addopts = "--doctest-glob=get_started_*.rst"
 testpaths = [
-    # "doc/source/devel", # Durchsucht Ihr Dokumentationsverzeichnis nach .rst-Dateien
+    "doc/source/devel", # Durchsucht Ihr Dokumentationsverzeichnis nach .rst-Dateien
     "tests",            # Durchsucht das Unit-Test-Verzeichnis (für test_*.py)
 ]
 
 [tool.coverage.run]
-omit = [
-    "src/ftw/patch/_version.py",
-]
-
+omit = ["src/ftw/patch/_version.py"]
 
 
 #

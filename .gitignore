@@ -9,16 +9,21 @@ __pycache__
 
 # Sphinx generated files
 doc/build
+.coverage
 
 # Doctest generated files
-doc/source/devel/testhome
-.coverage
+doc/source/devel/testhome/.config
+
 
 # Build generated files
 dist
+build
 
-# Setupzools.scm generated file
+# Setuptools.scm generated file
 src/ftw/patch/_version.py
 
 # Autosummary generated files
 doc/source/devel/api/
+
+# Backuped Files
+*.bak

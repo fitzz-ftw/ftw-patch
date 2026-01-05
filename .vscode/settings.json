@@ -68,5 +68,20 @@
             "-m",
             "esbonio.sphinx_agent"
         ]
+    },
+    "esbonio.sphinx.buildTriggers": {
+        "manual": true,
+        "save": false,
+        "change": false
+    },
+    "esbonio.server.enabled": true,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportDocstringUnknownParameter": "none"
+    },
+    "[toml]": {
+        "editor.formatOnSave": false,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "never"
+        }
     }
 }
