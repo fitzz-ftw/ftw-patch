@@ -1,14 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
+requires = [ "setuptools>=61.0", "setuptools-scm>=8.0" ]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
 include-package-data = true
-
+[tool.setuptools.package-dir]
+"" = "src"
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["ftw*"]
+where = [ "src" ]
+include = [ "ftw*" ]
 namespaces = true
 
 [tool.setuptools_scm]
@@ -16,23 +16,21 @@ write_to = "src/ftw/patch/_version.py"
 
 [project]
 name = "ftw-patch"
-dynamic = ["version"]
+dynamic = [ "version" ]
 description = "Ein Unicode resistenter Ersatz für patch."
 readme = "README.md"
-requires-python = ">=3.9"
-
+requires-python = ">=3.11"
+dependencies = [ "platformdirs" ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Build Tools",
     "Topic :: Text Processing :: Filters",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Operating System :: OS Independent",
+    "Operating System :: OS Independent"
 ]
 
 
@@ -48,8 +46,9 @@ classifiers = [
 [project.scripts]
 ftwpatch = "ftw.patch.ftw_patch:prog_ftw_patch"
 
+
 [project.optional-dependencies]
-doc =[
+doc = [
     "sphinx",
     "sphinx-argparse",
     "sphinx-autodoc-annotation",
@@ -59,14 +58,14 @@ doc =[
     "sphinxcontrib-plantuml",
     "sphinx-copybutton",
     "sphinx-rtd-theme",
-    "sphinx-design",
+    "sphinx-design"
 ]
-test=[
+test = [
     "pytest",
     "pytest-mock",
-    "pytest-cov",
+    "pytest-cov"
 ]
-lint=["ruff",]
+lint = [ "ruff", ]
 dev = [
     "ftw-patch[test,doc,lint]",
 ]
@@ -87,6 +86,7 @@ egg_base = "."
 [tool.ruff]
 src = ["src"]
 line-length = 100
+exclude = ["pyproject.toml"]
 
 [tool.ruff.lint]
 # E/W = Pycodestyle (Standard-Fehler/Warnungen)
