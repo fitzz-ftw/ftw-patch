@@ -1,0 +1,12 @@
+--- a/app.py
++++ b/app.py
+@@ -1,5 +1,9 @@
+ def greet():
+-    print('Hello')
++    print('Hello World')
+ 
++def farewell():
++    print('Goodbye')
++
+ if __name__ == '__main__':
+     greet()
