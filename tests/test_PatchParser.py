@@ -1,6 +1,6 @@
 import pytest
 
-from ftw.patch.ftw_patch import PatchLine, PatchParseError, PatchParser
+from ftw.patch.ftw_patch import PatchParseError, PatchParser
 
 
 class TestPatchParser:
@@ -126,7 +126,8 @@ class TestPatchParser:
             list(parser.iter_files(["+++ b/file.txt"]))
             
         # 1161: Handling @@ before any file header exists
-        with pytest.raises(PatchParseError, match=r"Found '@@' before file headers"):
+        # with pytest.raises(PatchParseError, match=r"Found '@@' before file headers"):
+        with pytest.raises(PatchParseError, match=r"Line 1: Found '@@ ' before file headers"):
             list(parser.iter_files(["@@ -1,1 +1,1 @@"]))
             
         # 1169: Handling content lines before a hunk header is defined
@@ -169,7 +170,7 @@ class TestPatchParser:
             list(parser.iter_files(["+++ b/file.txt"]))
             
         # 1161: Error on '@@' without file headers
-        with pytest.raises(PatchParseError, match=r"Found '@@' before file headers"):
+        with pytest.raises(PatchParseError, match=r"Line 1: Found '@@ ' before file headers"):
             list(parser.iter_files(["@@ -1,1 +1,1 @@"]))
             
         # 1169: Error on content before hunk header

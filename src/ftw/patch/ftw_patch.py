@@ -30,11 +30,17 @@ Ein Unicode resistenter Ersatz für patch.
 import re
 import sys
 import tempfile
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentError, ArgumentParser, Namespace
 from pathlib import Path
 from shutil import copy2, move
 from tempfile import TemporaryDirectory
+from tomllib import TOMLDecodeError
+from tomllib import load as tomlload
 from typing import ClassVar, Generator, Iterable
+
+from platformdirs import user_config_path
+
+from ftw.baselib.converter import str2bool
 
 ### Temporary Functions
 # oldprint=print
@@ -766,7 +772,7 @@ class Hunk:
         if len(expected) != len(actual):
             return False
 
-        for exp, act in zip(expected, actual):
+        for exp, act in zip(expected, actual, strict=False):
             # 1. Option: --ignore-blank-lines
             if getattr(options, "ignore_blank_lines", False):
                 if exp.is_empty and act.is_empty:
@@ -1182,7 +1188,7 @@ class PatchParser:
                 # 2. Handle Hunk Headers
                 elif raw_line.startswith("@@ "):
                     if current_file is None:
-                        raise PatchParseError(f"Line {line_no}: Found '@@' before file headers")
+                        raise PatchParseError(f"Line {line_no}: Found '@@ ' before file headers")
 
                     current_hunk = Hunk(HunkHeadLine(raw_line))
                     current_file.add_hunk(current_hunk)
@@ -1418,7 +1424,8 @@ class FtwPatch:
                     # Wir erzeugen einen sicheren Pfad im Temp-Verzeichnis
                     source_path = code_file.get_source_path(options.strip_count) 
                     # name}_{id(code_file)}.tmp
-                    source_tmp_path = source_path.with_name(f"{source_path.name}_{id(code_file)}.tmp")
+                    tmp_file_name=f"{source_path.name}_{id(code_file)}.tmp"
+                    source_tmp_path = source_path.with_name(tmp_file_name)
 
                     staged_path = staging_dir / source_tmp_path
                     # f"{code_file.get_source_path(options.strip_count).name}_{id(code_file)}.tmp"
@@ -1511,18 +1518,107 @@ class FtwPatch:
 #!CLASS - FtwPatch
 #!SECTION - FtwPatch
 
+def get_backup_extension(ext: str) -> str:
+    """
+    Normalizes the backup extension and handles dynamic keywords.
+
+    Input is cleaned by removing outer whitespace and dots. If a keyword is 
+    detected, it is replaced by an ISO 8601 compliant timestamp.
+
+    :param ext: The extension string or keyword ('date', 'time', 'datetime', 'auto', 'timestamp').
+    :returns: A normalized string starting with a dot. Keywords result 
+              in the format: '.bak_YYYY-MM-DDTHHMMSS'.
+    """
+    ext = ext.strip().strip(".").strip()
+    
+    # Aliases for the full ISO 8601 timestamp
+    if ext in ('auto', 'date', 'time', 'datetime', 'timestamp'):
+        import datetime
+        ext = f"bak_{datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')}"
+    
+    return f".{ext}"
+
+def get_merged_config(app_name: str = "ftw", manual_user_cfg: str = None) -> dict:
+    """
+    Merge configuration from hierarchical sources into a single dictionary.
+    
+    This function implements the configuration layering logic before the 
+    Pimple-object (args) is fully initialized. It resolves the 'chicken-and-egg' 
+    problem of locating the user configuration file via CLI before parsing 
+    the remaining arguments.
+
+    The priority order for settings (highest to lowest):
+
+    1. Project Configuration: Defined in 'pyproject.toml' under [tool.ftw.patch].
+       This level ensures project-specific standards (e.g., .gitignore compliance) 
+       always override global user preferences.       
+    2. Manual User Configuration: A TOML file specified via the '--userconfig' flag.
+    3. Platform User Configuration: The default OS-specific path 
+       (e.g., ~/.config/ftw/patch.toml on Linux).
+
+    :param app_name: The application namespace used for platformdirs resolution.
+    :param manual_user_cfg: Optional filesystem path to a custom TOML config.
+    :raises tomllib.TOMLDecodeError: If any encountered TOML file is syntactically invalid.
+    :raises OSError: If there are permission issues accessing the configuration files.
+    :returns: A dictionary containing the effective configuration defaults.
+    """ 
+    config = {}
+    
+    # 1. User level
+    if manual_user_cfg:
+        user_cfg_file = Path(manual_user_cfg)
+    else:
+        user_cfg_file = user_config_path(app_name) / "patch.toml"
+    
+    if user_cfg_file.exists():
+        with open(user_cfg_file, "rb") as f:
+            config.update(tomlload(f))
+            
+    # 2. Project level (always wins over user level)
+    project_cfg_file = Path("pyproject.toml")
+    if project_cfg_file.exists():
+        with open(project_cfg_file, "rb") as f:
+            data = tomlload(f)
+            project_cfg = data.get("tool", {}).get("ftw", {}).get("patch", {})
+            config.update(project_cfg)
+            
+    return config
+
 # SECTION -  --- CLI Entry Point ---
 
 
 def _get_argparser() -> ArgumentParser:
     """
-    Creates and configures the ArgumentParser for the ftw_patch CLI.
+    Creates the final parser by first pre-parsing meta-arguments to load configs.
+    
+    This encapsulates the 'chicken-and-egg' problem of loading defaults 
+    from a file path that is itself a command line argument.
 
     :returns: The configured ArgumentParser instance.
     """
+    # 1. Pre-parsing phase (Internal)
+    pre_parser = ArgumentParser(add_help=False, exit_on_error=False)
+    pre_parser.add_argument("--userconfig", dest="user_config_path")
+    
+    # We don't want the script to crash here if other args are present
+    pre_args, _ = pre_parser.parse_known_args()
+
+    # 2. Load Configuration (using our previously defined logic)
+    # The priority is already handled inside get_merged_config
+    cfg = get_merged_config(manual_user_cfg=pre_args.user_config_path)
+    # 3. Final Parser Phase
     parser = ArgumentParser(
         prog="ftwpatch",
-        description="A Unicode-safe patch application tool with advanced whitespace normalization.",
+        description=("A Unicode-safe patch application tool with "
+                     "advanced whitespace normalization. "
+                     "Patch utility. Settings are loaded from pyproject.toml [tool.ftw.patch] "
+                     "or a user config file. Keys in TOML match CLI flags (e.g., 'backupext')."
+                     ),
+        epilog=(
+            "Note: '--userconfig' cannot be set within a config file itself "
+            "as it is required to locate the file."
+        ),
+        exit_on_error=False,
     )
 
     parser.add_argument(
@@ -1537,11 +1633,11 @@ def _get_argparser() -> ArgumentParser:
         "-p",
         "--strip",
         type=int,
-        default=0,
+        default=cfg.get("strip", 0),
         dest="strip_count",
         help=(
             "Set the number of leading path components to strip from file names "
-            "before trying to find the file. Default is 0."
+            "before trying to find the file. (default: %(default)s)"
         ),
     )
 
@@ -1549,55 +1645,76 @@ def _get_argparser() -> ArgumentParser:
         "-d",
         "--directory",
         type=Path,
-        default=Path("."),
+        default=Path(cfg.get("directory",".")),
         dest="target_directory",
         help=(
             "Change the working directory to <dir> before starting to look for "
-            "files to patch. Default is the current working directory ('.')."
+            "files to patch. (default: %(default)s)"
         ),
     )
 
     # FTW Patch specific normalization options
     parser.add_argument(
         "--normalize-ws",
-        action="store_true",
+        type=str2bool,
+        nargs='?',
+        const=True,
+        metavar="BOOLEAN",
+        # action="store_true",
+        default=cfg.get("normalize-ws", False),
         dest="normalize_whitespace",
         help=(
             "Normalize non-leading whitespace (replace sequences of spaces/tabs "
             "with a single space) in context and patch lines before comparison. "
-            "Useful for patches with minor formatting differences."
+            "Useful for patches with minor formatting differences. (default: %(default)s)"
         ),
     )
 
     parser.add_argument(
         "--ignore-bl",
-        action="store_true",
+        type=str2bool,
+        nargs='?',
+        const=True,
+        metavar="BOOLEAN",
+        # action="store_true",
+        default=cfg.get("ignore-bl", False),
         dest="ignore_blank_lines",
         help=(
             "Ignore or treat pure blank lines identically during patch matching. "
             "This implements a skip-ahead logic that collapses sequences of "
             "blank lines in the original file to match the blank lines (or lack "
             "thereof) in the patch context. It effectively ignores differences "
-            "in the number of consecutive blank lines."
+            "in the number of consecutive blank lines. (default: %(default)s)"
         ),
     )
 
     parser.add_argument(
         "--ignore-all-ws",
-        action="store_true",
+        type=str2bool,
+        nargs='?',
+        const=True,
+        metavar="BOOLEAN",
+        # action="store_true",
+        default=cfg.get("ignore-all-ws", False),
         dest="ignore_all_whitespace",
         help=(
             "Ignore all whitespace (leading, non-leading, and blank lines) "
             "during comparison. This option overrides --normalize-ws and "
-            "--ignore-bl."
+            "--ignore-bl. (default: %(default)s)"
         ),
     )
 
     parser.add_argument(
         "--dry-run",
-        action="store_true",
+        type=str2bool,
+        nargs='?',
+        const=True,
+        metavar="BOOLEAN",
+        # action="store_true",
+        default=cfg.get("dry-run", False),
         dest="dry_run",
-        help="Do not write changes to the file system; only simulate the process.",
+        help=("Do not write changes to the file system; only simulate the process. "
+              "(default: %(default)s)"),
     )
 
     parser.add_argument(
@@ -1605,10 +1722,44 @@ def _get_argparser() -> ArgumentParser:
         "--verbose",
         action="count",
         dest="verbose",
-        default=0,
+        default=cfg.get("verbose",0),
         help="Increase output verbosity. Can be specified multiple times (-vvv) "
-        "to increase the level of detail.",
+        "to increase the level of detail. (default: %(default)s)",
     )
+    parser.add_argument(
+        "-b", "--backup",
+        type=str2bool,
+        nargs='?',
+        const=True,
+        metavar="BOOLEAN",
+        # action="store_true",
+        default=cfg.get("backup", False),
+        dest="backup",
+        help=("Create a backup of each file before applying patches. "
+            "(default: %(default)s)"
+        )
+    )
+
+    parser.add_argument(
+        "--backupext",
+        type=str,
+        default=cfg.get("backupext", ".bak"),
+        dest="backup_ext",
+        help=(
+            "The extension for backup files (e.g., '.bak' or 'old'). "
+            "A leading dot is added automatically if missing. "
+            "Special keywords 'date', 'time', or 'datetime' create a timestamped suffix "
+            "in ISO 8601 format (e.g., '.bak_2025-12-30T094200'). (default: %(default)s)"
+        )
+    
+    )
+    parser.add_argument("--userconfig",
+        type=str,
+        default="",
+        dest="userconfig",
+        help="Path to a custom user TOML config (default: %(default)s)"
+        )
+
 
     return parser
 
@@ -1633,6 +1784,9 @@ def prog_ftw_patch() -> int:
         # 3. Parse arguments
         args = parser.parse_args()
 
+
+        args.backup_ext = get_backup_extension(args.backup_ext)
+
         # The 'dry_run' argument must be correctly extracted from args
         dry_run = getattr(args, "dry_run", False)
 
@@ -1643,6 +1797,10 @@ def prog_ftw_patch() -> int:
         exit_code = patcher.apply_patch(dry_run=dry_run)
 
         return exit_code
+
+    except (ArgumentError, TOMLDecodeError) as e:
+        print(f"Initialization error: {e}", file=sys.stderr)
+        return 2
 
     except FileNotFoundError as e:
         # Error for files not found (patch or target file)

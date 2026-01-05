@@ -134,7 +134,7 @@ suppress_warnings=[
 html_theme = "sphinx_book_theme"
 toc_object_entries = True
 toc_object_entries_show_parents = 'hide'
-html_theme_options = { "show_toc_level": 2, 
+html_theme_options = { "show_toc_level": 4, 
     "show_navbar_depth": 1, 
     "home_page_in_toc": True }
 

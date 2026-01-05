@@ -17,10 +17,14 @@ documentation for details.
    user/use_ftwpatch
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Development
 
    devel/get_started_ftw_patch
+
+.. toctree::
+   :maxdepth: 4
+   
    devel/ftw_patch_module
 
 

@@ -27,3 +27,6 @@ doc/source/devel/api/
 
 # Backuped Files
 *.bak
+
+# Tox Generated Files
+.tox

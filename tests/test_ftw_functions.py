@@ -1,4 +1,5 @@
 import sys
+from argparse import ArgumentError
 from pathlib import Path
 
 import pytest
@@ -49,7 +50,8 @@ class TestCLI:
         """Tests if the parser rejects non-integer values for strip count."""
         parser = _get_argparser()
         # argparse raises SystemExit on error and prints to stderr
-        with pytest.raises(SystemExit):
+        # with pytest.raises(SystemExit):
+        with pytest.raises(ArgumentError):
             parser.parse_args(["my.patch", "--strip", "not-an-int"])
 
 class TestMainEntry:
@@ -57,7 +59,7 @@ class TestMainEntry:
         """Tests the successful execution path (Returns 0)."""
         # Mock Parser
         mock_args = mocker.Mock(dry_run=False)
-        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args
+        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
         
         # Mock FtwPatch logic
         mock_patcher = mocker.patch("ftw.patch.ftw_patch.FtwPatch")
@@ -69,7 +71,7 @@ class TestMainEntry:
 
     def test_prog_ftw_patch_ftw_error(self, mocker, capsys):
         """Tests the handling of a known FtwPatchError (Returns 1)."""
-        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mocker.Mock()
+        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mocker.Mock()  # noqa: E501
         
         # Force a FtwPatchError during initialization
         mocker.patch("ftw.patch.ftw_patch.FtwPatch", side_effect=FtwPatchError("Parser fail"))
@@ -97,10 +99,10 @@ class TestMainEntry:
         """
         # 1. Mock parser to return a valid namespace
         mock_args = mocker.Mock(dry_run=False)
-        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args
+        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
         
         # 2. Mock FtwPatch to raise the specific FileNotFoundError
-        mocker.patch("ftw.patch.ftw_patch.FtwPatch", side_effect=FileNotFoundError("Target file missing"))
+        mocker.patch("ftw.patch.ftw_patch.FtwPatch", side_effect=FileNotFoundError("Target file missing"))  # noqa: E501
         
         # 3. Execute
         exit_code = prog_ftw_patch()
