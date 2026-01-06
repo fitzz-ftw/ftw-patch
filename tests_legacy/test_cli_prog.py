@@ -4,7 +4,7 @@ import sys
 
 # ANNAHME: Importiere die Hauptfunktion und FtwPatch aus dem Modul
 # WICHTIG: BITTE 'prog_ftw_patch' durch den tatsächlichen Namen Ihrer Hauptfunktion ersetzen!
-from ftw_patch.ftw_patch import FtwPatch, FtwPatchError, prog_ftw_patch 
+from ftw.patch.ftw_patch import FtwPatch, FtwPatchError, prog_ftw_patch 
 
 # Dies ist Ihre Hauptfunktion, die die Zeilen 1271-1342 repräsentiert
 prog_entrypoint = prog_ftw_patch 
@@ -45,7 +45,7 @@ def test_cli_entrypoint_success(tmp_path: Path, mocker):
     # Wir ersetzen FtwPatch durch einen Mock, der nur die Aufrufe zählt (Spying).
     mock_patcher = mocker.Mock()
     mock_FtwPatch_class = mocker.patch(
-        'ftw_patch.ftw_patch.FtwPatch', 
+        'ftw.patch.ftw_patch.FtwPatch', 
         return_value=mock_patcher
     )
     
@@ -89,7 +89,7 @@ def test_cli_entrypoint_ftw_patch_error(tmp_path: Path, mocker):
     mock_patcher.apply_patch.side_effect = FtwPatchError("Simulierter FtwPatch Anwendungsfehler.")
     
     mocker.patch(
-        'ftw_patch.ftw_patch.FtwPatch', 
+        'ftw.patch.ftw_patch.FtwPatch', 
         return_value=mock_patcher
     )
     
@@ -149,7 +149,7 @@ def test_cli_entrypoint_generic_exception(tmp_path: Path, mocker):
     mock_patcher.apply_patch.side_effect = ValueError("Simulierter unhandled interner Fehler.")
     
     mocker.patch(
-        'ftw_patch.ftw_patch.FtwPatch', 
+        'ftw.patch.ftw_patch.FtwPatch', 
         return_value=mock_patcher
     )
     

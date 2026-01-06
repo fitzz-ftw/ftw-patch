@@ -1,21 +1,54 @@
 [build-system]
-requires = [ "setuptools" ]
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+include-package-data = true
+[tool.setuptools.package-dir]
+"" = "src"
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["ftw*"]
+namespaces = true
+
+[tool.setuptools_scm]
+write_to = "src/ftw/patch/_version.py"
 
 [project]
 name = "ftw-patch"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Ein Unicode resistenter Ersatz für patch."
 readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["platformdirs"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Text Processing :: Filters",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Operating System :: OS Independent",
+]
+
+
+# [project.urls]
+# Homepage = "https://github.com/FitzzTeXnikWelt/ftw-patch"
+# Documentation = "https://ftw-patch.readthedocs.io/"
+# Repository = "https://github.com/FitzzTeXnikWelt/ftw-patch.git"
+# Issues = "https://github.com/FitzzTeXnikWelt/ftw-patch/issues"
+
 
 [project.scripts]
-ftwpatch = "ftw_patch.ftw_patch:prog_ftw_patch"
+ftwpatch = "ftw.patch.ftw_patch:prog_ftw_patch"
+
 
 [project.optional-dependencies]
-dev = [
+doc = [
     "sphinx",
     "sphinx-argparse",
     "sphinx-autodoc-annotation",
@@ -25,25 +58,44 @@ dev = [
     "sphinxcontrib-plantuml",
     "sphinx-copybutton",
     "sphinx-rtd-theme",
-    "sphinx-copybutton",
-    "ruff",
-    "pytest",
+    "sphinx-design",
 ]
+test = ["pytest", "pytest-mock", "pytest-cov"]
+lint = ["ruff"]
+dev = ["ftw-patch[test,doc,lint]"]
 
 
-[[authors]]
+[[project.authors]]
 name = "Fitzz TeXnik Welt"
 email = "FitzzTeXnikWelt@t-online.de"
 
 
-[[maintainers]]
+[[project.maintainers]]
 name = "Fitzz TeXnik Welt"
 email = "FitzzTeXnikWelt@t-online.de"
 
-
+[tool.distutils.egg_info]
+egg_base = "."
 
 [tool.ruff]
-line-length = 120
+src = ["src"]
+line-length = 100
+exclude = ["pyproject.toml"]
+
+[tool.ruff.lint]
+# E/W = Pycodestyle (Standard-Fehler/Warnungen)
+# F = Pyflakes (Logik-Fehler wie ungenutzte Imports)
+# I = isort (Sortierung der Imports)
+# B = flake8-bugbear (findet potenzielle Design-Fehler)
+select = ["E", "W", "F", "I", "B"]
+ignore = ["W293", "W291", "B904"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ftw"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.pytest.ini_options]
 # Pytest-Optionen für die Testausführung
@@ -54,14 +106,17 @@ testpaths = [
     "tests",            # Durchsucht das Unit-Test-Verzeichnis (für test_*.py)
 ]
 
+[tool.coverage.run]
+source = ["ftw.patch"]
+branch = true
+omit = ["**/_version.py"]
+
 [tool.coverage.report]
-# Fügt Regeln hinzu, um spezifische Dateien und Zeilen auszuschließen
-omit = [
-    "src/ftw_patch/ftw_patch.py:490-494", # docstringlines
-    "src/ftw_patch/ftw_patch.py:1305-1342", # if __name__ == "__main__"-Block
-]
+show_missing = true
+fail_under = 100
 
-
+[tool.coverage.html]
+directory = "htmlcov"
 
 
 #

@@ -1,5 +1,6 @@
 from pathlib import Path
-from ftw_patch.ftw_patch import is_null_path
+
+from ftw.patch.ftw_patch import is_null_path
 
 # Angenommen, Sie haben is_null_path und die Konstanten NULL_PATHS_POSIX/WIN_UPPER
 # in Ihrem Modul importiert.
@@ -11,7 +12,8 @@ def test_is_null_path_posix_standard():
     assert is_null_path(Path("/dev/null")) is True
 
 def test_is_null_path_posix_case_mismatch():
-    """Prüft, ob POSIX-Pfade bei falscher Großschreibung fehlschlagen (wegen case-sensitiver Natur)."""
+    """Prüft, ob POSIX-Pfade bei falscher Großschreibung fehlschlagen 
+    (wegen case-sensitiver Natur)."""
     assert is_null_path("/DEV/NULL") is False
     assert is_null_path(Path("/DEV/NULL")) is False
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
 # Annahme: Das Paket ftw_patch liegt nun im src/ Verzeichnis
-from ftw_patch.ftw_patch import PatchParser, PatchParseError, FtwPatchError, is_null_path
+from ftw.patch.ftw_patch import PatchParser, PatchParseError, FtwPatchError, is_null_path
 
 
 # --- Fixture für Mock-Patch-Dateien ---
@@ -227,7 +227,7 @@ def test_parse_hunk_content_raises_patch_parse_error(mocker, mock_patch_file: Pa
     parser._current_line = None # Stellt sicher, dass _peek_line aufgerufen wird
 
     # Mocke den HunkLine-Konstruktor, um die gewünschte Ausnahme auszulösen
-    mocker.patch('ftw_patch.ftw_patch.HunkLine', 
+    mocker.patch('ftw.patch.ftw_patch.HunkLine', 
                  side_effect=PatchParseError("Simulated Hunk error"))
     
     # Vorbereitung für den Aufruf
@@ -261,7 +261,7 @@ def test_parse_hunk_content_raises_unexpected_error(mocker, mock_patch_file: Pat
     
     # 2. Mocken der HunkLine-Klasse, um eine generische Ausnahme auszulösen
     unexpected_error_msg = "Simulated internal error"
-    mocker.patch('ftw_patch.ftw_patch.HunkLine', 
+    mocker.patch('ftw.patch.ftw_patch.HunkLine', 
                  side_effect=ValueError(unexpected_error_msg)) # ValueError ist eine generische Exception
 
     # 3. Aufruf der Methode

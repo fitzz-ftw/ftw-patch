@@ -7,6 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
+AUTOSUMMERYDIR = $(SOURCEDIR)/devel/api
 PYTHON=python
 
 # Put it first so that "make" without argument is like "make help".
@@ -20,7 +21,7 @@ htmlpure:
 
 html: 
 	@$(SPHINXBUILD) -M coverage "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@$(SPHINXBUILD) -M dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 coverage:
 	@$(SPHINXBUILD) -M coverage "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -53,6 +54,10 @@ html-coverage-full:
 	@echo "JSON-API liegt unter: $(BUILDDIR)/api-json/gemini_api_data.json"
 
 
+.PHONY: clean
+clean:
+	rm -r $(BUILDDIR)
+	rm $(AUTOSUMMERYDIR)/*.rst
 
 
 
