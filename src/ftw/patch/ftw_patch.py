@@ -60,7 +60,7 @@ from ftw.baselib.converter import str2bool
 # --- Exceptions ---
 
 
-class FtwPatchError(Exception):  # pragma: no cover
+class FtwPatchError(Exception):  
     """
     Base exception for all errors raised by the :py:mod:`ftw_patch`
     module.
@@ -74,7 +74,7 @@ class FtwPatchError(Exception):  # pragma: no cover
         return f"{self.__class__.__name__}({str(self)!r})"
 
 
-class PatchParseError(FtwPatchError):  # pragma: no cover
+class PatchParseError(FtwPatchError):  
     """
     Exception raised when an error occurs during the parsing of the
     patch file content.

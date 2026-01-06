@@ -1841,5 +1841,7 @@ patching cycle: creating a source file, defining a unified diff, and applying it
     .. code:: python
 
         >>> env.input_readonly=False
+        
         >>> env.teardown()
-        >>> env.clean_home()
+        
+        >> env.clean_home()

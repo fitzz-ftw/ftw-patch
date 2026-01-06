@@ -19,7 +19,7 @@ we use a directory within our documentation structure.
     >>> from ftw.develtool.testinfra import TestHomeEnvironment
     
     >>> # Define the anchor for our test environment
-    >>> base_path = Path("doc/source/devel/testhome")
+    >>> base_path = Path("doc/source/devel/testhome_tmp")
     >>> env = TestHomeEnvironment(base_path)
     >>> env.setup()
 
@@ -84,3 +84,5 @@ At the end of the doctest, we restore the original system state.
 
     >>> env.teardown()
     >>> # CWD and Environment variables are now back to original values
+    >>> import shutil
+    >>> shutil.rmtree(base_path, ignore_errors=True)

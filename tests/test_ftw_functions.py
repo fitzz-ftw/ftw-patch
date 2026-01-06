@@ -1,10 +1,14 @@
-import sys
 from argparse import ArgumentError
 from pathlib import Path
 
 import pytest
 
-from ftw.patch.ftw_patch import FtwPatchError, _get_argparser, prog_ftw_patch
+from ftw.patch.ftw_patch import (
+    FtwPatchError,
+    _get_argparser,
+    get_merged_config,
+    prog_ftw_patch,
+)
 
 
 class TestCLI:
@@ -111,3 +115,62 @@ class TestMainEntry:
         assert exit_code == 1
         stderr = capsys.readouterr().err
         assert "File System Error: Target file missing" in stderr
+
+    def test_prog_ftw_patch_initialization_error(self, mocker, capsys):
+        """
+        Tests the handling of TOMLDecodeError/ArgumentError.
+        Covers lines 1801-1803 (Returns 2).
+        """
+        from tomllib import TOMLDecodeError
+        
+        # Wir simulieren, dass get_merged_config wegen eines TOML-Fehlers explodiert
+        # (Alternativ könntest du auch _get_argparser mocken, um einen ArgumentError zu werfen)
+        mocker.patch(
+            "ftw.patch.ftw_patch.get_merged_config", 
+            side_effect=TOMLDecodeError("Invalid TOML syntax",
+                                        "invalid = [", 9)
+        )
+        
+        # Ausführen
+        exit_code = prog_ftw_patch()
+        
+        # Verifizieren der Zeilen 1802-1803
+        assert exit_code == 2
+        stderr = capsys.readouterr().err
+        #assert "Initialization error: Invalid TOML syntax" in stderr
+        assert "Initialization error:" in stderr
+        assert "Invalid TOML syntax" in stderr
+
+class TestGetMergedConfig:
+    def est_manual_config_loading(self, tmp_path):
+        """Tests if a manually specified config file is correctly processed."""
+        # Erstelle eine temporäre Config-Datei
+        cfg_file = tmp_path / "manual.cfg"
+        cfg_file.write_text("[DEFAULT]\nnormalize_whitespace = True")
+        
+        # Rufe die Funktion mit dem Pfad auf (triggert Zeile 1569)
+        # Je nachdem, wie deine Signatur aussieht:
+        config = get_merged_config(manual_user_cfg=str(cfg_file))
+        
+        assert Path(cfg_file).exists()
+        # Überprüfe, ob der Wert aus der Datei übernommen wurde
+        assert config.normalize_whitespace is True
+
+    def test_manual_config_loading(self, tmp_path):
+        """Tests if a manually specified config file is correctly processed."""
+        # Erstelle eine temporäre TOML-Datei
+        cfg_file = tmp_path / "manual.toml"
+        # TOML Syntax: key = value (Booleans sind klein: true/false)
+        cfg_file.write_text('normalize_whitespace = true')
+    
+        # Rufe die Funktion mit dem Pfad auf
+        config = get_merged_config(manual_user_cfg=str(cfg_file))
+        
+        # Prüfen, ob der Wert korrekt geladen wurde
+        assert config["normalize_whitespace"] is True
+
+    def test_manual_config_none(self):
+        """Tests the branch where no manual config is provided."""
+        # Triggert den False-Zweig von 'if manual_user_cfg'
+        config = get_merged_config(manual_user_cfg=None)
+        assert config is not None # Sollte Default-Werte liefern

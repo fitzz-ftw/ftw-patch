@@ -107,7 +107,16 @@ testpaths = [
 ]
 
 [tool.coverage.run]
-omit = ["src/ftw/patch/_version.py"]
+source = ["ftw.patch"]
+branch = true
+omit = ["**/_version.py"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 100
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 
 #
