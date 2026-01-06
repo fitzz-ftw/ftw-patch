@@ -36,11 +36,11 @@ classifiers = [
 ]
 
 
-# [project.urls]
-# Homepage = "https://github.com/FitzzTeXnikWelt/ftw-patch"
-# Documentation = "https://ftw-patch.readthedocs.io/"
-# Repository = "https://github.com/FitzzTeXnikWelt/ftw-patch.git"
-# Issues = "https://github.com/FitzzTeXnikWelt/ftw-patch/issues"
+[project.urls]
+Homepage = "https://github.com/fitzz-ftw/ftw-patch"
+Documentation = "https://github.com/fitzz-ftw/ftw-patch#readme"
+Repository = "https://github.com/fitzz-ftw/ftw-patch.git"
+Issues = "https://github.com/fitzz-ftw/ftw-patch/issues"
 
 
 [project.scripts]
