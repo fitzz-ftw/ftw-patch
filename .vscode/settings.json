@@ -77,5 +77,8 @@
     // In v0.11.0 war dieser Pfad oft entscheidend:
     "esbonio.sphinx.buildDir": "${workspaceFolder}/doc/build/html",
     "esbonio.server.logLevel": "debug",
-    "python.defaultInterpreterPath": "dein/pfad/zum/venv/bin/python"
+    "python.defaultInterpreterPath": "dein/pfad/zum/venv/bin/python",
+    "files.associations": {
+        "*.rst.inc": "restructuredtext"
+    }
 }

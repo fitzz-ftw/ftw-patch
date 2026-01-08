@@ -117,6 +117,4 @@ omit = ["**/_version.py"]
 show_missing = true
 fail_under = 100
 
-
-
 #

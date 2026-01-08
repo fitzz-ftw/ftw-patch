@@ -9,6 +9,20 @@
 import os
 import sys
 
+from docutils import nodes
+
+
+def ftwpatchopt_role(name, rawtext, text, lineno, inliner, options=None, content=None):
+    # Wir erstellen einen literal-Knoten (für Monospace)
+    # und fügen "ftwpatchopt" zu den Klassen hinzu
+    node = nodes.literal(rawtext, text, classes=['ftwpatchopt'])
+    return [node], []
+
+def setup(app):
+    app.add_css_file('custom.css')
+    # Eine spezifische Rolle für ftwpatch-Optionen
+    app.add_role('ftwpatchopt', ftwpatchopt_role)
+
 sys.path.insert(0, os.path.abspath('.'))
 project = "FTW Patch"
 copyright = "2025, Fitzz TeXnik Welt"
@@ -19,13 +33,13 @@ html_show_copyright = True
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "sphinxarg.ext",
     "autoclasstoc",
     "sphinx.ext.autodoc",
     "sphinx_autodoc_annotation",
     "sphinx.ext.doctest",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinxarg.ext",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
@@ -34,6 +48,8 @@ extensions = [
     # "sphinxcontrib-plantuml",
 ]
 
+
+html_static_path = ['_static']
 templates_path = ["_templates", "_templates/autosummary"]
 exclude_patterns = []
 
@@ -134,9 +150,11 @@ suppress_warnings=[
 html_theme = "sphinx_book_theme"
 toc_object_entries = True
 toc_object_entries_show_parents = 'hide'
-html_theme_options = { "show_toc_level": 4, 
-    "show_navbar_depth": 1, 
-    "home_page_in_toc": True }
+html_theme_options = { 
+    "show_toc_level": 5, 
+    "show_navbar_depth": 2, 
+    "home_page_in_toc": True,
+    }
 
 # intersphinx configuration
 

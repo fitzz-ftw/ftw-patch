@@ -67,3 +67,12 @@ a.headerlink:hover {
     color: #0056b3 !important;
     text-decoration: underline;
 }
+
+
+code.ftwpatchopt {
+    color: #c0392b; 
+    background-color: #f9f9f9;
+    padding: 1px 3px;
+    border-radius: 3px;
+    font-weight: 500;
+}

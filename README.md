@@ -7,6 +7,17 @@
 [![PyPI version](https://img.shields.io/pypi/v/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 
+
+[![PyPI version](https://img.shields.io/pypi/v/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
+[![Documentation Status](https://readthedocs.org/projects/ftw-patch/badge/?version=latest)](https://ftw-patch.readthedocs.io/en/latest/?badge=latest)
+[![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://codecov.io/gh/fitzz-ftw/ftw-patch)
+[![Doc Coverage](https://img.shields.io/badge/doc--coverage-100%25-brightgreen)](https://ftw-patch.readthedocs.io/)
+[![Linting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+[![Downloads](https://static.pepy.tech/badge/ftw-patch)](https://pepy.tech/project/ftw-patch)
+
+
+
 ### Abstract
 A unicode-resistant replacement for the classic `patch` utility. This tool is designed to handle patches reliably, even when dealing with special characters or different file encodings that often cause issues with traditional tools.
 
@@ -23,7 +34,7 @@ pip install ftw-patch
 ## Features
 
 * **Unicode-Safe:** Reliable processing of files with special characters and various encodings.
-* **Modern Python Support:** Fully tested and optimized for Python 3.8 up to the latest version 3.15.
+* **Modern Python Support:** Fully tested and optimized for Python 3.11 up to the latest version 3.15.
 * **Cross-Platform:** Works seamlessly on Linux, macOS, and Windows.
 * **Configuration Support:** Settings can be pre-defined in `pyproject.toml` or a custom user TOML file.
 * **Robust Path Handling:** Uses `platformdirs` to ensure clean and standard-compliant file paths.

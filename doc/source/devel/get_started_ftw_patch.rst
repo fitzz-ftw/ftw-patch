@@ -297,7 +297,7 @@ patch content without manual string prefix checking **(ro)**.
     False
 
 
-Test Case 2: Lines with Trailing Whitespace
+Lines with Trailing Whitespace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This test simulates a deletion line that includes trailing whitespace, 
 which is important for the :py:attr:`has_trailing_whitespace` property.
@@ -310,7 +310,7 @@ which is important for the :py:attr:`has_trailing_whitespace` property.
    >>> hl2.has_trailing_whitespace
    True
 
-Test Case 3: Error Handling (Missing Prefix)
+Error Handling (Missing Prefix)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The class must raise a :py:class:`PatchParseError` if 
@@ -321,12 +321,14 @@ the line does not have a valid diff prefix (' ', '+', '-').
    >>> HunkLine("Missing prefix") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
    Traceback (most recent call last):
    ...
-   ftw.patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix (' ', '+', '-') or is empty: 'Missing prefix'
+   ftw.patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix 
+   (' ', '+', '-') or is empty: 'Missing prefix'
 
-Test Case 4: Whitespace Normalization (Compare all 3 Properties)
+Whitespace Normalization (Compare all 3 Properties)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This test is critical and compares the three levels of dynamic whitespace handling (Default, --normalize-ws, --ignore-all-ws).
+This test is critical and compares the three levels of dynamic whitespace 
+handling (Default, --normalize-ws, --ignore-all-ws).
 
 Original Content: Leading WS, Internal WS run, Trailing WS
 
@@ -335,14 +337,14 @@ Original Content: Leading WS, Internal WS run, Trailing WS
    >>> ws_raw = "+  def test_fn(  a, b ): \t"
    >>> hl_ws = HunkLine(ws_raw)
 
-Test 4a: Default Content (Raw, only newline/prefix stripped)
+Default Content (Raw, only newline/prefix stripped)
 
 .. code:: python
 
    >>> hl_ws.content
    '  def test_fn(  a, b ): \t'
 
-Test 4b: Normalized WS (Internal collapses, trailing removed, leading kept)
+Normalized WS (Internal collapses, trailing removed, leading kept)
 
 .. code:: python
 
@@ -356,14 +358,14 @@ Test 4b: Normalized WS (Internal collapses, trailing removed, leading kept)
    '  def test_fn2( a, b ):'
 
 
-Test 4c: Ignore All WS (Removes all \s)
+Ignore All WS (Removes all \s)
 
 .. code:: python
 
    >>> hl_ws.ignore_all_ws_content
    'deftest_fn(a,b):'
 
-Test Case 5: Blank Line Context
+Blank Line Context
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests an explicit blank context line (' '), which is important for the Blank 
