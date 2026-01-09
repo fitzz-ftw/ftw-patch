@@ -8,7 +8,7 @@
 Getting Started with Classes from Patch Module 
 =================================================
 
-:Author: Fitzz TeXnik Welt
+:Author: Fitzz TeΧnik Welt
 :Email: FitzzTeXnikWelt@t-online.de
 
 This document provides a step-by-step introduction and executable documentation for the core logic in the ``ftw.patch`` module.
@@ -731,10 +731,12 @@ Adding some :py:class:`HunkLine`
     
     >>> hunk1.new_start
     1
-    
-The size of of a :py:class:`Hunk` is defiend by it's   
 
-    >> len(hunk1)
+The size of of a :py:class:`Hunk` is defiend by it's :py:class:`HunkLines`. 
+
+.. code:: python
+
+    >>> len(hunk1)
     5
 
     >>> hunk1[2]
@@ -961,7 +963,7 @@ Simulate passing the minimal required argument, the patch file path:
 
     >>> args = parser.parse_args(["-p", "0","--dry-run","False","patch.diff"])
 
-Verify default boolean flags:
+Verify default boolean options:
 
 .. code:: python
 
@@ -987,7 +989,7 @@ Verify the positional argument was mapped correctly:
     >>> args.patch_file.name
     'patch.diff'
 
-Verify FTW-specific normalization flags default to **False**:
+Verify FTW-specific normalization options default to **False**:
 
 .. code:: python
 
@@ -1002,12 +1004,12 @@ Verify FTW-specific normalization flags default to **False**:
 
 .. _ftw-patch-strip-count:
 
-Test Case 2: Handling Strip Count (-p)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Handling Strip Count (:ftwpatchopt:`-p`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This test verifies that the :py:attr:`strip_count` argument is correctly parsed.
 
-Test with the short flag (`-p`) set to `3`:
+Test with the short option (:ftwpatchopt:`-p`) set to `3`:
 
 .. code:: python
 
@@ -1015,7 +1017,7 @@ Test with the short flag (`-p`) set to `3`:
     >>> args_p.strip_count
     3
 
-Test with the long flag (`--strip`) set to `5`:
+Test with the long option (:ftwpatchopt:`--strip`) set to `5`:
 
 .. code:: python
 
@@ -1041,18 +1043,18 @@ Test for non-numeric input, which should raise a `SystemExit` error:
 
 .. _ftw-patch-dry-run:
 
-Test Case 3: Handling Dry Run (--dry-run)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Handling Dry Run (:ftwpatchopt:`--dry-run`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This test confirms that the boolean flag `dry_run` is correctly set.
+This test confirms that the boolean option :py:attr:`dry_run` is correctly set.
 
-Test with the `--dry-run` flag present:
+Test with the :ftwpatchopt:`--dry-run` option present:
 
 Handling Ambiguous Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When using optional values with ``nargs='?'``, positional arguments (like filenames) 
-following a flag might be mistaken for the flag's value. Use the double-dash ``--`` 
+When using optional values with :py:attr:`nargs='?'`, positional arguments (like filenames) 
+following a option might be mistaken for the option's value. Use the double-dash :ftwpatchopt:`--` 
 to explicitly separate options from positional arguments.
 
 This would fail, because "patch.diff" is not a boolean:
@@ -1086,12 +1088,12 @@ This succeeds:
 
 .. _ftw-patch-verbose:
 
-Test Case 4: Controlling Verbosity (`-v`)
+Controlling Verbosity (:ftwpatchopt:`-v`)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This test verifies that the verbosity level is correctly parsed and incremented.
 
-Test with a single short flag (`-v`):
+Test with a single short option (:ftwpatchopt:`-v`):
 
 .. code:: python
 
@@ -1099,7 +1101,7 @@ Test with a single short flag (`-v`):
     >>> args_v1.verbose
     1
 
-Test with multiple short flags (`-vvv`):
+Test with multiple short options (:ftwpatchopt:`-vvv`):
 
 .. code:: python
 
@@ -1107,7 +1109,7 @@ Test with multiple short flags (`-vvv`):
     >>> args_v3.verbose
     3
 
-Test with the long flag (`--verbose`):
+Test with the long option (:ftwpatchopt:`--verbose`):
 
 .. code:: python
 
@@ -1117,10 +1119,10 @@ Test with the long flag (`--verbose`):
 
 .. _ftw_patch-ftw_patch-backup-options:
 
-Test Case 5: Backup Extension Handling
+Backup Extension Handling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``--backupext`` argument is flexible. It automatically ensures a leading 
+The :ftwpatchopt:`--backupext` option is flexible. It automatically ensures a leading 
 dot is present and supports dynamic timestamps for automated workflows.
 
 Example 1: Extension without a dot is normalized
@@ -1846,4 +1848,4 @@ patching cycle: creating a source file, defining a unified diff, and applying it
         
         >>> env.teardown()
         
-        >> env.clean_home()
+        >>> env.clean_home()

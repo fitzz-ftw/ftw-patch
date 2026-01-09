@@ -31,7 +31,7 @@ project-specific :file:`pyproject.toml` is present.
    backupext = "datetime"
    
 .. note::
-   If you use the :ftwpatchopt:`--userconfig` flag, the path is resolved 
+   If you use the :ftwpatchopt:`--userconfig` option, the path is resolved 
    relative to your CWD. 
    Example: ``ftwpatch --userconfig ./my_rules.toml <patch_file>`` will look 
    for the config exactly in your current folder.

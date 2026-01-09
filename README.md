@@ -99,7 +99,7 @@ backupext = ".original"
 normalize-ws = true
 ```
 
-> **Note:** You can override these defaults at any time by using command-line flags or a project-specific `pyproject.toml`. If you want to use a specific configuration file from a different location, use the `--userconfig <path>` flag.
+> **Note:** You can override these defaults at any time by using command-line options or a project-specific `pyproject.toml`. If you want to use a specific configuration file from a different location, use the `--userconfig <path>` option.
 
 
 

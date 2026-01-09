@@ -49,13 +49,41 @@ Key Features
 * **Cross-Platform:** Consistent behavior on Linux, macOS, and Windows.
 
 Installation
-------------
+-------------
 
-Install the package via pip:
+Recommended: Global Installation via pipx
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For most users, we recommend installing the application using `pipx <https://pypa.github.io/pipx/>`_. 
+It installs the package into a dedicated, isolated environment while making the executable available 
+globally in your shell.
+
+.. rubric:: Why pipx?
+
+* **Isolation:** Prevents dependency conflicts with other Python packages or your 
+  system's Python.
+* **Cleanliness:** No more cluttering of your global site-packages.
+* **Convenience:** Binaries are automatically added to your PATH.
 
 .. code-block:: bash
 
-   pip install ftw-patch
+   pipx install your-package-name
+
+Developer Installation (pip)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you intend to use the package as a library or want to contribute to development, 
+use a standard virtual environment:
+
+.. code-block:: bash
+
+   # Create and activate a venv
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+   # Install the package
+   pip install your-package-name
+
 
 Quick Start
 -----------
@@ -77,18 +105,19 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
-   :caption: Project Info:
-
-   changelog
-   license
-
-.. toctree::
-   :maxdepth: 1
    :caption: Developer Guides:
 
    devel/get_started_ftw_patch
    devel/ftw_patch_module
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Project Information:
+
+   about
+   changelog
+   roadmap
+   license
 
 Indices and tables
 ==================
@@ -103,7 +132,7 @@ Indices and tables
 
 Licensed under |cc-logo|
 `Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International 
-<https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en>`_ [cite: 9, 10]
+<https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en>`_ 
 
 .. topic:: Citing this documentation
 
