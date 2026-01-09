@@ -25,8 +25,8 @@ def setup(app):
 
 sys.path.insert(0, os.path.abspath('.'))
 project = "FTW Patch"
-copyright = "2025, Fitzz TeXnik Welt"
-author = "Fitzz TeXnik Welt"
+copyright = "2025, Fitzz TeΧnik Welt"
+author = "Fitzz TeΧnik Welt"
 html_show_copyright = True
 
 # -- General configuration ---------------------------------------------------
@@ -151,6 +151,35 @@ html_theme = "sphinx_book_theme"
 toc_object_entries = True
 toc_object_entries_show_parents = 'hide'
 html_theme_options = { 
+    "icon_links": [
+        {
+            "name": "General Index",
+            "url": "/genindex", # Sphinx generiert diese Datei automatisch
+            "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/book.svg',
+            "type": "url",
+            "attributes": {
+               "target": "_self",
+            },
+        },
+        {
+            "name": "Module Index",
+            "url": "/py-modindex",
+            "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/code.svg',
+            "type": "url",
+            "attributes": {
+               "target": "_self",
+            },
+        },
+        {
+            "name": "About",
+            "url": "/about",
+            "icon": "https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/circle-info.svg",
+            "type": "url",
+            "attributes": {
+                "target": "_self"
+            },
+        },
+    ],
     "show_toc_level": 5, 
     "show_navbar_depth": 2, 
     "home_page_in_toc": True,
