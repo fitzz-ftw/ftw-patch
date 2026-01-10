@@ -51,7 +51,6 @@ ftwpatch = "ftw.patch.ftw_patch:prog_ftw_patch"
 doc = [
     "sphinx",
     "sphinx-argparse",
-    "sphinx-autodoc-annotation",
     "autoclasstoc",
     "python-docs-theme",
     "sphinxcontrib-mermaid",

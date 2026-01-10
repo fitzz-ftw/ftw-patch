@@ -37,3 +37,14 @@ As long as you follow these terms:
 * **NonCommercial** — You may not use the material for commercial purposes.
 * **ShareAlike** — If you remix, transform, or build upon the material, you must 
   distribute your contributions under the same license as the original.
+
+
+Font License
+------------
+
+The documentation uses the **TeX Gyre** font family. These fonts are 
+distributed under the **GUST Font License (GFL)**, which is a free 
+license intended to support the TeX community.
+
+.. literalinclude:: _static/fonts/GUST-FONT-LICENSE.txt
+   :language: text

@@ -2,34 +2,36 @@
 ftw-patch: Unicode-Safe & Whitespace-Aware Patching
 ===================================================
 
-.. image:: https://img.shields.io/pypi/v/ftw-patch.svg
-   :target: https://pypi.org/project/ftw-patch/
-   :alt: PyPI version
+.. only:: not epub
 
-.. image:: https://readthedocs.org/projects/ftw-patch/badge/?version=latest
-   :target: https://ftw-patch.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+   .. image:: https://img.shields.io/pypi/v/ftw-patch.svg
+      :target: https://pypi.org/project/ftw-patch/
+      :alt: PyPI version
 
-.. image:: https://img.shields.io/badge/coverage-100%25-brightgreen
-   :target: https://codecov.io/gh/fitzz-ftw/ftw-patch
-   :alt: Code Coverage
+   .. image:: https://readthedocs.org/projects/ftw-patch/badge/?version=latest
+      :target: https://ftw-patch.readthedocs.io/en/latest/?badge=latest
+      :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/doc--coverage-100%25-brightgreen
-   :target: https://ftw-patch.readthedocs.io/
-   :alt: Doc Coverage
+   .. image:: https://img.shields.io/badge/coverage-100%25-brightgreen
+      :target: https://codecov.io/gh/fitzz-ftw/ftw-patch
+      :alt: Code Coverage
 
-.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
-   :target: https://github.com/astral-sh/ruff
-   :alt: Linting: ruff
+   .. image:: https://img.shields.io/badge/doc--coverage-100%25-brightgreen
+      :target: https://ftw-patch.readthedocs.io/
+      :alt: Doc Coverage
 
-.. image:: https://img.shields.io/badge/License-GPL%20v2-blue.svg
-   :target: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-   :alt: License: GPL v2
+   .. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+      :target: https://github.com/astral-sh/ruff
+      :alt: Linting: ruff
 
-.. 
-   .. image:: https://static.pepy.tech/badge/ftw-patch
-      :target: https://pepy.tech/project/ftw-patch
-      :alt: Downloads
+   .. image:: https://img.shields.io/badge/License-GPL%20v2-blue.svg
+      :target: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+      :alt: License: GPL v2
+
+   .. 
+      .. image:: https://static.pepy.tech/badge/ftw-patch
+         :target: https://pepy.tech/project/ftw-patch
+         :alt: Downloads
 
 ---
 
@@ -118,12 +120,17 @@ Documentation
    changelog
    roadmap
    license
+   genindex
+   modindex
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`search`
+  
+.. only:: not epub
+
+   * :ref:`search`
 
 .. |cc-logo| image:: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
    :target: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
