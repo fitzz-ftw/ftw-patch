@@ -31,9 +31,11 @@ help:
 	@printf "  $(YELLOW)make test-deploy V=x.y.z$(NC) Test release (TestPyPI, Twine check, Tag vV-test)\n\n"
 	@printf "$(GREEN)%s$(NC)\n" "Quality Assurance & Documentation:"
 	@printf "  $(YELLOW)make tox$(NC)                 Run all tests using tox\n"
+	@printf "  $(YELLOW)make build$(NC)               Build package (sdist & wheel) via tox\\n"
 	@printf "  $(YELLOW)make html$(NC)                Generate Sphinx HTML documentation\n"
 	@printf "  $(YELLOW)make check-tools$(NC)         Show versions and paths of used tools\n\n"
 	@printf "$(GREEN)%s$(NC)\n" "Validation & Safety (Internal):$(NC)\n"
+	@printf "  $(YELLOW)make ci-prepare$(NC)          Prepare CI environment (Install tools like tox/build)\\n"
 	@printf "  $(YELLOW)make check-gitclean$(NC)      Check for uncommitted changes\n"
 	@printf "  $(YELLOW)make check-upstream$(NC)      Check sync status with origin\n"
 	@printf "  $(YELLOW)make check-v V=...$(NC)       Validate version format (SemVer)\n\n"
@@ -142,3 +144,20 @@ html:
 tox:
 	@printf "%s\n" "--- Starting Tests ---"
 	tox
+
+# --- CI Support ---
+.PHONY: ci-prepare
+
+ci-prepare:
+	@printf "$(YELLOW)%s$(NC)\n" "Preparing CI environment..."
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install tox 
+	@printf "$(GREEN)%s$(NC)\n" "CI environment ready."
+
+# --- Build & Distribution ---
+.PHONY: build
+
+build: clean ## Build sdist and wheel using tox
+	@printf "$(YELLOW)%s$(NC)\n" "Starting isolated build via tox..."
+	tox -e build
+	@printf "$(GREEN)%s$(NC)\n" "Build finished. Check dist/ for artifacts."
