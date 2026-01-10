@@ -1,43 +1,154 @@
-.. FTW Patch documentation master file,
-   created on Wed Nov  5 20:01:12 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-FTW Patch documentation
-===================================
+ftw-patch: Unicode-Safe & Whitespace-Aware Patching
+===================================================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+.. only:: not epub
+
+   .. image:: https://img.shields.io/pypi/v/ftw-patch.svg
+      :target: https://pypi.org/project/ftw-patch/
+      :alt: PyPI version
+
+   .. image:: https://readthedocs.org/projects/ftw-patch/badge/?version=latest
+      :target: https://ftw-patch.readthedocs.io/en/latest/?badge=latest
+      :alt: Documentation Status
+
+   .. image:: https://img.shields.io/badge/coverage-100%25-brightgreen
+      :target: https://codecov.io/gh/fitzz-ftw/ftw-patch
+      :alt: Code Coverage
+
+   .. image:: https://img.shields.io/badge/doc--coverage-100%25-brightgreen
+      :target: https://ftw-patch.readthedocs.io/
+      :alt: Doc Coverage
+
+   .. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+      :target: https://github.com/astral-sh/ruff
+      :alt: Linting: ruff
+
+   .. image:: https://img.shields.io/badge/License-GPL%20v2-blue.svg
+      :target: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+      :alt: License: GPL v2
+
+   .. 
+      .. image:: https://static.pepy.tech/badge/ftw-patch
+         :target: https://pepy.tech/project/ftw-patch
+         :alt: Downloads
+
+---
+
+
+:py:mod:`ftw-patch` is a robust Python-based patch utility designed for modern 
+development workflows. While traditional patch tools often struggle with different 
+line endings, Unicode characters, or minor formatting changes, :py:mod:`ftw-patch` 
+provides advanced normalization to make patching reliable and predictable.
+
+Key Features
+------------
+
+* **Unicode-Safe:** Native handling of UTF-8 and other encodings without corruption.
+* **Smart Normalization:** Optional ignore/normalize rules for non-leading whitespace and blank lines.
+* **Context-Aware:** Dynamically loads configuration from :file:`pyproject.toml` or user-defined files.
+* **Safety First:** Built-in dry-run mode and flexible backup options (including timestamped suffixes).
+* **Cross-Platform:** Consistent behavior on Linux, macOS, and Windows.
+
+Installation
+-------------
+
+Recommended: Global Installation via pipx
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For most users, we recommend installing the application using `pipx <https://pypa.github.io/pipx/>`_. 
+It installs the package into a dedicated, isolated environment while making the executable available 
+globally in your shell.
+
+.. rubric:: Why pipx?
+
+* **Isolation:** Prevents dependency conflicts with other Python packages or your 
+  system's Python.
+* **Cleanliness:** No more cluttering of your global site-packages.
+* **Convenience:** Binaries are automatically added to your PATH.
+
+.. code-block:: bash
+
+   pipx install your-package-name
+
+Developer Installation (pip)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you intend to use the package as a library or want to contribute to development, 
+use a standard virtual environment:
+
+.. code-block:: bash
+
+   # Create and activate a venv
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+   # Install the package
+   pip install your-package-name
+
+
+Quick Start
+-----------
+
+Once installed, use the :command:`ftwpatch` command to apply a unified diff:
+
+.. code-block:: bash
+
+   ftwpatch my_changes.patch
+
+Documentation
+-------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: CLI ftwpatch
+   :caption: User Guide:
 
    user/use_ftwpatch
 
 .. toctree::
    :maxdepth: 1
-   :caption: Development
+   :caption: Developer Guides:
 
    devel/get_started_ftw_patch
-
-.. toctree::
-   :maxdepth: 4
-   
    devel/ftw_patch_module
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Project Information:
+
+   about
+   changelog
+   roadmap
+   license
+   genindex
+   modindex
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+  
+.. only:: not epub
+
+   * :ref:`search`
 
 .. |cc-logo| image:: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
-   :target: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de
+   :target: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
    :alt: CC BY-NC-SA 4.0
 
-Lizenziert unter |cc-logo|
-`Creative Commons Namensnennung - Nicht-kommerziell - Weitergabe unter gleichen Bedingungen 4.0 International <https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de>`_
 
-.. topic:: Zitieren dieser Dokumentation
+Licensed under |cc-logo|
+`Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International 
+<https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en>`_ 
 
-   Bitte zitieren Sie dieses Werk wie folgt:
+.. topic:: Citing this documentation
+
+   Please cite this work as follows: 
    
-   Fitzz TeXnik Welt. (2025). *ftw-patch: Ein Unicode-resistenter Ersatz für das klassische patch-Tool* (Version 1.0.0) [Software-Dokumentation]. Abgerufen von https://github.com/dein-nutzername/ftw-patch
+   Fitzz TeXnik Welt. 
+   (2025). *ftw-patch: A Unicode-resilient replacement for the classic patch tool* 
+   (Version 1.0.0) [Software documentation]. Retrieved from https://github.com/fitzz-ftw/ftw-patch
+
+
+
    

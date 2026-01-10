@@ -1,68 +1,72 @@
-# Minimal makefile for Sphinx documentation
-#
+# --- Variables (Original Project Configuration) ---
+SPHINXOPTS      ?=
+SPHINXBUILD     ?= sphinx-build
+SOURCEDIR       = source
+BUILDDIR        = build
+AUTOSUMMERYDIR  = $(SOURCEDIR)/devel/api
+PYTHON          = python
 
-# You can set these variables from the command line, and also
-# from the environment for the first two.
-SPHINXOPTS    ?=
-SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = source
-BUILDDIR      = build
-AUTOSUMMERYDIR = $(SOURCEDIR)/devel/api
-PYTHON=python
+# Color codes for terminal feedback
+GREEN           = \033[0;32m
+YELLOW          = \033[1;33m
+BLUE            = \033[0;34m
+NC              = \033[0m
 
-# Put it first so that "make" without argument is like "make help".
+# Explicit default goal
+.DEFAULT_GOAL := help
+
+.PHONY: help html htmlpure coverage clean api-json html-coverage-full epub check-sphinx
+
+# Custom help menu reflecting your full workflow
 help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@printf "$(BLUE)FTW Patch Build System$(NC)\n"
+	@printf "Please use 'make <target>' where <target> is one of:\n\n"
+	@printf "  $(GREEN)html$(NC)                Builds coverage AND dirhtml (Original Workflow)\n"
+	@printf "  $(GREEN)htmlpure$(NC)            Builds standard HTML only\n"
+	@printf "  $(GREEN)epub$(NC)                Builds ePub (with assets & custom_epub.css)\n"
+	@printf "  $(BLUE)coverage$(NC)            Generates coverage reports\n"
+	@printf "  $(BLUE)html-coverage-full$(NC)  Full run: Coverage + HTML + JSON Export\n"
+	@printf "  $(YELLOW)clean$(NC)               Removes $(BUILDDIR) and API RSTs\n"
 
-.PHONY: help Makefile htmlpure html coverage doctest test
+# Verify environment
+check-sphinx:
+	@command -v $(SPHINXBUILD) >/dev/null 2>&1 || { echo >&2 "Error: $(SPHINXBUILD) not found."; exit 1; }
 
-htmlpure:
-	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+# --- Original Workflows ---
 
-html: 
+# Your 'html' target: always cleans and runs coverage first
+html: clean check-sphinx
+	@printf "$(GREEN)%s$(NC)\n" "--- Running Coverage ---"
 	@$(SPHINXBUILD) -M coverage "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@printf "$(GREEN)%s$(NC)\n" "--- Building HTML (dirhtml) ---"
 	@$(SPHINXBUILD) -M dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-coverage:
+htmlpure: check-sphinx
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+coverage: check-sphinx
 	@$(SPHINXBUILD) -M coverage "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: api-json
+html-coverage-full: check-sphinx
+	@echo "INFO: Starting FULL COVERAGE check..."  
+	@$(SPHINXBUILD) -b coverage "$(SOURCEDIR)" "$(BUILDDIR)/coverage"  
+	@echo "INFO: Starting HTML Build..."  
+	@$(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)/html"  
+	@echo "SUCCESS: Reports in $(BUILDDIR)/coverage, HTML in $(BUILDDIR)/html"
 
-api-json:  
-	@echo "INFO: Starte schlanken Build zum Generieren der Gemini API JSON..."  
-	# Nutzt den schnellsten Builder ('dummy'), um die Sphinx-Umgebung zu befüllen.  
-	$(SPHINXBUILD) -b dummy "$(SOURCEDIR)" "$(BUILDDIR)/dummy_api_export"  
-	@echo "SUCCESS: API JSON erstellt. Datei liegt unter: \$(BUILDDIR)/api-json/gemini_api_data.json"
+# --- New Asset-aware Targets ---
 
+epub: check-sphinx
+	@printf "$(YELLOW)%s$(NC)\n" "--- Building ePub output ---"
+	@$(SPHINXBUILD) -M epub "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: html-coverage-full
+# --- Cleanup ---
 
-# Ziel: Generiert Coverage-Berichte, die vollständige HTML-Doku UND die gemini\_api\_data.json  
-html-coverage-full:  
-	@echo "INFO: Starte COVERAGE-Check..."  
-	# 1. Führt den Coverage-Build zuerst aus, um die Berichtsdatei zu erstellen.  
-	$(SPHINXBUILD) -b coverage "$(SOURCEDIR)" "$(BUILDDIR)/coverage"  
-	  
-	@echo "INFO: Starte HTML-Build (inkl. Gemini API JSON Export)..."  
-	# 2. Führt den HTML-Build aus. Er liest den Coverage-Bericht ein und 
-	# löst den JSON-Hook aus.  
-	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html"  
-	  
-	@echo "SUCCESS: Build abgeschlossen."  
-	@echo "Berichte liegen unter: $(BUILDDIR)/coverage"  
-	@echo "HTML-Doku liegt unter: $(BUILDDIR)/html"  
-	@echo "JSON-API liegt unter: $(BUILDDIR)/api-json/gemini_api_data.json"
-
-
-.PHONY: clean
 clean:
-	rm -r $(BUILDDIR)
-	rm $(AUTOSUMMERYDIR)/*.rst
+	@printf "$(YELLOW)%s$(NC)\n" "--- Cleaning build directory and API cache ---"
+	rm -rf $(BUILDDIR)
+	@if [ -d "$(AUTOSUMMERYDIR)" ]; then \
+		find "$(AUTOSUMMERYDIR)" -name "*.rst" -type f -delete 2>/dev/null || true; \
+	fi
+	@printf "$(GREEN)%s$(NC)\n" "Clean complete."
 
-
-
-
-# Catch-all target: route all unknown targets to Sphinx using the new
-# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

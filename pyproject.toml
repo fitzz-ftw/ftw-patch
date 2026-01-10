@@ -36,11 +36,11 @@ classifiers = [
 ]
 
 
-# [project.urls]
-# Homepage = "https://github.com/FitzzTeXnikWelt/ftw-patch"
-# Documentation = "https://ftw-patch.readthedocs.io/"
-# Repository = "https://github.com/FitzzTeXnikWelt/ftw-patch.git"
-# Issues = "https://github.com/FitzzTeXnikWelt/ftw-patch/issues"
+[project.urls]
+Homepage = "https://github.com/fitzz-ftw/ftw-patch"
+Documentation = "https://github.com/fitzz-ftw/ftw-patch#readme"
+Repository = "https://github.com/fitzz-ftw/ftw-patch.git"
+Issues = "https://github.com/fitzz-ftw/ftw-patch/issues"
 
 
 [project.scripts]
@@ -51,7 +51,6 @@ ftwpatch = "ftw.patch.ftw_patch:prog_ftw_patch"
 doc = [
     "sphinx",
     "sphinx-argparse",
-    "sphinx-autodoc-annotation",
     "autoclasstoc",
     "python-docs-theme",
     "sphinxcontrib-mermaid",
@@ -62,7 +61,9 @@ doc = [
 ]
 test = ["pytest", "pytest-mock", "pytest-cov"]
 lint = ["ruff"]
-dev = ["ftw-patch[test,doc,lint]"]
+dev = ["ftw-patch[test,doc,lint]",
+    "esbonio==0.16.5",
+    ]
 
 
 [[project.authors]]
@@ -114,9 +115,5 @@ omit = ["**/_version.py"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 100
-
-[tool.coverage.html]
-directory = "htmlcov"
-
 
 #

@@ -197,7 +197,7 @@ class HeadLine(PatchLine):
             self._info = None
 
     @property
-    def prefix(self):
+    def prefix(self)->str:
         """
         The diff prefix ('--- ' or '+++ ') identified at the start of the line **(ro)**.
 
@@ -206,7 +206,7 @@ class HeadLine(PatchLine):
         return self._prefix
 
     @property
-    def is_orig(self):
+    def is_orig(self)->bool:
         """
         Indicates if this line represents the original (source) file path **(ro)**.
 
@@ -215,7 +215,7 @@ class HeadLine(PatchLine):
         return self._prefix == "--- "
 
     @property
-    def is_new(self):
+    def is_new(self)->bool:
         """
         Indicates if this line represents the new (target) file path **(ro)**.
 
@@ -224,11 +224,12 @@ class HeadLine(PatchLine):
         return self._prefix == "+++ "
 
     @property
-    def is_null_path(self):
+    def is_null_path(self)->bool:
         """
         Checks if the file path points to a null device (e.g., /dev/null) **(ro)**.
 
-        This property delegates the check to the global is_null_path utility function.
+        This property uses the static method :py:meth:`~HeadLine.check_is_null_path` to perform the 
+        null-path check.
 
         :returns: True if the content matches a null path pattern.
         """

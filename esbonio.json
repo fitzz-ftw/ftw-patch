@@ -1,0 +1,15 @@
+{
+    "sphinx": {
+        "confDir": "./doc/source",
+        "srcDir": "./doc/source",
+        "buildDir": "./doc/build/html",
+        "pythonCommand": [
+            "python",
+            "-m",
+            "esbonio.sphinx_agent"
+        ]
+    },
+    "server": {
+        "logLevel": "debug"
+    }
+}
