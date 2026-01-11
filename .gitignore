@@ -30,3 +30,6 @@ doc/source/devel/api/
 
 # Tox Generated Files
 .tox
+
+TAGMESSAGE.txt
+old_messages/**
