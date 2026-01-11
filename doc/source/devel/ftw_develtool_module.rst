@@ -1,6 +1,5 @@
-FTW Patch
-###################################
-
+FTW Development Tools
+=====================
 
 
 .. autosummary::
@@ -8,5 +7,4 @@ FTW Patch
     :recursive:
     :template: module_extended.rst
 
-    ftw.patch.ftw_patch
-
+    ftw.develtool.testinfra

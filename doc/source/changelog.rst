@@ -2,7 +2,7 @@ Changelog
 =========
 All notable changes to this project will be documented in this file.
 
-.. rubric:: v0.1.0 (2026-01-08) Initial Public Beta Release.
+.. rubric:: v0.3.0 (2026-01-11) Initial Public Beta Release.
     :class: ftw-cr-title
 
 .. rubric:: Added
