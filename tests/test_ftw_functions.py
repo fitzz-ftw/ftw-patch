@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ftw.patch.ftw_patch import (
+from fitzzftw.patch.ftw_patch import (
     FtwPatchError,
     _get_argparser,
     get_merged_config,
@@ -63,10 +63,10 @@ class TestMainEntry:
         """Tests the successful execution path (Returns 0)."""
         # Mock Parser
         mock_args = mocker.Mock(dry_run=False)
-        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
+        mocker.patch("fitzzftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
         
         # Mock FtwPatch logic
-        mock_patcher = mocker.patch("ftw.patch.ftw_patch.FtwPatch")
+        mock_patcher = mocker.patch("fitzzftw.patch.ftw_patch.FtwPatch")
         mock_patcher.return_value.apply_patch.return_value = 0
         
         exit_code = prog_ftw_patch()
@@ -75,10 +75,10 @@ class TestMainEntry:
 
     def test_prog_ftw_patch_ftw_error(self, mocker, capsys):
         """Tests the handling of a known FtwPatchError (Returns 1)."""
-        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mocker.Mock()  # noqa: E501
+        mocker.patch("fitzzftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mocker.Mock()  # noqa: E501
         
         # Force a FtwPatchError during initialization
-        mocker.patch("ftw.patch.ftw_patch.FtwPatch", side_effect=FtwPatchError("Parser fail"))
+        mocker.patch("fitzzftw.patch.ftw_patch.FtwPatch", side_effect=FtwPatchError("Parser fail"))
         
         exit_code = prog_ftw_patch()
         
@@ -88,7 +88,7 @@ class TestMainEntry:
 
     def test_prog_ftw_patch_unexpected_error(self, mocker, capsys):
         """Tests the handling of an unexpected generic Exception (Returns 1)."""
-        mocker.patch("ftw.patch.ftw_patch._get_argparser", side_effect=RuntimeError("System crash"))
+        mocker.patch("fitzzftw.patch.ftw_patch._get_argparser", side_effect=RuntimeError("System crash"))
         
         exit_code = prog_ftw_patch()
         
@@ -103,10 +103,10 @@ class TestMainEntry:
         """
         # 1. Mock parser to return a valid namespace
         mock_args = mocker.Mock(dry_run=False)
-        mocker.patch("ftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
+        mocker.patch("fitzzftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
         
         # 2. Mock FtwPatch to raise the specific FileNotFoundError
-        mocker.patch("ftw.patch.ftw_patch.FtwPatch", side_effect=FileNotFoundError("Target file missing"))  # noqa: E501
+        mocker.patch("fitzzftw.patch.ftw_patch.FtwPatch", side_effect=FileNotFoundError("Target file missing"))  # noqa: E501
         
         # 3. Execute
         exit_code = prog_ftw_patch()
@@ -126,7 +126,7 @@ class TestMainEntry:
         # Wir simulieren, dass get_merged_config wegen eines TOML-Fehlers explodiert
         # (Alternativ könntest du auch _get_argparser mocken, um einen ArgumentError zu werfen)
         mocker.patch(
-            "ftw.patch.ftw_patch.get_merged_config", 
+            "fitzzftw.patch.ftw_patch.get_merged_config", 
             side_effect=TOMLDecodeError("Invalid TOML syntax",
                                         "invalid = [", 9)
         )

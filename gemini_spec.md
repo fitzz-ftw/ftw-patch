@@ -26,7 +26,7 @@ FTW-Patch
 │   │   │   │   └── package.rst
 │   │   │   └── mymodul.html
 │   │   ├── devel
-│   │   │   ├── ftw_patch_module.rst
+│   │   │   ├── fitzzftw_patch_module.rst
 │   │   │   └── get_started_ftw_patch.rst
 │   │   ├── user
 │   │   │   └── use_ftwpatch.rst
@@ -35,9 +35,9 @@ FTW-Patch
 │   │   └── index.rst
 │   └── Makefile
 ├── src
-│   └── ftw_patch
+│   └── fitzzftw_patch
 │       ├── __init__.py
-│       └── ftw_patch.py
+│       └── fitzzftw_patch.py
 ├── tests
 │   └── __init__.py
 ├── gemini_spec.md

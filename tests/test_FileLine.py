@@ -1,6 +1,6 @@
 import pytest
 
-from ftw.patch.ftw_patch import FileLine, PatchParseError
+from fitzzftw.patch.ftw_patch import FileLine, PatchParseError
 
 
 class TestFileLine:

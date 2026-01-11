@@ -18,7 +18,7 @@
 FTW Patch
 ===============================
 
-| File: ftw.patch/ftw_patch.py
+| File: fitzzftw.patch/ftw_patch.py
 | Author: Fitzz TeXnik Welt
 | Email: FitzzTeXnikWelt@t-online.de
 
@@ -38,8 +38,9 @@ from tomllib import TOMLDecodeError
 from tomllib import load as tomlload
 from typing import ClassVar, Generator, Iterable
 
-from fitzzftw.baselib.converter import str2bool
 from platformdirs import user_config_path
+
+from fitzzftw.baselib.converter import str2bool
 
 ### Temporary Functions
 # oldprint=print
@@ -1549,7 +1550,7 @@ def get_merged_config(app_name: str = "ftw", manual_user_cfg: str = None) -> dic
 
     The priority order for settings (highest to lowest):
 
-    1. Project Configuration: Defined in 'pyproject.toml' under [tool.ftw.patch].
+    1. Project Configuration: Defined in 'pyproject.toml' under [tool.fitzzftw.patch].
        This level ensures project-specific standards (e.g., .gitignore compliance) 
        always override global user preferences.       
     2. Manual User Configuration: A TOML file specified via the '--userconfig' flag.
@@ -1579,7 +1580,7 @@ def get_merged_config(app_name: str = "ftw", manual_user_cfg: str = None) -> dic
     if project_cfg_file.exists():
         with open(project_cfg_file, "rb") as f:
             data = tomlload(f)
-            project_cfg = data.get("tool", {}).get("ftw", {}).get("patch", {})
+            project_cfg = data.get("tool", {}).get(app_name, {}).get("patch", {})
             config.update(project_cfg)
             
     return config
@@ -1611,7 +1612,7 @@ def _get_argparser() -> ArgumentParser:
         prog="ftwpatch",
         description=("A Unicode-safe patch application tool with "
                      "advanced whitespace normalization. "
-                     "Patch utility. Settings are loaded from pyproject.toml [tool.ftw.patch] "
+                     "Patch utility. Settings are loaded from pyproject.toml [tool.fitzzftw.patch] "
                      "or a user config file. Keys in TOML match CLI flags (e.g., 'backupext')."
                      ),
         epilog=(

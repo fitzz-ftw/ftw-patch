@@ -23,7 +23,7 @@ Configuration Priority
 Settings are merged from the following sources, where the higher level always overrides the lower ones:
 
 1. **Command Line Arguments:** Explicit options (e.g., :ftwpatchopt:`--dry-run`) always win.
-2. **Project Configuration:** Settings in :file:`./pyproject.toml` under the ``[tool.ftw.patch]`` section.
+2. **Project Configuration:** Settings in :file:`./pyproject.toml` under the ``[tool.fitzzftw.patch]`` section.
 3. **User Configuration:**
 
    * Either a manual file provided via the :ftwpatchopt:`--userconfig` option.

@@ -8,11 +8,11 @@ include-package-data = true
 "" = "src"
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["ftw*"]
+include = ["fitzzftw*"]
 namespaces = true
 
 [tool.setuptools_scm]
-write_to = "src/ftw/patch/_version.py"
+write_to = "src/fitzzftw/patch/_version.py"
 tag_regex = '^(?P<prefix>v)?(?P<version>[^\+|-]+)(?P<suffix>-test)?$'
 
 [project]
@@ -45,7 +45,7 @@ Issues = "https://github.com/fitzz-ftw/ftw-patch/issues"
 
 
 [project.scripts]
-ftwpatch = "ftw.patch.ftw_patch:prog_ftw_patch"
+ftwpatch = "fitzzftw.patch.ftw_patch:prog_ftw_patch"
 
 
 [project.optional-dependencies]
@@ -91,7 +91,7 @@ select = ["E", "W", "F", "I", "B"]
 ignore = ["W293", "W291", "B904"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ftw"]
+known-first-party = ["fitzzftw"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -107,7 +107,7 @@ testpaths = [
 ]
 
 [tool.coverage.run]
-source = ["ftw.patch"]
+source = ["fitzzftw.patch"]
 branch = true
 omit = ["**/_version.py"]
 

@@ -8,5 +8,5 @@ FTW Patch
     :recursive:
     :template: module_extended.rst
 
-    ftw.patch.ftw_patch
+    fitzzftw.patch.ftw_patch
 

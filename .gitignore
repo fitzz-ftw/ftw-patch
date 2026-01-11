@@ -20,7 +20,7 @@ dist
 build
 
 # Setuptools.scm generated file
-src/ftw/patch/_version.py
+src/fitzzftw/patch/_version.py
 
 # Autosummary generated files
 doc/source/devel/api/

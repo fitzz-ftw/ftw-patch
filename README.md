@@ -65,17 +65,17 @@ ftwpatch [options] patch_file
 * **`--backupext <ext>`**: Extension for backup files (default: `.bak`). Supports special keywords: `date`, `time`, or `datetime` for ISO 8601 timestamps.
 * **`--userconfig <path>`**: Path to a custom user TOML configuration file.
 
-> **Note:** Settings can also be loaded from `pyproject.toml` under `[tool.ftw.patch]`.
+> **Note:** Settings can also be loaded from `pyproject.toml` under `[tool.fitzzftw.patch]`.
 
 
 ### Configuration via pyproject.toml
 
 You can pre-configure `ftwpatch` in your project's `pyproject.toml` file. This is useful for setting permanent defaults for your project.
 
-Add a section `[tool.ftw.patch]` like this:
+Add a section `[tool.fitzzftw.patch]` like this:
 
 ```toml
-[tool.ftw.patch]
+[tool.fitzzftw.patch]
 backup = true
 backupext = ".original"
 normalize-ws = true

@@ -19,7 +19,7 @@ FTW Patch
 ===============================
 
 
-| File: ftw.patch/ftw_patch.py
+| File: fitzzftw.patch/ftw_patch.py
 | Author: Fitzz TeXnik Welt
 | Email: FitzzTeXnikWelt@t-online.de
 

@@ -51,10 +51,10 @@
     --ui-patch-red: #c0392b;
     --ui-patch-bg: #f9f9f9;
     /* LIGHT FTW */
-    --ftw-color-added: var(--iso-green);
-    --ftw-color-changed: var(--toc-hover);
-    --ftw-color-fixed: var(--iso-red);
-    --ftw-title-underline: var(--toc-hover);
+    --fitzzftw-color-added: var(--iso-green);
+    --fitzzftw-color-changed: var(--toc-hover);
+    --fitzzftw-color-fixed: var(--iso-red);
+    --fitzzftw-title-underline: var(--toc-hover);
 }
 
 [data-theme="dark"] {
@@ -65,7 +65,7 @@
     --ui-patch-red: #ff6b6b;
     --ui-patch-bg: #2d2d2d;
     /* DARK FTW */
-    --ftw-title-underline: var(--toc-hover);
+    --fitzzftw-title-underline: var(--toc-hover);
 }
 /* !SECTION - Colors ui_elements */
 
