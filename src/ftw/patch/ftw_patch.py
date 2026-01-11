@@ -288,7 +288,7 @@ class HeadLine(PatchLine):
                 marker, :py:obj:`False` otherwise.
         """
         if isinstance(path, Path):
-            path_str = str(path)
+            path_str = path.as_posix()
         elif isinstance(path, str):
             path_str = path
         else:

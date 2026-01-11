@@ -13,6 +13,7 @@ namespaces = true
 
 [tool.setuptools_scm]
 write_to = "src/ftw/patch/_version.py"
+tag_regex = '^(?P<prefix>v)?(?P<version>[^\+|-]+)(?P<suffix>-test)?$'
 
 [project]
 name = "ftw-patch"
@@ -52,13 +53,11 @@ doc = [
     "sphinx",
     "sphinx-argparse",
     "autoclasstoc",
-    "python-docs-theme",
-    "sphinxcontrib-mermaid",
-    "sphinxcontrib-plantuml",
+    "sphinx-book-theme",
     "sphinx-copybutton",
-    "sphinx-rtd-theme",
     "sphinx-design",
 ]
+
 test = ["pytest", "pytest-mock", "pytest-cov"]
 lint = ["ruff"]
 dev = ["ftw-patch[test,doc,lint]",
