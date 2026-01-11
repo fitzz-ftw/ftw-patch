@@ -7,14 +7,11 @@
 [![PyPI version](https://img.shields.io/pypi/v/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 
-
-[![PyPI version](https://img.shields.io/pypi/v/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 [![Documentation Status](https://readthedocs.org/projects/ftw-patch/badge/?version=latest)](https://ftw-patch.readthedocs.io/en/latest/?badge=latest)
 [![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://codecov.io/gh/fitzz-ftw/ftw-patch)
 [![Doc Coverage](https://img.shields.io/badge/doc--coverage-100%25-brightgreen)](https://ftw-patch.readthedocs.io/)
 [![Linting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
-[![Downloads](https://static.pepy.tech/badge/ftw-patch)](https://pepy.tech/project/ftw-patch)
 
 
 
@@ -25,7 +22,7 @@ A unicode-resistant replacement for the classic `patch` utility. This tool is de
 
 ## Installation
 
-Install `ftw-patch` easily via pip:
+Install `ftw-patch` easily via pipx:
 
 ```bash
 pipx install ftw-patch
