@@ -13,7 +13,7 @@ specific project.
 
 .. code-block:: toml
 
-   [tool.ftw.patch]
+   [tool.fitzzftw.patch]
    backup = true
    backupext = ".original"
    normalize-ws = true

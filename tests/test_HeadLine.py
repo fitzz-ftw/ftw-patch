@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ftw.patch.ftw_patch import HeadLine
+from fitzzftw.patch.ftw_patch import HeadLine
 
 
 class TestHeadLine:

@@ -7,14 +7,11 @@
 [![PyPI version](https://img.shields.io/pypi/v/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 
-
-[![PyPI version](https://img.shields.io/pypi/v/ftw-patch.svg)](https://pypi.org/project/ftw-patch/)
 [![Documentation Status](https://readthedocs.org/projects/ftw-patch/badge/?version=latest)](https://ftw-patch.readthedocs.io/en/latest/?badge=latest)
 [![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://codecov.io/gh/fitzz-ftw/ftw-patch)
 [![Doc Coverage](https://img.shields.io/badge/doc--coverage-100%25-brightgreen)](https://ftw-patch.readthedocs.io/)
 [![Linting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
-[![Downloads](https://static.pepy.tech/badge/ftw-patch)](https://pepy.tech/project/ftw-patch)
 
 
 
@@ -25,10 +22,10 @@ A unicode-resistant replacement for the classic `patch` utility. This tool is de
 
 ## Installation
 
-Install `ftw-patch` easily via pip:
+Install `ftw-patch` easily via pipx:
 
 ```bash
-pip install ftw-patch
+pipx install ftw-patch
 ```
 
 ## Features
@@ -65,17 +62,17 @@ ftwpatch [options] patch_file
 * **`--backupext <ext>`**: Extension for backup files (default: `.bak`). Supports special keywords: `date`, `time`, or `datetime` for ISO 8601 timestamps.
 * **`--userconfig <path>`**: Path to a custom user TOML configuration file.
 
-> **Note:** Settings can also be loaded from `pyproject.toml` under `[tool.ftw.patch]`.
+> **Note:** Settings can also be loaded from `pyproject.toml` under `[tool.fitzzftw.patch]`.
 
 
 ### Configuration via pyproject.toml
 
 You can pre-configure `ftwpatch` in your project's `pyproject.toml` file. This is useful for setting permanent defaults for your project.
 
-Add a section `[tool.ftw.patch]` like this:
+Add a section `[tool.fitzzftw.patch]` like this:
 
 ```toml
-[tool.ftw.patch]
+[tool.fitzzftw.patch]
 backup = true
 backupext = ".original"
 normalize-ws = true

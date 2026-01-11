@@ -28,11 +28,6 @@ ftw-patch: Unicode-Safe & Whitespace-Aware Patching
       :target: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
       :alt: License: GPL v2
 
-   .. 
-      .. image:: https://static.pepy.tech/badge/ftw-patch
-         :target: https://pepy.tech/project/ftw-patch
-         :alt: Downloads
-
 ---
 
 
@@ -69,7 +64,7 @@ globally in your shell.
 
 .. code-block:: bash
 
-   pipx install your-package-name
+   pipx install ftw-patch
 
 Developer Installation (pip)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,7 +79,7 @@ use a standard virtual environment:
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
    # Install the package
-   pip install your-package-name
+   pip install ftw-patch
 
 
 Quick Start
@@ -111,6 +106,12 @@ Documentation
 
    devel/get_started_ftw_patch
    devel/ftw_patch_module
+
+.. toctree:: 
+   :maxdepth: 1
+   :caption: Externel Components
+
+   extern_packages
 
 .. toctree::
    :maxdepth: 1

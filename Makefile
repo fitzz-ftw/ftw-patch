@@ -27,8 +27,11 @@ help:
 	@printf "$(YELLOW)%s$(NC)\n" "Usage: make <target> [V=x.y.z]"
 	@printf "  $(YELLOW)make help$(NC)                Show this help message (standard info)\n\n"
 	@printf "$(GREEN)%s$(NC)\n" "Main Workflows:"
-	@printf "  $(YELLOW)make deploy V=x.y.z$(NC)      Full release (Master check, Upstream sync, Tox, HTML, Tag, Push)\n"
-	@printf "  $(YELLOW)make test-deploy V=x.y.z$(NC) Test release (TestPyPI, Twine check, Tag vV-test)\n\n"
+
+	@printf "  $(YELLOW)make deploy V=x.y.z$(NC)           Production Release: Tag & Push to PyPI via GitHub Actions\n"
+	@printf "  $(YELLOW)make test-deploy-git V=x.y.z$(NC)  Test Release: Tag & Push to TestPyPI via GitHub Actions\n"
+	@printf "  $(YELLOW)make test-deploy V=x.y.z$(NC)      Local Check: Build and verify package only (no upload)\n"
+	@printf "  $(YELLOW)make test-deploy-direct V=x.y.z$(NC) Direct Upload: Manual upload to TestPyPI via Twine\n"
 	@printf "$(GREEN)%s$(NC)\n" "Quality Assurance & Documentation:"
 	@printf "  $(YELLOW)make tox$(NC)                 Run all tests using tox\n"
 	@printf "  $(YELLOW)make build$(NC)               Build package (sdist & wheel) via tox\\n"
@@ -41,7 +44,7 @@ help:
 	@printf "  $(YELLOW)make check-v V=...$(NC)       Validate version format (SemVer)\n\n"
 	@printf "$(GREEN)%s$(NC)\n" "Cleanup:"
 	@printf "  $(YELLOW)make clean$(NC)               Remove build artifacts and caches\n"
-	@printf "  $(YELLOW)make clean-test-tags$(NC)     Remove all v*-test tags locally\n"
+	@printf "  $(YELLOW)make clean-test-tags$(NC)     Remove all test-tags (Local & Remote/GitHub)\n"
 
 # --- Tool Check ---
 check-tools:
@@ -106,32 +109,57 @@ prepare-tag: init-msg
 		printf "$(RED)%s$(NC)\n" "ERROR: $(TAG_FILE) is empty!"; exit 1; \
 	fi
 
-deploy: prepare-master check-gitclean
+
+# --- Production Release (GitHub CI) ---
+deploy: check-gitclean
+	@$(MAKE) prepare-master
 	@$(MAKE) check-upstream EXIT_ON_FAIL=1
 	@$(MAKE) check-v prepare-tag tox html
+	@printf "$(YELLOW)%s$(NC)\n" "--- CI/CD PROCESS: Creating release tag v$(V) and pushing to GitHub ---"
 	$(GIT) tag -a v$(V) -F $(TAG_FILE)
 	@cp $(TAG_FILE) $(OLD_MSG_DIR)/$(TAG_FILE).v$(V)_$$(date +%Y%m%d_%H%M%S).bak
 	@> $(TAG_FILE)
 	$(GIT) push origin $(DEPLOY_BRANCH)
 	$(GIT) push origin v$(V)
-	@printf "$(GREEN)%s$(NC)\n" "SUCCESS: v$(V) published."
+	@printf "$(GREEN)%s$(NC)\n" "Done: v$(V) pushed. GitHub Actions will now publish to PyPI."
 
+
+# --- Test-Deployment Workflows ---
+
+# --- Local Verification (No Network) ---
 test-deploy: check-gitclean
 	@$(MAKE) check-upstream EXIT_ON_FAIL=0
 	@$(MAKE) check-v prepare-tag tox
-	$(GIT) tag -a v$(V)-test -F $(TAG_FILE)
-	@cp $(TAG_FILE) $(OLD_MSG_DIR)/$(TAG_FILE).v$(V)-test_$$(date +%Y%m%d_%H%M%S).bak
 	rm -rf dist/
 	$(PYTHON) -m build
-	$(TWINE) check dist/* || { printf "$(RED)%s$(NC)\n" "ERROR: Twine check failed!"; exit 1; }
-	$(TWINE) upload --repository testpypi dist/*
-	@printf "$(GREEN)%s$(NC)\n" "SUCCESS: Test version v$(V) uploaded."
+	$(TWINE) check dist/*
+	@printf "$(GREEN)%s$(NC)\n" "Local check for v$(V) completed. Package is ready for Git push."
 
+
+# --- Test Release (GitHub CI) ---
+test-deploy-git: test-deploy
+	@printf "$(YELLOW)%s$(NC)\n" "--- CI/CD PROCESS (TEST): Creating test tag v$(V)-test and pushing to GitHub ---"
+	$(GIT) tag -a v$(V)-test -F $(TAG_FILE)
+	@cp $(TAG_FILE) $(OLD_MSG_DIR)/$(TAG_FILE).v$(V)-test_$$(date +%Y%m%d_%H%M%S).bak
+	$(GIT) push origin v$(V)-test
+	@printf "$(GREEN)%s$(NC)\n" "Done: v$(V)-test pushed. GitHub Actions will now publish to TestPyPI."
+
+# 3. Direkt-Upload: Der manuelle Weg (für Notfälle)
+test-deploy-direct: test-deploy
+	@printf "$(YELLOW)%s$(NC)\n" "--- MANUAL UPLOAD: Sending to TestPyPI via Twine ---"
+	$(TWINE) upload --repository testpypi dist/*
+	@printf "$(GREEN)%s$(NC)\n" "SUCCESS: Test version v$(V) uploaded from local machine."
+
+# Aufräumen: Lokale UND Remote Test-Tags löschen
 clean-test-tags:
-	@printf "$(YELLOW)%s$(NC)\n" "--- Removing local test tags ---"
+	@printf "$(YELLOW)%s$(NC)\n" "--- Removing local and remote test tags ---\n"
 	@for tag in $$(git tag -l "*-test"); do \
+		printf "Deleting tag $$tag... "; \
 		git tag -d $$tag; \
+		git push --delete origin $$tag 2>/dev/null || true; \
 	done
+	@printf "\n$(GREEN)%s$(NC)\n" "Clean-up finished."
+
 
 clean: 
 	@printf "%s\n" "--- Cleaning up project ---"

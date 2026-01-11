@@ -1,5 +1,5 @@
 
-from ftw.patch.ftw_patch import FtwPatchError, PatchParseError
+from fitzzftw.patch.ftw_patch import FtwPatchError, PatchParseError
 
 #FehlerKlasse1, FehlerKlasse2
 

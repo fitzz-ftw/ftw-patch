@@ -11,9 +11,9 @@ Getting Started with Classes from Patch Module
 :Author: Fitzz TeΧnik Welt
 :Email: FitzzTeXnikWelt@t-online.de
 
-This document provides a step-by-step introduction and executable documentation for the core logic in the ``ftw.patch`` module.
+This document provides a step-by-step introduction and executable documentation for the core logic in the ``fitzzftw.patch`` module.
 
-.. seealso:: The full API documentation for the module is available here: :py:mod:`ftw.patch.ftw_patch`
+.. seealso:: The full API documentation for the module is available here: :py:mod:`fitzzftw.patch.ftw_patch`
 
 ---
 
@@ -27,7 +27,7 @@ This document provides a step-by-step introduction and executable documentation 
     .. code:: python
 
         >>> from pathlib import Path
-        >>> from ftw.develtool.testinfra import TestHomeEnvironment
+        >>> from fitzzftw.develtool.testinfra import TestHomeEnvironment
 
 
         >>> env = TestHomeEnvironment(Path("doc/source/devel/testhome"))
@@ -43,7 +43,7 @@ Class PatchLine
 
 .. code:: python 
 
-    >>> from ftw.patch.ftw_patch import PatchLine
+    >>> from fitzzftw.patch.ftw_patch import PatchLine
 
     >>> patchline = PatchLine("This is a test line.\n")
     >>> patchline
@@ -77,7 +77,7 @@ Class FileLine
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import FileLine
+    >>> from fitzzftw.patch.ftw_patch import FileLine
 
     >>> fileline = FileLine("  def func( a,    b):   \n")
     >>> fileline 
@@ -124,7 +124,7 @@ FileLine Class
 :Inherits: :py:class:`PatchLine`
 :Purpose: Represents a single line within a code file.
 
-The :py:class:`ftw.patch.ftw_patch.FileLine` class represents a single line of text from a 
+The :py:class:`fitzzftw.patch.ftw_patch.FileLine` class represents a single line of text from a 
 file. Its core function is to immediately **strip the trailing newline character** from 
 the input and provide the clean, ready-to-use content via the :py:attr:`content` property.
 
@@ -138,7 +138,7 @@ The class is initialized solely with the raw line input as the **first positiona
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import FileLine
+    >>> from fitzzftw.patch.ftw_patch import FileLine
     >>> line1 = FileLine("This is line 1.\n")
     >>> line1.content
     'This is line 1.'
@@ -243,7 +243,7 @@ The HunkLine class is implemented in the Patch Parser to encapsulate hunk line c
 
 .. code:: python
 
-   >>> from ftw.patch.ftw_patch import HunkLine
+   >>> from fitzzftw.patch.ftw_patch import HunkLine
 
 Initialization and Properties
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -321,7 +321,7 @@ the line does not have a valid diff prefix (' ', '+', '-').
    >>> HunkLine("Missing prefix") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
    Traceback (most recent call last):
    ...
-   ftw.patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix 
+   fitzzftw.patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix 
    (' ', '+', '-') or is empty: 'Missing prefix'
 
 Whitespace Normalization (Compare all 3 Properties)
@@ -390,7 +390,7 @@ Initialization and Properties
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import HunkHeadLine
+    >>> from fitzzftw.patch.ftw_patch import HunkHeadLine
     >>> hhline1 = HunkHeadLine("@@ -1,2 +1,3 @@")
     >>> hhline1
     HunkHeadLine(Content: '-1,2 +1,3', Prefix: '@@ ')
@@ -500,7 +500,7 @@ HeadLine Class
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import HeadLine
+    >>> from fitzzftw.patch.ftw_patch import HeadLine
 
 Test Cases for staticmethode check_is_null_path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -684,7 +684,7 @@ Hunk Class
 ----------
 .. _ftw_patch-hunk-class:
 
-The :py:class:`ftw.patch.ftw_patch.Hunk` dataclass represents a single contiguous block of 
+The :py:class:`fitzzftw.patch.ftw_patch.Hunk` dataclass represents a single contiguous block of 
 changes ("a hunk") within a file being patched. It primarily stores the line number 
 and length metadata, as well as the content of the changes (the **hunk lines**).
 
@@ -700,7 +700,7 @@ actual changes.
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import Hunk
+    >>> from fitzzftw.patch.ftw_patch import Hunk
 
 2. **Initialize a standard Hunk** that deletes 2 lines and adds 3 lines, 
    resulting in a net increase of 1 line. The newline metadata is also stored.
@@ -764,7 +764,7 @@ Initialization and Properties
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import DiffCodeFile
+    >>> from fitzzftw.patch.ftw_patch import DiffCodeFile
 
 Manual initialization (as the parser would do it)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -846,7 +846,7 @@ Import ``get_backup_extension``
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import get_backup_extension
+    >>> from fitzzftw.patch.ftw_patch import get_backup_extension
 
 The following tests demonstrate the sanitization and keyword resolution.
 
@@ -919,16 +919,16 @@ Get the Configuration
 
 .. code:: python
 
-    >>> user_config = env.copy2config("ftw", "patch_config.toml", "patch.toml")
+    >>> user_config = env.copy2config("fitzzftw", "patch_config.toml", "patch.toml")
 
 
-    >>> from ftw.patch.ftw_patch import get_merged_config
-    >>> get_merged_config("ftw")
+    >>> from fitzzftw.patch.ftw_patch import get_merged_config
+    >>> get_merged_config("fitzzftw")
     {'backup': True, 'backupext': '.my_bak', 'normalize-ws': False}
 
     >>> pyproject = env.copy2cwd("test_pyproject.toml", "pyproject.toml")
     
-    >>> get_merged_config("ftw") # doctest: +NORMALIZE_WHITESPACE
+    >>> get_merged_config("fitzzftw") # doctest: +NORMALIZE_WHITESPACE
     {'backup': True, 'backupext': 'timestamp', 
     'normalize-ws': False, 'dry-run': True, 
     'strip': 1}
@@ -947,7 +947,7 @@ First, import the necessary component:
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import _get_argparser 
+    >>> from fitzzftw.patch.ftw_patch import _get_argparser 
 
 For a full list of command-line options, refer to the :ref:`cli-reference`.
 
@@ -1162,11 +1162,11 @@ Example 2: Using the 'time' keyword for a quick timestamp
 PatchParser Class
 -------------------
 
-The :py:class:`ftw.patch.ftw_patch.PatchParser` class is responsible for processing the patch file. It reads the patch format (typically Unified Diff) and divides it into logical units (the file data tuples).
+The :py:class:`fitzzftw.patch.ftw_patch.PatchParser` class is responsible for processing the patch file. It reads the patch format (typically Unified Diff) and divides it into logical units (the file data tuples).
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import PatchParser, FtwPatchError
+    >>> from fitzzftw.patch.ftw_patch import PatchParser, FtwPatchError
 
 
 Line Classification with the PatchParser Factory
@@ -1302,7 +1302,7 @@ Missing `'---'` header before `'@@ '`
     >>> list(patch_parser.iter_files(broken_patch))
     Traceback (most recent call last):
         ...
-    ftw.patch.ftw_patch.PatchParseError: Line 1: Found '@@ ' before file headers
+    fitzzftw.patch.ftw_patch.PatchParseError: Line 1: Found '@@ ' before file headers
 
 
 Processing Complex Patches
@@ -1393,7 +1393,7 @@ potentially empty patch files or filtered streams.
 FtwPatch Class
 -----------------------------
 
-The :py:class:`ftw.patch.ftw_patch.FtwPatch` class is the high-level controller 
+The :py:class:`fitzzftw.patch.ftw_patch.FtwPatch` class is the high-level controller 
 of the module. It coordinates the parsing of the patch file and the application 
 of changes to the target directory using a safe staging mechanism.
 
@@ -1403,7 +1403,7 @@ Initialization and Properties
 
 .. code:: python
 
-    >>> from ftw.patch.ftw_patch import FtwPatch
+    >>> from fitzzftw.patch.ftw_patch import FtwPatch
     >>> from argparse import Namespace
 
 
@@ -1693,7 +1693,7 @@ your source code remains consistent.
     >>> patcher.apply(options) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     Traceback (most recent call last):
         ...
-    ftw.patch.ftw_patch.PatchParseError: Hunk mismatch at line 1. 
+    fitzzftw.patch.ftw_patch.PatchParseError: Hunk mismatch at line 1. 
     ... not match the hunk's context.
 
 Verification of Atomicity
@@ -1739,7 +1739,7 @@ Triggering an error with a missing file
 Full Cycle: Patching a Python Source File
 -----------------------------------------
 
-To demonstrate the full power of :py:meth:`ftw.patch`, we will perform a complete 
+To demonstrate the full power of :py:meth:`fitzzftw.patch`, we will perform a complete 
 patching cycle: creating a source file, defining a unified diff, and applying it.
 
 1. **Setup the Source File**

@@ -6,7 +6,7 @@ Upcoming Releases
 
 .. container:: roadmap-next
 
-   .. rubric:: v0.8.0 – Verbosity Option 
+   .. rubric:: v0.4.0 – Verbosity Option 
       :class: ftw-cr-title
    
    Implementation of the --verbose option for granular output.
@@ -15,7 +15,7 @@ Upcoming Releases
 
 .. container:: roadmap-planned
 
-   .. rubric:: v0.9.0 – Backup Directory
+   .. rubric:: v0.5.0 – Backup Directory
       :class: ftw-cr-title
    
    Adding an option to select a directory to collect the backups. 
@@ -25,7 +25,7 @@ Upcoming Releases
 
 .. container:: roadmap-planned
 
-   .. rubric:: v0.10.0 – Logging & Monitoring
+   .. rubric:: v0.6.0 – Logging & Monitoring
       :class: ftw-cr-title
    
    The level of logging could be selected. Although the name of the log file 

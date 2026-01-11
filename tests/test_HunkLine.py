@@ -1,6 +1,6 @@
 import pytest
 
-from ftw.patch.ftw_patch import HunkLine, PatchParseError
+from fitzzftw.patch.ftw_patch import HunkLine, PatchParseError
 
 
 class TestHunkLine:

@@ -4,7 +4,7 @@
 Getting Started: FTW Converter Functions
 =========================================
 
-The :py:mod:`ftw.baselib.converter` module provides utility functions to transform 
+The :py:mod:`fitzzftw.baselib.converter` module provides utility functions to transform 
 various data types into a standardized format. This is particularly useful 
 for processing configuration files and command-line arguments.
 
@@ -24,7 +24,7 @@ The function is case-insensitive and handles multiple truthy and falsy strings.
 
 .. code:: python
 
-    >>> from ftw.baselib.converter import str2bool
+    >>> from fitzzftw.baselib.converter import str2bool
     
 Truthy values
 ^^^^^^^^^^^^^^

@@ -17,7 +17,7 @@ When you run ``ftwpatch``, settings are merged from several sources in a specifi
    Any option passed directly in the terminal (e.g., ``--dry-run``) always has the final word.
    
 2. **Project Configuration** (``pyproject.toml``)
-   Settings defined in the ``[tool.ftw.patch]`` section of your project's root. This ensures, for example, that whitespace rules required by a specific project are always enforced.
+   Settings defined in the ``[tool.fitzzftw.patch]`` section of your project's root. This ensures, for example, that whitespace rules required by a specific project are always enforced.
 
 3. **User Configuration** (``patch.toml``)
    Your personal defaults. By default, these are loaded from your OS-specific config directory:
@@ -52,7 +52,7 @@ The keys in the TOML files correspond directly to the long-form CLI arguments. B
 
 .. code-block:: toml
 
-   [tool.ftw.patch]
+   [tool.fitzzftw.patch]
    backup = true
    backupext = ".original"
    normalize-ws = true

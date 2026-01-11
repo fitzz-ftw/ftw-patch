@@ -4,7 +4,7 @@ import sys
 from docutils import nodes
 
 try:
-    from ftw.patch._version import __version__
+    from fitzzftw.patch._version import __version__
     version = __version__
     release = __version__
 except ImportError:

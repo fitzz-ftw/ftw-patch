@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ftw.patch.ftw_patch import (
+from fitzzftw.patch.ftw_patch import (
     DiffCodeFile,
     FileLine,
     FtwPatchError,
