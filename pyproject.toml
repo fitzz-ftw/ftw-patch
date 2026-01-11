@@ -13,6 +13,7 @@ namespaces = true
 
 [tool.setuptools_scm]
 write_to = "src/ftw/patch/_version.py"
+tag_regex = '^(?P<prefix>v)?(?P<version>[^\+|-]+)(?P<suffix>-test)?$'
 
 [project]
 name = "ftw-patch"
