@@ -53,13 +53,11 @@ doc = [
     "sphinx",
     "sphinx-argparse",
     "autoclasstoc",
-    "python-docs-theme",
-    "sphinxcontrib-mermaid",
-    "sphinxcontrib-plantuml",
+    "sphinx-book-theme",
     "sphinx-copybutton",
-    "sphinx-rtd-theme",
     "sphinx-design",
 ]
+
 test = ["pytest", "pytest-mock", "pytest-cov"]
 lint = ["ruff"]
 dev = ["ftw-patch[test,doc,lint]",

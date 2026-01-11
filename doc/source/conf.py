@@ -1,5 +1,4 @@
 # Configuration file for the Sphinx documentation builder.
-import os
 import sys
 
 from docutils import nodes
@@ -34,9 +33,6 @@ extensions = [
     "sphinxarg.ext",
     "autoclasstoc",
     "sphinx.ext.autodoc",
-    "sphinx.ext.doctest",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
