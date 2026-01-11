@@ -20,3 +20,4 @@ python:
 # Deine Sphinx-Konfiguration
 sphinx:
   configuration: doc/source/conf.py
+  builder: dirhtml
