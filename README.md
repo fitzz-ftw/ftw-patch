@@ -28,7 +28,7 @@ A unicode-resistant replacement for the classic `patch` utility. This tool is de
 Install `ftw-patch` easily via pip:
 
 ```bash
-pip install ftw-patch
+pipx install ftw-patch
 ```
 
 ## Features
