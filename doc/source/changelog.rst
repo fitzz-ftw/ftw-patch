@@ -2,7 +2,7 @@ Changelog
 =========
 All notable changes to this project will be documented in this file.
 
-.. rubric:: v0.3.0 (2026-01-11) Initial Public Beta Release.
+.. rubric:: v0.3.0 (2026-01-11) Initial Public Release.
     :class: ftw-cr-title
 
 .. rubric:: Added
@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * **Normalization:** Added filters for non-leading whitespace and blank line variations.
 * **Configuration:** Support for ``pyproject.toml`` [tool.ftwpatch] and custom ``.toml`` config files.
 * **CLI:** Command-line tool ``ftwpatch`` with dry-run and backup functionality.
+* **CI/CD:** Automated testing and deployment infrastructure via GitHub Actions.
 * **Documentation:** Complete user manual and developer guide.
 
 .. rubric:: Fixed
