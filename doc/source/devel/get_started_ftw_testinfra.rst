@@ -16,7 +16,7 @@ we use a directory within our documentation structure.
 .. code:: python
 
     >>> from pathlib import Path
-    >>> from ftw.develtool.testinfra import TestHomeEnvironment
+    >>> from fitzzftw.develtool.testinfra import TestHomeEnvironment
     
     >>> # Define the anchor for our test environment
     >>> base_path = Path("doc/source/devel/testhome_tmp")

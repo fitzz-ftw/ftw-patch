@@ -7,4 +7,4 @@ FTW Baselibraries
     :recursive:
     :template: module_extended.rst
 
-    ftw.baselib.converter
+    fitzzftw.baselib.converter

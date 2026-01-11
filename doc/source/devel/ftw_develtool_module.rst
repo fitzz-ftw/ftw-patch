@@ -7,4 +7,4 @@ FTW Development Tools
     :recursive:
     :template: module_extended.rst
 
-    ftw.develtool.testinfra
+    fitzzfitzzfitzzftw.develtool.testinfra

@@ -27,7 +27,7 @@ This document provides a step-by-step introduction and executable documentation 
     .. code:: python
 
         >>> from pathlib import Path
-        >>> from ftw.develtool.testinfra import TestHomeEnvironment
+        >>> from fitzzftw.develtool.testinfra import TestHomeEnvironment
 
 
         >>> env = TestHomeEnvironment(Path("doc/source/devel/testhome"))

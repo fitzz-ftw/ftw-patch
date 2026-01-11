@@ -38,9 +38,8 @@ from tomllib import TOMLDecodeError
 from tomllib import load as tomlload
 from typing import ClassVar, Generator, Iterable
 
+from fitzzftw.baselib.converter import str2bool
 from platformdirs import user_config_path
-
-from ftw.baselib.converter import str2bool
 
 ### Temporary Functions
 # oldprint=print
