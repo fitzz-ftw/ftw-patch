@@ -1,7 +1,16 @@
 # Configuration file for the Sphinx documentation builder.
+import os
 import sys
 
 from docutils import nodes
+
+# Read the Docs liefert uns die Canonical URL direkt!
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
+
+# Falls wir lokal sind, ist die Variable leer, dann setzen wir einen Fallback
+if not html_baseurl:
+    html_baseurl = "/"
+
 
 try:
     from fitzzftw.patch._version import __version__
@@ -59,16 +68,16 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "General Index",
-            "url": "/genindex",
+            "url": f"{html_baseurl}genindex",
             "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/book.svg',
-            "type": "url",
+            "type": "local",
             "attributes": {
                "target": "_self",
             },
         },
         {
             "name": "Module Index",
-            "url": "/py-modindex",
+            "url": f"{html_baseurl}py-modindex",
             "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/code.svg',
             "type": "url",
             "attributes": {
@@ -77,7 +86,7 @@ html_theme_options = {
         },
         {
             "name": "About",
-            "url": "/about",
+            "url": f"{html_baseurl}about",
             "icon": "https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/circle-info.svg",
             "type": "url",
             "attributes": {
