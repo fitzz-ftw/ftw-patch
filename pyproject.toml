@@ -18,7 +18,7 @@ tag_regex = '^(?P<prefix>v)?(?P<version>[^\+|-]+)(?P<suffix>-test)?$'
 [project]
 name = "ftw-patch"
 dynamic = ["version"]
-description = "Ein Unicode resistenter Ersatz für patch."
+description = "A unicode-resistant replacement for the classic `patch` utility"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["platformdirs"]
@@ -39,7 +39,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/fitzz-ftw/ftw-patch"
-Documentation = "https://github.com/fitzz-ftw/ftw-patch#readme"
+Documentation = "https://ftw-patch.readthedocs.io/en/stable/"
 Repository = "https://github.com/fitzz-ftw/ftw-patch.git"
 Issues = "https://github.com/fitzz-ftw/ftw-patch/issues"
 
@@ -60,9 +60,7 @@ doc = [
 
 test = ["pytest", "pytest-mock", "pytest-cov"]
 lint = ["ruff"]
-dev = ["ftw-patch[test,doc,lint]",
-    "esbonio==0.16.5",
-    ]
+dev = ["ftw-patch[test,doc,lint]", "esbonio==0.16.5"]
 
 
 [[project.authors]]

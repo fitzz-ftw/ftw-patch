@@ -69,8 +69,10 @@ html_theme_options = {
         {
             "name": "General Index",
             "url": f"{html_baseurl}genindex",
-            "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/book.svg',
-            "type": "local",
+            "icon": "fa-solid fa-book", # Nutzt die CSS-Klasse statt URL
+            "type": "fontawesome",
+            # "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/book.svg',
+            # "type": "local",
             "attributes": {
                "target": "_self",
             },
@@ -78,8 +80,10 @@ html_theme_options = {
         {
             "name": "Module Index",
             "url": f"{html_baseurl}py-modindex",
-            "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/code.svg',
-            "type": "url",
+            "icon": 'fa-solid fa-code',
+            "type": "fontawesome",
+            # "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/code.svg',
+            # "type": "url",
             "attributes": {
                "target": "_self",
             },
@@ -87,8 +91,10 @@ html_theme_options = {
         {
             "name": "About",
             "url": f"{html_baseurl}about",
-            "icon": "https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/circle-info.svg",
-            "type": "url",
+            "icon": "fa-solid fa-circle-info",
+            "type": "fontawesome",
+            # "icon": "https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/circle-info.svg",
+            # "type": "url",
             "attributes": {
                 "target": "_self"
             },
