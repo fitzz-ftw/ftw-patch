@@ -1,0 +1,29 @@
+.nftt-navbar span.brand-text,
+.nftt-navbar span.brand-short-text {
+    font-weight: 900;
+    font-size: 35px;
+    /* content: "patch";
+    border: 2px solid white; */
+}
+
+.person {
+    font-variant: small-caps;
+    letter-spacing: 0.03em;
+    font-weight: 400;
+}
+
+/* Tabellen-Typografie: Condensed & Normales Gewicht */
+.list-table td,
+.list-table th {
+    font-family: "Fira Sans Condensed", "Fira Sans", sans-serif;
+}
+
+.list-table td {
+    font-weight: 400;
+    /* Stärker als das 300er Standard-Weight */
+}
+
+.list-table th {
+    font-weight: 700;
+    /* Deutlicher Header-Kontrast */
+}

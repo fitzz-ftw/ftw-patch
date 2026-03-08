@@ -9,3 +9,8 @@
 @import url("epub_ui_fixes.css");
 @import url("code_api.css");     /* 5. API & Signaturen (Cursor) */
 @import url("admonitions.css");  /* 6. Warnungen/Hinweise (LaTeX-Style) */
+.person {
+   font-variant: small-caps;
+   letter-spacing: 0.03em;
+   font-weight: 400;
+}
