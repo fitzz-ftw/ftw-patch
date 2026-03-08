@@ -2,6 +2,27 @@ Changelog
 =========
 All notable changes to this project will be documented in this file.
 
+
+
+.. rubric:: v0.3.1 (2026-03-08) Documentation Overhaul
+    :class: ftw-cr-title
+
+.. rubric:: Added
+    :class: ftw-cr-added
+
+* **New Visual Identity:** Migrated to the *Nefertiti* theme for a modern, responsive HTML documentation.
+* **Dynamic EPUB Covers:** Implemented automated generation of SVG covers that dynamically embed the current version from SCM.
+* **Typography Enhancements:**
+    * Integrated *Fira Sans* and *Fira Code* for better readability across all formats.
+    * Added semantic roles for consistent styling of person names and configuration options.
+
+.. rubric:: Changed
+    :class: ftw-cr-changed
+
+* **Build Optimization:** Improved EPUB build process by automatically filtering unnecessary font formats (WOFF2) to reduce file size.
+* **Unified Versioning:** Versions are now automatically synchronized between the core engine and documentation.
+
+
 .. rubric:: v0.3.0 (2026-01-11) Initial Public Release.
     :class: ftw-cr-title
 

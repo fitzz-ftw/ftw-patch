@@ -51,11 +51,13 @@ ftwpatch = "fitzzftw.patch.ftw_patch:prog_ftw_patch"
 [project.optional-dependencies]
 doc = [
     "sphinx",
+    "myst-parser",
     "sphinx-argparse",
     "autoclasstoc",
-    "sphinx-book-theme",
+    "sphinx-nefertiti",
     "sphinx-copybutton",
     "sphinx-design",
+    "sphinx-mdinclude",
 ]
 
 test = ["pytest", "pytest-mock", "pytest-cov"]
