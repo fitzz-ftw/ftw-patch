@@ -9,7 +9,12 @@ __pycache__
 
 # Sphinx generated files
 doc/build
+doc/build_old_theme
 .coverage
+doc/source/_static/cover.svg
+
+#local copies
+* copy.css
 
 # Doctest generated files
 doc/source/devel/testhome/.config
@@ -33,3 +38,4 @@ doc/source/devel/api/
 
 TAGMESSAGE.txt
 old_messages/**
+doc/build_old_theme/coverage/python.txt
