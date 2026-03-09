@@ -56,7 +56,7 @@ from fitzzftw.patch.utils import get_backup_extension, get_merged_config
 # oldprint(*args, flush=True)
 #     pass
 
-__all__ = [FileLine, Hunk, HeadLine,HunkHeadLine, HunkLine, PatchLine, ColorMixin] # type: ignore
+__all__ = ["FileLine", "Hunk", "HeadLine","HunkHeadLine", "HunkLine", "PatchLine", "ColorMixin"] 
 
 
 
