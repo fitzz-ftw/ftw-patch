@@ -36,7 +36,7 @@ from shutil import copy2, move
 from tempfile import TemporaryDirectory
 from tomllib import TOMLDecodeError
 from tomllib import load as tomlload
-from typing import ClassVar, Generator, Iterable
+from typing import ClassVar, Generator, Iterable, Literal
 
 from platformdirs import user_config_path
 
@@ -96,6 +96,57 @@ class PatchParseError(FtwPatchError):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({str(self)!r})"
         # return f"{self.__class__.__name__}(message={self.args[0]!r})"
+
+#SECTION - MixinClasses
+
+#CLASS - ColorMixin
+class ColorMixin:
+    """
+    Provides colorization capabilities for CLI output.
+
+    The mixin provides a `colorize` method to encapsulate strings with ANSI
+    color codes and bold styling.
+    """
+
+    # ANSI Terminal Codes
+    _ANSI:ClassVar[dict[str,str]] = {
+        "red": "\033[31m",    # Red
+        "green": "\033[32m",  # Green
+        "cyan": "\033[36m",   # Normal Cyan
+        "reset": "\033[0m",   # Reset
+        "bold": "\033[1m",    # Bold
+    }
+    """Internal mapping of semantic names to ANSI escape sequences. 
+    Can be overridden for testing purposes. 
+    """
+
+    use_colors: ClassVar[bool] = True
+    """Global toggle to enable or disable colorized output. 
+    Defaults to True; should be set explicitly based on CLI flags.
+    """
+
+    def colorize(self, text: str, color_key: Literal["red","green","cyan"], bold:bool=False) -> str:
+        """
+        Colorizes the text using ANSI escape sequences.
+
+        :param text: The string to colorize.
+        :param color_key: The color to use ('red', 'green', 'cyan').
+        :param bold: Whether to make the output bold.
+        :returns: Colorized string or plain text if colors are disabled.
+        """
+        if not self.use_colors:
+            return text
+
+        prefix = self._ANSI.get("bold", "\033[1m") if bold else ""
+        prefix += self._ANSI.get(color_key, "")
+        suffix = self._ANSI.get("reset", "\033[0m")
+
+        return f"{prefix}{text}{suffix}"
+
+#!CLASS
+
+#!SECTION
+
 
 
 # CLASS - PatchLine
@@ -1231,10 +1282,6 @@ class PatchParser:
 
 # SECTION -  --- FtwPatch (Main Application) ---
 
-# Constant for the /dev/null path, which is returned by _clean_patch_path with strip=0.
-# This path must be independent of the operating system.
-# DEV_NULL_PATH = Path(os.devnull)
-
 
 # CLASS - FtwPatch
 class FtwPatch:
@@ -1348,7 +1395,7 @@ class FtwPatch:
         """
         if getattr(self, '_patch_files', None) is None:
             self._parse()
-        return self._patch_files
+        return self._patch_files # pyright: ignore[reportReturnType]
 
     @property
     def verbose(self) -> int:
@@ -1383,14 +1430,14 @@ class FtwPatch:
         with self._get_patch_stream() as stream:
             self._patch_files = list(parser.iter_files(stream))
 
-    def run(self) -> int:
+    def run(self) -> int|None:
         """
         Execute the patching process and handle high-level errors.
 
         :returns: Exit code (0 for success, 1 or 2 for errors).
         """
         try:
-            return self.apply()
+            return self.apply(Namespace())
         except FtwPatchError as e:
             print(f"\nPatch failed: {e}")
             return 1
@@ -1439,7 +1486,7 @@ class FtwPatch:
 
                 # SCHRITT 3: All-or-Nothing Commit
                 if self.dry_run:
-                    return
+                    return 
                 self._commit_changes(staged_results, options)
 
             except FtwPatchError:
@@ -1539,7 +1586,7 @@ def get_backup_extension(ext: str) -> str:
     
     return f".{ext}"
 
-def get_merged_config(app_name: str = "ftw", manual_user_cfg: str = None) -> dict:
+def get_merged_config(app_name: str = "ftw", manual_user_cfg: str = "") -> dict:
     """
     Merge configuration from hierarchical sources into a single dictionary.
     
@@ -1789,15 +1836,16 @@ def prog_ftw_patch() -> int:
         args.backup_ext = get_backup_extension(args.backup_ext)
 
         # The 'dry_run' argument must be correctly extracted from args
-        dry_run = getattr(args, "dry_run", False)
+        # dry_run = getattr(args, "dry_run", False)
 
         # The FtwPatch class encapsulates the entire logic
         patcher = FtwPatch(args=args)
 
         # apply_patch() executes the entire patch logic
-        exit_code = patcher.apply_patch(dry_run=dry_run)
-
-        return exit_code
+        # exit_code = patcher.apply_patch(dry_run=dry_run)
+        # exit_code = patcher.apply(Namespace(dry_run=dry_run))
+        exit_code = patcher.apply(args)
+        return exit_code if exit_code is not None else 0
 
     except (ArgumentError, TOMLDecodeError) as e:
         print(f"Initialization error: {e}", file=sys.stderr)
@@ -1819,6 +1867,49 @@ def prog_ftw_patch() -> int:
         return 1
 
 
+def color_terminal_check()->None:
+    """
+    Performs a visual diagnostic of ANSI color support in the current terminal.
+
+    This function prints a structured test pattern showcasing 'green', 'red',
+    and 'cyan' in both standard and bold variations. It then repeats the
+    pattern with colors disabled to verify the fallback mechanism.
+
+    **Usage via CLI:**
+
+    .. code-block:: bash
+
+        $ ftw-terminal-color
+
+    **Visual Output:**
+    - A header 'Visual Terminal Color Check' centered in a 39-character block.
+    - An 'Enabled' row showing colorized and bold tags.
+    - A 'Disabled' row showing plain text tags.
+    """
+    print("=" * 39)
+    print(" Visual Terminal Color Check ".center(39, "="))
+    colmix = ColorMixin()
+
+    # Testreihe 1: Colors ON
+    print("Enabled :", end=" ")
+    print(colmix.colorize("GRN", "green"), end="|")
+    print(colmix.colorize("GRN-B", "green", True), end="|")
+    print(colmix.colorize("RED", "red"), end="|")
+    print(colmix.colorize("RED-B", "red", True), end="|")
+    print(colmix.colorize("CYN", "cyan"), end="|")
+    print(colmix.colorize("CYN-B", "cyan", True))
+
+    # Testreihe 2: Colors OFF
+    colmix.use_colors = False # pyright: ignore[reportAttributeAccessIssue]
+    print("Disabled:", end=" ")
+    print(colmix.colorize("GRN", "green"), end="|")
+    print(colmix.colorize("GRN-B", "green", True), end="|")
+    print(colmix.colorize("RED", "red"), end="|")
+    print(colmix.colorize("RED-B", "red", True), end="|")
+    print(colmix.colorize("CYN", "cyan"), end="|")
+    print(colmix.colorize("CYN-B", "cyan", True))
+    print("=" * 39)
+
 if __name__ == "__main__":  # pragma: no cover
     from doctest import testfile, FAIL_FAST  # noqa: I001
     from pathlib import Path
@@ -1829,7 +1920,7 @@ if __name__ == "__main__":  # pragma: no cover
     print(project_root)
     sys.path.insert(0, str(project_root))
     be_verbose = False
-    be_verbose = True
+    # be_verbose = True
     option_flags = 0
     option_flags = FAIL_FAST
     testfilesbasedir = Path("../../../doc/source/devel")
@@ -1858,6 +1949,10 @@ if __name__ == "__main__":  # pragma: no cover
     # test_sum += doctestresult.failed
 
     if test_failed == 0:
-        print(f"DocTests passed without errors, {test_sum} tests.")
+        print(f"\nDocTests passed without errors, {test_sum} tests.")
     else:
-        print(f"DocTests failed: {test_failed} tests.")
+        print(f"\nDocTests failed: {test_failed} tests.")
+
+    color_terminal_check()
+
+

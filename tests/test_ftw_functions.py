@@ -67,11 +67,12 @@ class TestMainEntry:
         
         # Mock FtwPatch logic
         mock_patcher = mocker.patch("fitzzftw.patch.ftw_patch.FtwPatch")
-        mock_patcher.return_value.apply_patch.return_value = 0
+        mock_patcher.return_value.apply.return_value = 0
         
         exit_code = prog_ftw_patch()
         assert exit_code == 0
-        mock_patcher.return_value.apply_patch.assert_called_once_with(dry_run=False)
+        # mock_patcher.return_value.apply.assert_called_once_with(dry_run=False)
+        mock_patcher.return_value.apply.assert_called_once_with(mock_args)
 
     def test_prog_ftw_patch_ftw_error(self, mocker, capsys):
         """Tests the handling of a known FtwPatchError (Returns 1)."""
