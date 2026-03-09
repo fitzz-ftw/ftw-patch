@@ -435,7 +435,7 @@ the line does not have a valid diff prefix (' ', '+', '-').
    >>> HunkLine("Missing prefix") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
    Traceback (most recent call last):
    ...
-   fitzzftw.patch.ftw_patch.PatchParseError: Hunk content line missing valid prefix 
+   fitzzftw.patch.exceptions.PatchParseError: Hunk content line missing valid prefix 
    (' ', '+', '-') or is empty: 'Missing prefix'
 
 Whitespace Normalization (Compare all 3 Properties)
@@ -1414,7 +1414,7 @@ Missing `'---'` header before `'@@ '`
     >>> list(patch_parser.iter_files(broken_patch))
     Traceback (most recent call last):
         ...
-    fitzzftw.patch.ftw_patch.PatchParseError: Line 1: Found '@@ ' before file headers
+    fitzzftw.patch.exceptions.PatchParseError: Line 1: Found '@@ ' before file headers
 
 
 Processing Complex Patches
@@ -1805,7 +1805,7 @@ your source code remains consistent.
     >>> patcher.apply(options) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     Traceback (most recent call last):
         ...
-    fitzzftw.patch.ftw_patch.PatchParseError: Hunk mismatch at line 1. 
+    fitzzftw.patch.exceptions.PatchParseError: Hunk mismatch at line 1. 
     ... not match the hunk's context.
 
 Verification of Atomicity
