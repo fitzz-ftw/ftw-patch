@@ -46,7 +46,7 @@ Issues = "https://github.com/fitzz-ftw/ftw-patch/issues"
 
 [project.scripts]
 ftwpatch = "fitzzftw.patch.ftw_patch:prog_ftw_patch"
-ftw-terminal-color-check = "fitzzftw.patch.ftw_patch:color_terminal_check"
+ftw-terminal-color-check = "fitzzftw.patch.base:color_terminal_check"
 
 
 [project.optional-dependencies]
