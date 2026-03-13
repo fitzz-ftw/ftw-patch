@@ -175,11 +175,11 @@ autodoc_class_signature = "separated"
 autodoc_typehints_description_target = "documented_params"
 autodoc_default_options = {
     "members": True,
-    #    'special-members': False,
-    'private-members': "_ANSI,",
+    'special-members': False,
+    'private-members': "_ANSI,_color_map",
     #    'inherited-members': False,
     # 'undoc-members': True,
-    "exclude-members": "__weakref__, __new__",
+    "exclude-members": "__weakref__,__new__",
     "class-doc-from": "class",
 }
 
@@ -187,7 +187,7 @@ autodoc_default_options = {
 autosummary_generate = True
 autosummary_generate_overwrite = True
 autosummary_imported_members = False
-autosummary_ignore_module_all = False
+autosummary_ignore_module_all = True
 autosummary_context = {}
 
 class_extention_context = {
@@ -196,7 +196,14 @@ class_extention_context = {
     "function_inc": "funcinc",
     "class_show_inheritance": True,
     "excl_class_show_inheritance": [
-    ],
+        "LineLike",
+   ],
+    "excl_class_show_inheritance_member": {
+        "LineLike": [],
+    },
+    "include_private_members":{
+        "LineLike": ["_color_map",],
+    },
     "autoclass_toc": True,
 }
 

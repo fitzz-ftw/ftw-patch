@@ -1,0 +1,21 @@
+diff --git a/doc/source/conf.py b/doc/source/conf.py
+index e605aee..6589893 100644
+--- a/doc/source/conf.py
++++ b/doc/source/conf.py
+@@ -56,16 +56,10 @@ extensions = [
+     "sphinx.ext.viewcode",
+     "sphinx_copybutton",
+     "sphinx_design",
+-    #  "sphinx_jinja2",
+     "sphinx.ext.intersphinx",
+     "myst_parser",
+-    # "sphinx_mdinclude",
+ ]
+ 
+-# source_suffix = {
+-#     ".rst": "restructuredtext",
+-#     ".md": "markdown",
+-# }
+ 
+ templates_path = ["_templates", "_templates/autosummary"]
+ exclude_patterns = []

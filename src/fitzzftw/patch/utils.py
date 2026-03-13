@@ -97,12 +97,13 @@ if __name__ == "__main__": # pragma: no cover
     # Pfad zu den dokumentierenden Tests
     testfiles_dir = Path(__file__).parents[3] / "doc/source/devel"
     test_file = testfiles_dir / "get_started_utils.rst"
-    test_file = testfiles_dir / "get_started_ftw_patch.rst"
+    # test_file = testfiles_dir / "get_started_ftw_patch.rst"
 
     if test_file.exists():
         print("--- Running Doctest for utils ---")
         doctestresult = testfile(
             str(test_file),
+            module_relative=False,
             verbose=be_verbose,
             optionflags=option_flags,
         )

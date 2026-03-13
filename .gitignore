@@ -39,3 +39,7 @@ doc/source/devel/api/
 TAGMESSAGE.txt
 old_messages/**
 doc/build_old_theme/coverage/python.txt
+
+# Old Code Snippets
+old_code_snippets
+git_dif*

@@ -160,7 +160,6 @@ class PatchParser:
 #!CLASS - PatchParser
 #!SECTION - Parsers
 
-# Hier den Code einfügen
 
 if __name__ == "__main__": # pragma: no cover
     from doctest import FAIL_FAST, testfile

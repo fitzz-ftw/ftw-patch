@@ -17,6 +17,8 @@ This document provides a step-by-step introduction and executable documentation 
 
 ---
 
+.. SECTION - SetUp
+
 .. _ftw-patch-setup-env:
 
 
@@ -35,6 +37,11 @@ This document provides a step-by-step introduction and executable documentation 
         >>> env.input_readonly = True
         >>> env.do_not_clean = True
 
+.. !SECTION
+
+.. SECTION - Lines
+
+.. CLASS - PatchLine
 
 Class PatchLine 
 ----------------
@@ -70,6 +77,9 @@ Class PatchLine
     >>> patchline_ws.content
     'This is a test line.\n   '
 
+.. !CLASS
+
+.. CLASS - FileLine
 
 Class FileLine 
 ---------------
@@ -118,7 +128,7 @@ Class FileLine
 
 FileLine Class
 --------------------
-.. _ftw_patch-fileline-class:
+.. ftw_patch-fileline-class:
 
 :Inherits: :py:class:`PatchLine`
 :Purpose: Represents a single line within a code file.
@@ -230,7 +240,9 @@ The expected result must be an empty string, confirming complete removal.
     >>> FileLine("  \t\xa0 \n").ignore_all_ws_content
     ''
 
+.. !CLASS
 
+.. CLASS - HunkLine
 
 HunkLine Class
 --------------
@@ -269,7 +281,7 @@ patch content without manual string prefix checking **(ro)**.
    >>> hl1.is_context
    True
 
-.. _ftw_patch-hunk_line-is_deletion-property:
+.. ftw_patch-hunk_line-is_deletion-property:
 
 Identifying a Deletion Line in a Parsed Hunk
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -378,6 +390,9 @@ Line Skip Logic.
    >>> hl_blank.is_context
    True
 
+.. !CLASS
+
+.. CLASS - HunkHeadLine
 
 HunkHeadLine Class
 ------------------
@@ -489,8 +504,9 @@ Raised when a :py:class:`HunkHeadLine` is initialized with incorrect coords.
         ...
     ValueError: Invalid Hunk coordinates: '-10,4 +I0,6'
 
+.. !CLASS
 
-
+.. CLASS - HeadLine
 
 HeadLine Class
 --------------
@@ -674,266 +690,13 @@ Raised when a strip level is equal or greater then the parts of the path.
     ValueError: Strip level -p2 is too high for 
     path 'target/file.txt' (only 2 segments available).
 
+.. !CLASS 
 
+.. !SECTION
 
+.. SECTION - CLI
 
-
-
-Hunk Class
-----------
-.. _ftw_patch-hunk-class:
-
-The :py:class:`fitzzftw.patch.ftw_patch.Hunk` dataclass represents a single contiguous block of 
-changes ("a hunk") within a file being patched. It primarily stores the line number 
-and length metadata, as well as the content of the changes (the **hunk lines**).
-
-Initialization and Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. _ftw_patch-hunk-init-method:
-
-The dataclass is initialized with the key statistics derived from the 
-**hunk header** and the list of :py:class:`FileLine` objects containing the 
-actual changes.
-
-1. **Import the Hunk class** 
-
-.. code:: python
-
-    >>> from fitzzftw.patch.ftw_patch import Hunk
-
-2. **Initialize a standard Hunk** that deletes 2 lines and adds 3 lines, 
-   resulting in a net increase of 1 line. The newline metadata is also stored.
-
-.. code:: python
-
-    >>> hunk1 = Hunk(hhline1)
-    >>> hunk1
-    Hunk(header=(1, 2, 1, 3), lines=0)
-
-Adding some :py:class:`HunkLine` 
-
-.. code:: python
-
-    >>> hunk1.add_line(HunkLine("-Old Line 1\n"))
-    >>> hunk1.add_line(HunkLine("-Old Line 2\n"))
-    >>> hunk1.add_line(HunkLine("+New Line A\n"))
-    >>> hunk1.add_line(HunkLine("+New Line B\n"))
-    >>> hunk1.add_line(HunkLine("+New Line C\n"))
-
-    >>> hunk1
-    Hunk(header=(1, 2, 1, 3), lines=5)
-
-
-    
-    >>> hunk1.old_start
-    1
-    
-    >>> hunk1.new_start
-    1
-
-The size of of a :py:class:`Hunk` is defiend by it's :py:class:`HunkLines`. 
-
-.. code:: python
-
-    >>> len(hunk1)
-    5
-
-    >>> hunk1[2]
-    HunkLine(Content: 'New Line A', Prefix: '+')
-
-    >>> for line in hunk1:
-    ...     line
-    HunkLine(Content: 'Old Line 1', Prefix: '-')
-    HunkLine(Content: 'Old Line 2', Prefix: '-')
-    HunkLine(Content: 'New Line A', Prefix: '+')
-    HunkLine(Content: 'New Line B', Prefix: '+')
-    HunkLine(Content: 'New Line C', Prefix: '+')
-
-
-The DiffCodeFile Class
-----------------------
-
-A :py:class:`DiffCodeFile` represents all changes within a single source file. 
-It is typically created by the parser, but it can also be used independently. 
-It stores header information and acts as a container for hunks.
-
-
-Initialization and Properties
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: python
-
-    >>> from fitzzftw.patch.ftw_patch import DiffCodeFile
-
-Manual initialization (as the parser would do it)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code:: python
-
-    >>> source = HeadLine("--- a/old_name.py\n")
-    >>> target = HeadLine("+++ b/new_name.py\n")
-    >>> diff_file = DiffCodeFile(source)
-
-    >>> diff_file
-    DiffCodeFile(orig=a/old_name.py, hunks=0)
-
-    >>> diff_file.new_header = target
-
-Attributes
-^^^^^^^^^^^^^^^^^
-
-.. code:: python
-
-    >>> diff_file.orig_header
-    HeadLine(Content: 'a/old_name.py', Prefix: '--- ')
-
-    >>> diff_file.new_header
-    HeadLine(Content: 'b/new_name.py', Prefix: '+++ ')
-
-
-
-Container Protocols (empty state)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: python
-
-    >>> len(diff_file)
-    0
-    >>> list(diff_file)
-    []
-
-Adding Data
-~~~~~~~~~~~~
-
-.. code:: python
-
-    >>> hunk = Hunk(hhline1)
-    >>> diff_file.add_hunk(hunk)
-    >>> len(diff_file)
-    1
-
-    >>> diff_file.add_hunk(Hunk(hhline2))
-    >>> len(diff_file)
-    2
-
-
-Getting Lines with Index
-~~~~~~~~~~~~~~~~~~~~~~~~~
-.. code:: python
-
-    >>> diff_file[0]
-    Hunk(header=(1, 2, 1, 3), lines=0)
-
-
-    >>> diff_file[1]
-    Hunk(header=(10, 4, 10, 6), lines=0)
-
-    >>> diff_file
-    DiffCodeFile(orig=a/old_name.py, hunks=2)
-
-    >>> for code_file in diff_file:
-    ...     code_file
-    Hunk(header=(1, 2, 1, 3), lines=0)
-    Hunk(header=(10, 4, 10, 6), lines=0)
-
-.. _ftw_patch-utilities-get_backup_extension-auto:
-
-:py:func:`get_backup_extension`
----------------------------------------------------
-
-Import ``get_backup_extension``
-
-.. code:: python
-
-    >>> from fitzzftw.patch.ftw_patch import get_backup_extension
-
-The following tests demonstrate the sanitization and keyword resolution.
-
-Standard normalization
-
-.. code:: python
-
-    >>> get_backup_extension("  .bak  ")
-    '.bak'
-
-For convenience, the keyword ``auto`` is supported alongside ``date``, 
-``time``, and ``datetime``. All these keywords generate a full 
-timestamped suffix for unique backup identification.
-
-
-Using 'auto' for timestamped backups
-
-.. code:: python
-
-    >>> get_backup_extension("auto") # doctest: +ELLIPSIS
-    '.bak_20...'
-
-Maleformed extention string
-
-.. code:: python
-
-    >>> get_backup_extension(" . auto . ") # doctest: +ELLIPSIS
-    '.bak_20...'
-
-
-Using 'time' for timestamped backups
-
-.. code:: python
-
-    >>> get_backup_extension("time") # doctest: +ELLIPSIS
-    '.bak_20...'
-
-Using 'date' for timestamped backups
-
-.. code:: python
-
-    >>> get_backup_extension("date") # doctest: +ELLIPSIS
-    '.bak_20...'
-
-Using 'datetime' for timestamped backups
-
-.. code:: python
-
-    >>> get_backup_extension("datetime") # doctest: +ELLIPSIS
-    '.bak_20...'
-
-.. _ftw_patch-utilities-get_backup_extension-timestamp:
-
-The ``timestamp`` keyword
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can also use the explicit keyword ``timestamp`` to achieve the same 
-ISO-compliant backup suffix.
-Using 'timestamp' for timestamped backups
-
-Using 'timestamp' as a clear technical alias
-
-.. code:: python
-
-    >>> get_backup_extension("timestamp") # doctest: +ELLIPSIS
-    '.bak_20...'
-
-Get the Configuration
-^^^^^^^^^^^^^^^^^^^^^
-
-.. code:: python
-
-    >>> user_config = env.copy2config("fitzzftw", "patch_config.toml", "patch.toml")
-
-
-    >>> from fitzzftw.patch.ftw_patch import get_merged_config
-    >>> get_merged_config("fitzzftw")
-    {'backup': True, 'backupext': '.my_bak', 'normalize-ws': False}
-
-    >>> pyproject = env.copy2cwd("test_pyproject.toml", "pyproject.toml")
-    
-    >>> get_merged_config("fitzzftw") # doctest: +NORMALIZE_WHITESPACE
-    {'backup': True, 'backupext': 'timestamp', 
-    'normalize-ws': False, 'dry-run': True, 
-    'strip': 1}
-
-
-
+.. FUNCTION - _get_argparser
 
 .. _ftw-patch-get-argparser-func:
 
@@ -1146,15 +909,15 @@ Example 2: Using the 'time' keyword for a quick timestamp
     'time'
 
 
-
-
+.. !FUNCTION
+.. !SECTION
 
 ---
 
 
 
 
-
+.. CLASS - PatchParser
 
 PatchParser Class
 -------------------
@@ -1386,6 +1149,10 @@ potentially empty patch files or filtered streams.
     >>> list(parser.iter_files(empty_stream))
     []
 
+
+.. !CLASS
+
+.. CLASS - FtwPatch
 
 FtwPatch Class
 -----------------------------
@@ -1831,8 +1598,9 @@ patching cycle: creating a source file, defining a unified diff, and applying it
                 :emphasize-lines: 2, 4-6
                 :caption: app.py (patched)
 
+.. !CLASS
 
-
+.. SECTION - CleanUp
 
 .. dropdown:: Cleanup Testenvironment
     :chevron: down-up
@@ -1846,3 +1614,5 @@ patching cycle: creating a source file, defining a unified diff, and applying it
         >>> env.teardown()
         
         >>> env.clean_home()
+
+.. !SECTION

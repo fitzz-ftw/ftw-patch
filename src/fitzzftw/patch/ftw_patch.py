@@ -35,11 +35,11 @@ from tempfile import TemporaryDirectory
 from tomllib import TOMLDecodeError
 
 from fitzzftw.baselib.converter import str2bool
-from fitzzftw.patch.base import ColorMixin, color_terminal_check
-from fitzzftw.patch.cli import PatchParser
+from fitzzftw.patch.base import TerminalColorMixin, color_terminal_check
 from fitzzftw.patch.container import DiffCodeFile, Hunk
 from fitzzftw.patch.exceptions import FtwPatchError, PatchParseError
 from fitzzftw.patch.lines import FileLine, HeadLine, HunkHeadLine, HunkLine, PatchLine
+from fitzzftw.patch.parser import PatchParser
 from fitzzftw.patch.utils import get_backup_extension, get_merged_config
 
 ### Temporary Functions
@@ -56,15 +56,11 @@ from fitzzftw.patch.utils import get_backup_extension, get_merged_config
 # oldprint(*args, flush=True)
 #     pass
 
-__all__ = ["FileLine", "Hunk", "HeadLine","HunkHeadLine", "HunkLine", "PatchLine", "ColorMixin"] 
-
-
-
-
+__all__ = ["FileLine", "Hunk", "HeadLine",
+            "HunkHeadLine", "HunkLine", "PatchLine", 
+            "TerminalColorMixin"] 
 
 # SECTION -  --- FtwPatch (Main Application) ---
-
-
 # CLASS - FtwPatch
 class FtwPatch:
     """
@@ -343,8 +339,6 @@ class FtwPatch:
                 bak_path.unlink(missing_ok=True)
 
         return True
-
-
 #!CLASS - FtwPatch
 #!SECTION - FtwPatch
 
@@ -583,7 +577,7 @@ def prog_ftw_patch() -> int:
         print(f"An unexpected error occurred: {e}", file=sys.stderr)
         return 1
 
-
+#!SECTION
 
 if __name__ == "__main__":  # pragma: no cover
     from doctest import testfile, FAIL_FAST  # noqa: I001

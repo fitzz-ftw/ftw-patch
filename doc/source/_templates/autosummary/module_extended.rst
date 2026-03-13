@@ -58,7 +58,7 @@
     .. include:: ../api_inc/attributes/{{fullname}}.{{item}}_{{attributes_inc}}.rst.inc
         :parser: rst
 
-    .. autoattribute:: {{ item }}
+    .. autodata:: {{ item }}
     {%- endfor %}
 
     {% endif %}

@@ -8,5 +8,13 @@ FTW Patch
     :recursive:
     :template: module_extended.rst
 
+    fitzzftw.patch.base
+    fitzzftw.patch.parser
+    fitzzftw.patch.container
+    fitzzftw.patch.exceptions
     fitzzftw.patch.ftw_patch
+    fitzzftw.patch.lines
+    fitzzftw.patch.static
+    fitzzftw.patch.utils
+
 

@@ -14,7 +14,9 @@ import re
 from pathlib import Path
 from typing import ClassVar
 
+from fitzzftw.patch.base import TerminalColorMixin
 from fitzzftw.patch.exceptions import PatchParseError
+from fitzzftw.patch.static import ColorKey
 
 
 # CLASS - PatchLine
@@ -55,6 +57,7 @@ class PatchLine:
 
         # Strip trailing newline characters (\n or \r\n)
         self._content: str = clean_content.rstrip("\n\r")
+        self._orig_line: str = self._content
 
     @property
     def content(self) -> str:
@@ -66,8 +69,17 @@ class PatchLine:
         return self._content
 
     @property
+    def orig_line(self) -> str:
+        """
+        The original of the line without trailing newlines (ro).
+
+        :returns: A string representing the text content of the line.
+        """
+        return self._orig_line
+
+    # TODO: Docstring
+    @property
     def has_trailing_whitespace(self) -> bool:
-        # TODO: Docstring
         return self._has_trailing_whitespace
 
     def __repr__(self):
@@ -78,7 +90,7 @@ class PatchLine:
 
 
 # CLASS - HeadLine
-class HeadLine(PatchLine):
+class HeadLine(TerminalColorMixin, PatchLine):
     """
     Represents a file header line within a patch (starting with '--- ' or '+++ ').
 
@@ -87,6 +99,8 @@ class HeadLine(PatchLine):
     convenience methods to identify the role of the file (original vs. new)
     within a transition.
     """
+
+    _color_map:dict[str,ColorKey]={"--- ": "red", "+++ ":"green"}
 
     def __init__(self, raw_line: str):
         """
@@ -114,6 +128,7 @@ class HeadLine(PatchLine):
         else:
             super().__init__(parts[0])
             self._info = None
+        self._orig_line= raw_line.rstrip("\n\r")
 
     @property
     def prefix(self)->str:
@@ -235,7 +250,7 @@ class HeadLine(PatchLine):
 # CLASS -  HunkHead
 
 
-class HunkHeadLine(PatchLine):
+class HunkHeadLine(TerminalColorMixin, PatchLine):
     """
     Represents a hunk header line within a patch (starting with '@@ ').
 
@@ -243,6 +258,8 @@ class HunkHeadLine(PatchLine):
     It isolates the range information from optional context info (like function names)
     and provides parsed access to the line numbers.
     """
+
+    _color_map: dict[str, ColorKey] = {"@@ ": "cyan"}
 
     _HUNK_RE: ClassVar[re.Pattern] = re.compile(
         r"^-(?P<old_start>\d+)(?:,(?P<old_len>\d+))? "
@@ -284,6 +301,7 @@ class HunkHeadLine(PatchLine):
             self._info = None
             self._suffix_marker = " @@"
 
+        self._orig_line = raw_line.rstrip("\n\r")
         # Koordinaten-Validierung auf dem isolierten Koordinaten-String
         match = self._HUNK_RE.match(self.content)
         if not match:
@@ -511,7 +529,7 @@ class FileLine(PatchLine):
 
 
 # CLASS - HunkLine
-class HunkLine(FileLine):
+class HunkLine(TerminalColorMixin,FileLine):
     """
     Represents a single content line within a hunk block of a unified diff.
 
@@ -519,6 +537,12 @@ class HunkLine(FileLine):
     dynamically calculated, read-only content properties for different
     levels of whitespace normalization.
     """
+
+    _color_map: dict[str, ColorKey] = {
+        "+": "green",
+        "-": "red",
+        " ": "terminal",
+    }
 
     def __init__(self, raw_line: str) -> None:
         """
@@ -538,6 +562,7 @@ class HunkLine(FileLine):
         super().__init__(raw_line[1:])
         self._prefix: str = raw_line[0]
         self._has_newline: bool = True  # Default to POSIX standard
+        self._orig_line = raw_line.rstrip("\n\r")
 
     def __repr__(self):
         return "".join(
@@ -557,16 +582,6 @@ class HunkLine(FileLine):
         :returns: The prefix character.
         """
         return self._prefix
-
-    # @property
-    # def has_trailing_whitespace(self) -> bool:
-    #     """
-    #     Indicates if the original raw line contained trailing whitespace before the newline
-    #     **(ro)**.
-
-    #     :returns: Boolean value.
-    #     """
-    #     return self._has_trailing_whitespace
 
     @property
     def is_context(self) -> bool:
@@ -592,24 +607,6 @@ class HunkLine(FileLine):
         """
         return self._prefix == "-"
 
-    # @property
-    # def has_newline(self) -> bool:
-    #     """
-    #     State of the newline termination at the end of the line (**(rw)**).
-
-    #     :param value: Set to False if the line lacks a trailing newline.
-    #     :returns: True if the line ends with a newline, False otherwise.
-    #     """
-    #     return self._has_newline
-
-    # @has_newline.setter
-    # def has_newline(self, value: bool) -> None:
-    #     """
-    #     State of the newline termination at the end of the line.
-
-    #     :param value: Set to False if the line lacks a trailing newline.
-    #     """
-    #     self._has_newline = value
 
 
 #!CLASS HunkLine
@@ -629,12 +626,13 @@ if __name__ == "__main__":  # pragma: no cover
     # Pfad zu den dokumentierenden Tests
     testfiles_dir = Path(__file__).parents[3] / "doc/source/devel"
     test_file = testfiles_dir / "get_started_lines.rst"
-    test_file = testfiles_dir / "get_started_ftw_patch.rst"
+    # test_file = testfiles_dir / "get_started_ftw_patch.rst"
 
     if test_file.exists():
         print(f"--- Running Doctest for {test_file.name} ---")
         doctestresult = testfile(
             str(test_file),
+            module_relative=False,
             verbose=be_verbose,
             optionflags=option_flags,
         )

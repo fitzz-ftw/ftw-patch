@@ -18,6 +18,7 @@ The latter is particularly useful for mixins or dynamic color assignments.
 Direct property access
 
 .. code-block:: python
+    
    >>> print(f"{colors.RED}Error!{colors.RESET}")
    red>Error!<reset
 
@@ -53,6 +54,7 @@ The ``colors`` manager supports different modes to adapt to various environments
 
    # Switch to TEST mode for unit testing
 .. code-block:: python
+
     >>> colors.mode = "TEST"
     >>> print(colors.CYAN)
     cyn>

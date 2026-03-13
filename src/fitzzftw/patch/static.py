@@ -13,7 +13,6 @@ This module provides global access to color management via a pre-instantiated
 singleton-like object.
 """
 
-from ast import mod
 from pathlib import Path
 from typing import Literal, TypeAlias, TypeVar, get_args
 
@@ -21,7 +20,7 @@ _T = TypeVar("_T")
 
 ColorModes: TypeAlias = Literal["NORMAL", "PLAIN", "TEST"]
 
-class _Color:
+class Color:
     """
     Internal class for color and style management in terminal output.
 
@@ -44,6 +43,7 @@ class _Color:
             "CYAN": ("\033[36m", "cyn>"),
             "RESET": ("\033[0m", "<reset"),
             "BOLD": ("\033[1m", "bold."),
+            "TERMINAL": ("", "trm>"),
         }
 
     @property
@@ -72,6 +72,10 @@ class _Color:
     @property
     def defined_colors(self):
         return [c.lower() for c in self._codes if c not in ["RESET", "BOLD"]]
+    
+    @property
+    def defined_keys(self)-> list[str]:
+        return [c.lower() for c in self._codes]
 
     def switch_to_testmode(self, enabled: bool = True):
         """
@@ -167,19 +171,13 @@ class _Color:
         if self._mode == "PLAIN":
             return ""
         return self._get_value(color.upper())
-        
-
-
-Color: TypeAlias = _Color
-"""Type alias for the color provider class."""
 
 
 
+ColorKey: TypeAlias = Literal["red", "green", "yellow", "cyan","terminal"]
+TerminalKey: TypeAlias = Literal["bold", "reset" ,"red", "green", "yellow", "cyan", "terminal"]
 
-ColorKey: TypeAlias = Literal["red", "green", "yellow", "cyan"]
-
-
-colors:Color = _Color()
+colors:Color = Color()
 """Global instance for project-wide use."""
 
 
@@ -187,7 +185,7 @@ colors:Color = _Color()
 
 if __debug__: #pragma: no cover
     def _check_colors() -> None:
-        actual_keys = set(_Color().defined_colors)
+        actual_keys = set(Color().defined_colors)
         literal_keys = set(get_args(ColorKey))
 
         if actual_keys != literal_keys:
@@ -201,7 +199,25 @@ if __debug__: #pragma: no cover
                 error_msg.append(f"  - Extra in Literal (obsolete): {extra}")
 
             print("\n".join(error_msg))
+    
+    def _check_terminal() -> None:
+        actual_keys = set(Color().defined_keys)
+        literal_keys = set(get_args(TerminalKey))
+
+        if actual_keys != literal_keys:
+            missing = actual_keys - literal_keys
+            extra = literal_keys - actual_keys
+
+            error_msg = ["Update TerminalKey-Literal:"]
+            if missing:
+                error_msg.append(f"  - Missing in Literal: {missing}")
+            if extra:
+                error_msg.append(f"  - Extra in Literal (obsolete): {extra}")
+
+            print("\n".join(error_msg))
+        
     _check_colors()
+    _check_terminal()
 
 
 if __name__ == "__main__": # pragma: no cover

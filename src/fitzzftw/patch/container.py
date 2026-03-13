@@ -11,11 +11,12 @@ Modul container documentation
 """
 
 import tempfile
-from argparse import Namespace
 from pathlib import Path
+from typing import Iterator
 
 from fitzzftw.patch.exceptions import PatchParseError
 from fitzzftw.patch.lines import FileLine, HeadLine, HunkHeadLine, HunkLine
+from fitzzftw.patch.protocols import DiffCodeOptions, HunkCompareOptions
 
 # CLASS - Hunks
 
@@ -77,9 +78,11 @@ class Hunk:
         """
         self.lines.append(line)
 
-    def _compare_context(
-        self, expected: list[HunkLine], actual: list[FileLine], options: Namespace
-    ) -> bool:
+    def _compare_context( self, 
+                         expected: list[HunkLine], 
+                         actual: list[FileLine], 
+                         options: HunkCompareOptions
+                         ) -> bool:
         """
         Compare hunk context against file content using specialized properties.
 
@@ -116,7 +119,7 @@ class Hunk:
 
         return True
 
-    def apply(self, lines: list[FileLine], options: Namespace) -> list[FileLine]:
+    def apply(self, lines: list[FileLine], options: HunkCompareOptions) -> list[FileLine]:
         """
         Apply the hunk's changes to a list of FileLine objects.
 
@@ -182,7 +185,7 @@ class Hunk:
         """
         return len(self.lines)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[HunkLine]:
         """
         Provides an iterator for the hunk's lines.
 
@@ -191,13 +194,15 @@ class Hunk:
         return iter(self.lines)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(header={self._header.coords}, lines={len(self.lines)})"
+        return (f"{self.__class__.__name__}(header={self._header.coords}, "
+                f"lines={len(self.lines)})")
 
 
 #!CLASS - Hunks
 
 
 # CLASS - DiffCodeFile
+
 
 
 class DiffCodeFile:
@@ -296,7 +301,7 @@ class DiffCodeFile:
         """
         return len(self.hunks)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Hunk]:
         """
         Returns an independent iterator over the hunks.
 
@@ -312,7 +317,7 @@ class DiffCodeFile:
         """
         self.hunks.append(hunk)
 
-    def apply(self, options: Namespace) -> list[FileLine]:
+    def apply(self, options: DiffCodeOptions) -> list[FileLine]:
         """
         Apply hunks to the file content and return the resulting lines.
 
@@ -422,12 +427,13 @@ if __name__ == "__main__": # pragma: no cover
     # Pfad zu den dokumentierenden Tests
     testfiles_dir = Path(__file__).parents[3] / "doc/source/devel"
     test_file = testfiles_dir / "get_started_container.rst"
-    test_file = testfiles_dir / "get_started_ftw_patch.rst"
+    # test_file = testfiles_dir / "get_started_ftw_patch.rst"
 
     if test_file.exists():
         print(f"--- Running Doctest for {test_file.name} ---")
         doctestresult = testfile(
             str(test_file),
+            module_relative=False,
             verbose=be_verbose,
             optionflags=option_flags,
         )

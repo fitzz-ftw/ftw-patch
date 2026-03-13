@@ -11,14 +11,23 @@ Modul base documentation
 """
 
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, cast
 
+from fitzzftw.patch.exceptions import FtwProtcolError
+from fitzzftw.patch.protocols import LineLike
 from fitzzftw.patch.static import Color, ColorKey, colors
+
+#SECTION - Protocolls
+
+
+#!SECTION
+
+
 
 #SECTION - MixinClasses
 
 #CLASS - ColorMixin
-class ColorMixin:
+class TerminalColorMixin:
     """
     Provides colorization capabilities for CLI output.
 
@@ -37,24 +46,68 @@ class ColorMixin:
     Defaults to True; should be set explicitly based on CLI flags.
     """
 
-    def colorize(self, text: str, color_key: ColorKey ,#Literal["red","green","cyan","yellow"], 
-                 bold:bool=False) -> str:
+    # def __init__(self, *args, **kwargs) -> None:
+    #     """
+    #     Initialize the color mixin and validate the class structure.
+
+    #     This constructor ensures that any subclass inheriting from 
+    #     TerminalColorMixin provides a mandatory '_color_map' class variable. 
+    #     It acts as a structural guard to guarantee consistency across 
+    #     all colored line types.
+
+    #     :param args: Positional arguments passed to the next class in MRO.
+    #     :param kwargs: Keyword arguments passed to the next class in MRO.
+    #     :raises NotImplementedError: If '_color_map' is not defined in the subclass.
+    #     """
+    #     if not hasattr(self, "_color_map"):
+    #         raise NotImplementedError(
+    #             f"Class '{self.__class__.__name__}' inherits from TerminalColorMixin "
+    #             f"but is missing the mandatory '_color_map' class variable."
+    #         )
+    #     super().__init__(*args, **kwargs)
+
+    def colorize(self, text: str, color_key: ColorKey , bold:bool=False, **kvargs) -> None:
         """
         Colorizes the text using ANSI escape sequences.
 
         :param text: The string to colorize.
         :param color_key: The color to use ('red', 'green', 'cyan').
         :param bold: Whether to make the output bold.
+        :param kwargs: Arbitrary keyword arguments forwarded to the built-in print() function.
+               This allows for fine-grained control over the output, such as
+               specifying a custom 'file' stream or changing the line termination
+               via 'end' (e.g., end="|").
         :returns: Colorized string or plain text if colors are disabled.
         """
+        kvargs["flush"]= True
         if not self.use_colors:
-            return text
+            print(text, **kvargs)
+        else:
+            prefix = self._ANSI.get("bold", "\033[1m") if bold else ""
+            prefix += self._ANSI.get(color_key, "")
+            suffix = self._ANSI.get("reset", "\033[0m")
+            print(f"{prefix}{text}{suffix}", **kvargs)
 
-        prefix = self._ANSI.get("bold", "\033[1m") if bold else ""
-        prefix += self._ANSI.get(color_key, "")
-        suffix = self._ANSI.get("reset", "\033[0m")
+    def print(self, **kwargs) -> None:
+        """
+        Prints the line with color mapping based on its prefix.
 
-        return f"{prefix}{text}{suffix}"
+        :raises TypeError: If the class does not satisfy the LineLike protocol.
+        :param kwargs: Passed to colorize/print (e.g., end, file).
+        """
+        if not isinstance(self, LineLike):
+            raise FtwProtcolError(self.print, self.__class__.__name__, (LineLike,))
+            # raise TypeError(
+            #     f"Class '{self.__class__.__name__}' is not 'LineLike'. "
+            #     "To use this mixin, you must provide 'prefix', 'content', "
+            #     "and '_color_map', or override the 'print' method."
+            # )
+        is_bold = kwargs.pop("bold", False)
+        self.colorize(self.orig_line, 
+                      self._color_map.get(cast(str, self.prefix), "terminal"),
+                      bold=is_bold, 
+                      **kwargs)
+
 
 #!CLASS
 
@@ -81,30 +134,30 @@ def color_terminal_check() -> None:
     row_length=49
     print("=" * row_length)
     print(" Visual Terminal Color Check ".center(row_length, "="))
-    colmix = ColorMixin()
+    colmix = TerminalColorMixin()
 
     # Testreihe 1: Colors ON
     print("Enabled :", end=" ")
-    print(colmix.colorize("GRN", "green"), end="|")
-    print(colmix.colorize("GRN-B", "green", True), end="|")
-    print(colmix.colorize("RED", "red"), end="|")
-    print(colmix.colorize("RED-B", "red", True), end="|")
-    print(colmix.colorize("CYN", "cyan"), end="|")
-    print(colmix.colorize("CYN-B", "cyan", True), end="|")
-    print(colmix.colorize("YLW", "yellow"), end="|")
-    print(colmix.colorize("YLW-B", "yellow", True))
+    colmix.colorize("GRN", "green", end="|")
+    colmix.colorize("GRN-B", "green", True, end="|")
+    colmix.colorize("RED", "red", end="|")
+    colmix.colorize("RED-B", "red", True, end="|")
+    colmix.colorize("CYN", "cyan", end="|")
+    colmix.colorize("CYN-B", "cyan", True, end="|")
+    colmix.colorize("YLW", "yellow", end="|")
+    colmix.colorize("YLW-B", "yellow", True)
 
     # Testreihe 2: Colors OFF
     colmix.use_colors = False  # pyright: ignore[reportAttributeAccessIssue]
     print("Disabled:", end=" ")
-    print(colmix.colorize("GRN", "green"), end="|")
-    print(colmix.colorize("GRN-B", "green", True), end="|")
-    print(colmix.colorize("RED", "red"), end="|")
-    print(colmix.colorize("RED-B", "red", True), end="|")
-    print(colmix.colorize("CYN", "cyan"), end="|")
-    print(colmix.colorize("CYN-B", "cyan", True), end="|")
-    print(colmix.colorize("YLW", "yellow"), end="|")
-    print(colmix.colorize("YLW-B", "yellow", True))
+    colmix.colorize("GRN", "green", end="|")
+    colmix.colorize("GRN-B", "green", True, end="|")
+    colmix.colorize("RED", "red", end="|")
+    colmix.colorize("RED-B", "red", True, end="|")
+    colmix.colorize("CYN", "cyan", end="|")
+    colmix.colorize("CYN-B", "cyan", True, end="|")
+    colmix.colorize("YLW", "yellow", end="|")
+    colmix.colorize("YLW-B", "yellow", True)
     print("=" * row_length)
 
 

@@ -1,0 +1,82 @@
+diff --git a/doc/source/conf.py b/doc/source/conf.py
+index e605aee..6589893 100644
+--- a/doc/source/conf.py
++++ b/doc/source/conf.py
+@@ -56,16 +56,10 @@ extensions = [
+     "sphinx.ext.viewcode",
+     "sphinx_copybutton",
+     "sphinx_design",
+-    #  "sphinx_jinja2",
+     "sphinx.ext.intersphinx",
+     "myst_parser",
+-    # "sphinx_mdinclude",
+ ]
+ 
+-# source_suffix = {
+-#     ".rst": "restructuredtext",
+-#     ".md": "markdown",
+-# }
+ 
+ templates_path = ["_templates", "_templates/autosummary"]
+ exclude_patterns = []
+@@ -113,59 +107,11 @@ toc_object_entries = True
+ toc_object_entries_show_parents = "hide"
+ 
+ 
+-# -- Old Theme ----------#
+-# html_theme = "sphinx_book_theme"
+-# html_static_path = ['_static']
+-# html_css_files = ['custom_html.css']
+-# toc_object_entries = True
+-# toc_object_entries_show_parents = 'hide'
+-# html_theme_options = { 
+-#     "icon_links": [
+-#         {
+-#             "name": "General Index",
+-#             "url": f"{html_baseurl}genindex",
+-#             "icon": "fa-solid fa-book", # Nutzt die CSS-Klasse statt URL
+-#             "type": "fontawesome",
+-#             # "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/book.svg',
+-#             # "type": "local",
+-#             "attributes": {
+-#                "target": "_self",
+-#             },
+-#         },
+-#         {
+-#             "name": "Module Index",
+-#             "url": f"{html_baseurl}py-modindex",
+-#             "icon": 'fa-solid fa-code',
+-#             "type": "fontawesome",
+-#             # "icon": 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/code.svg',
+-#             # "type": "url",
+-#             "attributes": {
+-#                "target": "_self",
+-#             },
+-#         },
+-#         {
+-#             "name": "About",
+-#             "url": f"{html_baseurl}about",
+-#             "icon": "fa-solid fa-circle-info",
+-#             "type": "fontawesome",
+-#             # "icon": "https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/circle-info.svg",
+-#             # "type": "url",
+-#             "attributes": {
+-#                 "target": "_self"
+-#             },
+-#         },
+-#     ],
+-#     "show_toc_level": 5, 
+-#     "show_navbar_depth": 2, 
+-#     "home_page_in_toc": True,
+-# }
+ 
+ # -- Options for Intersphinx
+ intersphinx_mapping = {"python": (f"https://docs.python.org/{sys.version_info.major}.{sys.version_info.minor}",
++                        None)}
+ 
+-
+-
+-                                  None)}
+ # -- Options for ePub output -------------------------------------------------
+ 
+ # render_cover("ftwpatch", version)
