@@ -27,3 +27,19 @@
     font-weight: 700;
     /* Deutlicher Header-Kontrast */
 }
+/* @import url("custom-mermaid.css"); */
+
+.class-tree-diagram figure,
+.class-tree-diagram {
+    /* height: 300px; */
+    width: 300px;
+}
+
+
+.class-tree-diagram figure .mermaid-container > pre > svg {
+    height: 300px;
+    width: 100%;
+}
+.field-list dd {
+    overflow-x: auto;
+}

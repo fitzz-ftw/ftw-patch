@@ -13,8 +13,21 @@
    {%- endfor %}
    **import** {{ objname }}
 
-.. include:: ../api_inc/classes/{{fullname}}_{{class_inc}}.rst.inc
+.. include-if-exists:: ../api_inc/classes/{{fullname}}_{{class_inc}}.rst.inc
     :parser: rst
+
+{% if inheritence_diagram(fullname) %}
+
+.. container:: class-tree-diagram
+
+   .. autoclasstree:: {{fullname}}
+      :name: {{ objname }}
+      :title: {{ objname }}
+      :caption: Inheritage diagramm for {{ objname }} 
+      :align: center
+      :config: {"width": "300px", "height": "300px"}
+
+{% endif %}
 
 .. container:: custom-api-style api-class
 

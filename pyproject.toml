@@ -1,119 +1,123 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
 
 [tool.setuptools]
 include-package-data = true
 [tool.setuptools.package-dir]
 "" = "src"
 [tool.setuptools.packages.find]
-where = ["src"]
 include = ["fitzzftw*"]
 namespaces = true
+where = ["src"]
 
 [tool.setuptools_scm]
-write_to = "src/fitzzftw/patch/_version.py"
 tag_regex = '^(?P<prefix>v)?(?P<version>[^\+|-]+)(?P<suffix>-test)?$'
+write_to = "src/fitzzftw/patch/_version.py"
 
 [project]
-name = "ftw-patch"
-dynamic = ["version"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Text Processing :: Filters",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Operating System :: OS Independent",
+]
+dependencies = ["platformdirs"]
 description = "A unicode-resistant replacement for the classic `patch` utility"
+dynamic = ["version"]
+name = "ftw-patch"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["platformdirs"]
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Topic :: Software Development :: Build Tools",
-    "Topic :: Text Processing :: Filters",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: 3.15",
-    "Operating System :: OS Independent",
-]
-
 
 [project.urls]
-Homepage = "https://github.com/fitzz-ftw/ftw-patch"
 Documentation = "https://ftw-patch.readthedocs.io/en/stable/"
-Repository = "https://github.com/fitzz-ftw/ftw-patch.git"
+Homepage = "https://github.com/fitzz-ftw/ftw-patch"
 Issues = "https://github.com/fitzz-ftw/ftw-patch/issues"
-
+Repository = "https://github.com/fitzz-ftw/ftw-patch.git"
 
 [project.scripts]
-ftwpatch = "fitzzftw.patch.ftw_patch:prog_ftw_patch"
 ftw-terminal-color-check = "fitzzftw.patch.base:color_terminal_check"
-
+ftwpatch = "fitzzftw.patch.ftw_patch:prog_ftw_patch"
 
 [project.optional-dependencies]
 doc = [
-    "sphinx",
-    "myst-parser",
-    "sphinx-argparse",
-    "autoclasstoc",
-    "sphinx-nefertiti",
-    "sphinx-copybutton",
-    "sphinx-design",
-    "sphinx-mdinclude",
+  "sphinx",
+  "myst-parser",
+  "sphinx-argparse",
+  "autoclasstoc",
+  "sphinx-nefertiti",
+  "sphinx-copybutton",
+  "sphinx-design",
+  "sphinx-mdinclude",
+  "sphinxcontrib-mermaid",
 ]
 
-test = ["pytest", "pytest-mock", "pytest-cov"]
-lint = ["ruff"]
 dev = ["ftw-patch[test,doc,lint]", "esbonio==0.16.5"]
-
+lint = ["ruff"]
+test = ["pytest", "pytest-mock", "pytest-cov"]
 
 [[project.authors]]
-name = "Fitzz TeXnik Welt"
 email = "FitzzTeXnikWelt@t-online.de"
-
+name = "Fitzz TeXnik Welt"
 
 [[project.maintainers]]
-name = "Fitzz TeXnik Welt"
 email = "FitzzTeXnikWelt@t-online.de"
+name = "Fitzz TeXnik Welt"
 
 [tool.distutils.egg_info]
 egg_base = "."
 
 [tool.ruff]
-src = ["src"]
-line-length = 100
 exclude = ["pyproject.toml"]
+line-length = 100
+src = ["src"]
 
 [tool.ruff.lint]
 # E/W = Pycodestyle (Standard-Fehler/Warnungen)
 # F = Pyflakes (Logik-Fehler wie ungenutzte Imports)
 # I = isort (Sortierung der Imports)
 # B = flake8-bugbear (findet potenzielle Design-Fehler)
-select = ["E", "W", "F", "I", "B"]
 ignore = ["W293", "W291", "B904"]
+select = ["E", "W", "F", "I", "B"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["fitzzftw"]
 
 [tool.ruff.format]
-quote-style = "double"
 indent-style = "space"
+quote-style = "double"
 
 [tool.pytest.ini_options]
 # Pytest-Optionen für die Testausführung
+addopts = [
+  "--doctest-glob=get_started_*.rst",
+  "--cov-report=term",
+  "--cov-report=html",
+]
 minversion = "7.0"
-addopts = "--doctest-glob=get_started_*.rst"
 testpaths = [
-    "doc/source/devel", # Durchsucht Ihr Dokumentationsverzeichnis nach .rst-Dateien
-    "tests",            # Durchsucht das Unit-Test-Verzeichnis (für test_*.py)
+  "doc/source/devel", # Durchsucht Ihr Dokumentationsverzeichnis nach .rst-Dateien
+  "tests", # Durchsucht das Unit-Test-Verzeichnis (für test_*.py)
 ]
 
 [tool.coverage.run]
-source = ["fitzzftw.patch"]
 branch = true
 omit = ["**/_version.py"]
+source = ["fitzzftw.patch"]
 
 [tool.coverage.report]
-show_missing = true
+exclude_also = ["if *__name__ *=*[\"']__main__.*"]
 fail_under = 100
-
+show_missing = true
+#format = "text"
 #
+[tool.coverage.html]
+# Das entspricht --cov-report=html:doc/build/coverage
+directory = "doc/build/test_coverage"

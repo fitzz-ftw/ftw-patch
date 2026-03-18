@@ -1,9 +1,15 @@
 # Configuration file for the Sphinx documentation builder.
+import importlib
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
+from typing import Sequence, cast
 
 from docutils import nodes
+from docutils.nodes import Node
+from docutils.parsers.rst import directives
+from docutils.parsers.rst.directives.misc import Include, adapt_path
 from jinja2 import Environment, FileSystemLoader
 
 # Read the Docs liefert uns die Canonical URL direkt!
@@ -33,10 +39,34 @@ def person_role(name, rawtext, text, lineno, inliner, options=None, content=None
     node = nodes.inline(rawtext, text, classes=["person"])
     return [node], []
 
+class IncludeIfExists(Include):
+    """
+    A smart include guard directive.
+    If the file exists, it is included with ALL provided options.
+    If it doesn't exist, the document remains clean without errors.
+    """
+
+    def run(self)-> Sequence[Node]:
+        path = directives.path(self.arguments[0])
+        if path.startswith('<') and path.endswith('>'):
+            path = '/' + path[1:-1]
+            root_prefix = self.standard_include_path
+        else:
+            root_prefix = self.state.document.settings.root_prefix
+        path = adapt_path(path,
+                          cast(str,self.state.document.current_source),
+                          root_prefix)
+        exists:bool =Path(path).exists()
+        if not exists:
+            return []
+
+        return super().run()
+
 def setup(app):
     """Register custom components during the Sphinx setup process."""
     app.add_role('ftwpatchopt', ftwpatchopt_role)
     app.add_role("person", person_role)
+    app.add_directive("include-if-exists", IncludeIfExists)
 
 
 # -- Project information -----------------------------------------------------
@@ -58,6 +88,7 @@ extensions = [
     "sphinx_design",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "sphinxcontrib.mermaid",
 ]
 
 
@@ -68,6 +99,7 @@ toc_object_entries_show_parents='hide'
 suppress_warnings=[
     'app.add_directive',
     'autosummary.import_cycle',
+    'config.cache',
 ]
 
 
@@ -183,12 +215,54 @@ autodoc_default_options = {
     "class-doc-from": "class",
 }
 
-# -- Options for Autosummary 
+#SECTION - Function for Autosummary
+def create_mermaid_decision_maker(whitelist:list[str]|None=None, 
+                                  blacklist:list[str]|None=None) -> Callable[..., bool]:
+    whitelist = whitelist or []
+    blacklist = blacklist or []
+
+    def should_render_mermaid(fullname):
+        # 1. FAST RETURN: Blacklist (Geringste Kosten)
+        # Wenn wir es explizit verboten haben, sofort raus.
+        if fullname in blacklist:
+            return False
+
+        # 2. FAST RETURN: Whitelist (Geringe Kosten)
+        # Wenn wir wissen, dass es gewollt/möglich ist, sofort ok.
+        if fullname in whitelist:
+            return True
+
+        # 3. HEAVY LIFTING: Import & Analyse (Hohe Kosten)
+        # Erst wenn die Listen keine Antwort liefern, werfen wir die Import-Maschine an.
+        try:
+            # Trennung von Modul und Attribut
+            if "." not in fullname:
+                return False
+
+            module_name, class_name = fullname.rsplit(".", 1)
+            module = importlib.import_module(module_name)
+            obj = getattr(module, class_name)
+
+            if isinstance(obj, type):
+                # Technische Prüfung der Basisklassen
+                return any(b.__name__ != "object" for b in obj.__bases__)
+
+            return False
+        except (ImportError, AttributeError, ValueError):
+            return False
+
+    return should_render_mermaid
+#!SECTION
+
+#SECTION - Options for Autosummary 
 autosummary_generate = True
 autosummary_generate_overwrite = True
 autosummary_imported_members = False
 autosummary_ignore_module_all = True
 autosummary_context = {}
+
+inherit_diagramm:list[str]=["fitzzftw.patch.lines",]
+exclude_inherit_diagramm: list[str] = []
 
 class_extention_context = {
     "class_inc": "classinc",
@@ -197,23 +271,36 @@ class_extention_context = {
     "class_show_inheritance": True,
     "excl_class_show_inheritance": [
         "LineLike",
-   ],
+    ],
     "excl_class_show_inheritance_member": {
         "LineLike": [],
     },
-    "include_private_members":{
-        "LineLike": ["_color_map",],
+    "include_private_members": {
+        "LineLike": [
+            "_color_map",
+        ],
     },
     "autoclass_toc": True,
+    "inheritence_diagram": create_mermaid_decision_maker(
+        inherit_diagramm, exclude_inherit_diagramm
+    ),
 }
 
 autosummary_context.update(class_extention_context)
 
-
+#!SECTION
 
 # -- Options for Documentationcoverage
 coverage_statistics_to_stdout = True
 coverage_show_missing_items = True
+coverage_modules = ["fitzzftw.patch",
+                    "fitzzftw.baselib",
+                    "fitzzftw.develtool"]
+coverage_ignore_modules = [
+    r".*_version",
+    r".*testinfra.*",
+    r".*converter.*",
+]
 
 # -- Options for (Python) domain
 add_module_names = False

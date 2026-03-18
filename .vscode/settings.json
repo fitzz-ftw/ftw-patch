@@ -84,13 +84,18 @@
     // In v0.11.0 war dieser Pfad oft entscheidend:
     "esbonio.sphinx.buildDir": "${workspaceFolder}/doc/build/html",
     "esbonio.server.logLevel": "debug",
-    "python.defaultInterpreterPath": "%{workspace}/venv/pin/python",
+    "python.defaultInterpreterPath": "./venv/bin/python",
     "files.associations": {
         "*.rst.inc": "restructuredtext"
     },
     "python.testing.pytestArgs": [
-        "tests"
+        "tests",
+        "--doctest-glob",
+        "doc/source/devel/get_started_*.rst"
     ],
+    "python.testing.autoTestDiscoverOnSavePattern": "**/get_started_*.rst",
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+    "packageToFlowchart.showDevDependencies": true
 }

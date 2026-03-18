@@ -116,8 +116,11 @@ Programmatic Usage:
 Basic Integration
 ~~~~~~~~~~~~~~~~~
 
-To equip a class with color capabilities, inherit from :class:`~fitzzftw.patch.ftw_patch.TerminalColorMixin`. 
-The :meth:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.colorize` method then becomes available to handle styled output.
+To equip a class with color capabilities, inherit from 
+:class:`~fitzzftw.patch.ftw_patch.TerminalColorMixin`. 
+The :meth:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.colorize` method then 
+becomes available to handle styled output.
+
 
 .. code-block:: python
 
@@ -143,6 +146,7 @@ The :meth:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.colorize` method then be
           prefix: str | None
     or
       overwrite TerminalColorMixin.print(self, **kwargs) -> None.
+
 
 
     >>> class PatchLineReporter(TerminalColorMixin):

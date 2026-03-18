@@ -2,8 +2,23 @@
 
 {{ fullname | escape | underline}}
 
-.. include:: ../api_inc/modules/{{fullname}}_{{module_inc}}.rst.inc
+.. include-if-exists:: ../api_inc/modules/{{fullname}}_{{module_inc}}.rst.inc
     :parser: rst
+
+{% if inheritence_diagram(fullname) %}
+
+.. container:: class-tree-diagram
+   
+   .. autoclasstree:: {{fullname}}
+      :name: {{ objname }}
+      :strict:
+      :title: {{ objname }}
+      :caption: Inheritage diagramm for {{ objname }} 
+      :align: center
+      :config: {"width": "300px", "height": "300px"}
+
+{% endif %}
+
 
 .. container:: custom-api-style api-module
 
@@ -35,7 +50,7 @@
         {%- endfor %}
     {% for item in functions %}
 
-    .. include:: ../api_inc/functions/{{fullname}}.{{item}}_{{function_inc}}.rst.inc
+    .. include-if-exists:: ../api_inc/functions/{{fullname}}.{{item}}_{{function_inc}}.rst.inc
         :parser: rst
 
     .. autofunction:: {{ item }}
@@ -55,7 +70,7 @@
 
     {% for item in attributes %}
 
-    .. include:: ../api_inc/attributes/{{fullname}}.{{item}}_{{attributes_inc}}.rst.inc
+    .. include-if-exists:: ../api_inc/attributes/{{fullname}}.{{item}}_{{attributes_inc}}.rst.inc
         :parser: rst
 
     .. autodata:: {{ item }}
@@ -73,7 +88,7 @@
         {{ item }}
     {%- endfor %}
     {% for item in exceptions %}
-    .. include:: ../api_inc/exceptions/{{fullname}}.{{item}}_{{exception_inc}}.rst.inc
+    .. include-if-exists:: ../api_inc/exceptions/{{fullname}}.{{item}}_{{exception_inc}}.rst.inc
 
     .. autoexception:: {{ item }}
         :show-inheritance:

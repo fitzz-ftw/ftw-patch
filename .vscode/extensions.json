@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "garethcairns.mermaid-docstring-diagrams",
+        "krextensions.package-to-flowchart",
+        "tomoyukim.vscode-mermaid-editor",
+        "mermaidchart.vscode-mermaid-chart",
+        "vstirbu.vscode-mermaid-preview"
+    ]
+}
