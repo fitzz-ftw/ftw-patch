@@ -1,28 +1,42 @@
+# File: src/fitzzftw/patch/base.py
+# Author: Fitzz TeXnik Welt
+# Email: FitzzTeXnikWelt@t-online.de
+# License: LGPLv2 or above
 """
 base
 ===============================
 
-| File: src/fitzzftw/patch/base.py
-| Author: Fitzz TeXnik Welt
-| Email: FitzzTeXnikWelt@t-online.de
-| License: LGPLv2 or above
+This module provides the core visual and behavioral foundations for the
+fitzzftw patch framework, focusing on terminal output and protocol safety.
 
-Modul base documentation
+Core Features:
+--------------
+* **TerminalColorMixin**:
+  A reusable component that adds ANSI color support
+  to any class. It includes a global toggle (:attr:`~.base.TerminalColorMixin.use_colors`)
+  and a specialized
+  **Test-Mode** for predictable assertions in automated environments.
+
+* **Protocol-Enforced Printing**:
+  The :meth:`~.base.TerminalColorMixin.print` method validates the host
+  class against the :class:`~fitzzftw.patch.protocols.LineLike` protocol. 
+  If requirements (like `prefix`,
+  `orig_line`, or `_color_map`) are missing, it raises a detailed
+  :exc:`~.exceptions.FtwProtocolError` with implementation guidance.
+
+* **Visual Diagnostics**:
+  Includes :func:`~.base.color_terminal_check`, a utility to
+  verify ANSI support and semantic color mapping directly from the CLI.
+
+The module ensures that terminal output is not only visually rich but also
+structurally sound and testable.
 """
-
 from pathlib import Path
 from typing import ClassVar, cast
 
-from fitzzftw.patch.exceptions import FtwProtcolError
+from fitzzftw.patch.exceptions import FtwProtocolError
 from fitzzftw.patch.protocols import LineLike
 from fitzzftw.patch.static import Color, ColorKey, colors
-
-#SECTION - Protocolls
-
-
-#!SECTION
-
-
 
 #SECTION - MixinClasses
 
@@ -46,27 +60,8 @@ class TerminalColorMixin:
     Defaults to True; should be set explicitly based on CLI flags.
     """
 
-    # def __init__(self, *args, **kwargs) -> None:
-    #     """
-    #     Initialize the color mixin and validate the class structure.
 
-    #     This constructor ensures that any subclass inheriting from 
-    #     TerminalColorMixin provides a mandatory '_color_map' class variable. 
-    #     It acts as a structural guard to guarantee consistency across 
-    #     all colored line types.
-
-    #     :param args: Positional arguments passed to the next class in MRO.
-    #     :param kwargs: Keyword arguments passed to the next class in MRO.
-    #     :raises NotImplementedError: If '_color_map' is not defined in the subclass.
-    #     """
-    #     if not hasattr(self, "_color_map"):
-    #         raise NotImplementedError(
-    #             f"Class '{self.__class__.__name__}' inherits from TerminalColorMixin "
-    #             f"but is missing the mandatory '_color_map' class variable."
-    #         )
-    #     super().__init__(*args, **kwargs)
-
-    def colorize(self, text: str, color_key: ColorKey , bold:bool=False, **kvargs) -> None:
+    def colorize(self, text: str, color_key: ColorKey , bold:bool=False, **kwargs) -> None:
         """
         Colorizes the text using ANSI escape sequences.
 
@@ -79,14 +74,14 @@ class TerminalColorMixin:
                via 'end' (e.g., end="|").
         :returns: Colorized string or plain text if colors are disabled.
         """
-        kvargs["flush"]= True
+        kwargs["flush"]= True
         if not self.use_colors:
-            print(text, **kvargs)
+            print(text, **kwargs)
         else:
             prefix = self._ANSI.get("bold", "\033[1m") if bold else ""
             prefix += self._ANSI.get(color_key, "")
             suffix = self._ANSI.get("reset", "\033[0m")
-            print(f"{prefix}{text}{suffix}", **kvargs)
+            print(f"{prefix}{text}{suffix}", **kwargs)
 
     def print(self, **kwargs) -> None:
         """
@@ -96,7 +91,7 @@ class TerminalColorMixin:
         :param kwargs: Passed to colorize/print (e.g., end, file).
         """
         if not isinstance(self, LineLike):
-            raise FtwProtcolError(self.print, self.__class__.__name__, (LineLike,))
+            raise FtwProtocolError(self.print, self.__class__.__name__, (LineLike,))
             # raise TypeError(
             #     f"Class '{self.__class__.__name__}' is not 'LineLike'. "
             #     "To use this mixin, you must provide 'prefix', 'content', "

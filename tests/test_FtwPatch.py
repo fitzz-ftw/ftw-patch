@@ -116,7 +116,7 @@ class TestFtwPatch:
         
         # Simuliere Fehler beim zweiten Kopier-Vorgang
         # Wir mocken shutil.copy2 (via copy2 im Namespace von ftw_patch)
-        import fitzzftw.patch.ftw_patch as patch_module
+        import fitzzftw.patch.patcher as patch_module
         mock_copy = mocker.patch.object(patch_module, 'copy2')
         mock_copy.side_effect = [None, OSError("Disk Full")]
         
@@ -150,7 +150,7 @@ class TestFtwPatch:
         options = Namespace(backup=True)
 
         # WICHTIG: Patch 'move' direkt in deinem Modul, nicht in shutil!
-        mocker.patch("fitzzftw.patch.ftw_patch.move", side_effect=OSError("Disk write protected"))
+        mocker.patch("fitzzftw.patch.patcher.move", side_effect=OSError("Disk write protected"))
         
         with pytest.raises(FtwPatchError) as excinfo:
             app._commit_changes(results, options)

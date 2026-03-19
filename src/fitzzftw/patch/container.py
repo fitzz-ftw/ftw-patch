@@ -1,15 +1,33 @@
+# File: src/fitzzftw/patch/container.py
+# Author: Fitzz TeXnik Welt
+# Email: FitzzTeXnikWelt@t-online.de
+# License: LGPLv2 or above
+
 """
 container
 ===============================
 
-| File: src/fitzzftw/patch/container.py
-| Author: Fitzz TeXnik Welt
-| Email: FitzzTeXnikWelt@t-online.de
-| License: LGPLv2 or above
+This module provides stateful containers for structural patch data. It models
+the hierarchy of a unified diff, ensuring logical integrity during the
+parsing and application phases.
 
-Modul container documentation
+Core Components:
+----------------
+* **Hunk**: 
+  The atomic unit of change. It contains a header (range information)
+  and a collection of `HunkLine` objects (additions, deletions, or context).
+* **DiffCodeFile**: 
+  A file-level container that manages multiple hunks and
+  file headers (--- / +++). It provides the logic to resolve paths and
+  sequentially apply changes to file content.
+* **Structural Integrity**: 
+  Containers enforce strict validation (e.g.,
+  mandatory headers) to prevent the processing of malformed patch data.
+
+These classes act as the "Source of Truth" for the patch state, offering
+list-like access (indexing, iteration) to their internal elements for
+seamless integration with the rest of the framework.
 """
-
 import tempfile
 from pathlib import Path
 from typing import Iterator

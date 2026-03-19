@@ -1,5 +1,0 @@
---- hello.py
-+++ hello.py
-@@ -1,1 +1,1 @@
--print('Old')
-+print('New')

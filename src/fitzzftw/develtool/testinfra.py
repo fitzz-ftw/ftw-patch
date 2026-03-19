@@ -27,12 +27,17 @@ class TestHomeEnvironment:
         self._base_dir = base_dir.resolve()
         self._input_dir = self._base_dir / "testinput"
         self._output_dir = self._base_dir / "testoutput"
+        self._doc_inc = self._base_dir / "testdocinc"
         self._orig_cwd = Path.cwd()
         self._orig_env = {}
         self._do_not_clean=False
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(base_dir={self._base_dir!r})"
+
+    @property
+    def docinclude(self) -> Path:
+        return self._doc_inc
 
     @property
     def base_dir(self) -> Path:
@@ -218,6 +223,33 @@ class TestHomeEnvironment:
         shutil.copy2(source_path, target_path)
         return target_path
 
+    def cwd2doc_inc(self, filename: str | Path, target_name: str | None = None) -> Path:
+        """
+        Copies a file from the current working directory (CWD) to the
+        documentation includes directory (testdocinc).
+
+        This allows persisting files generated during tests (like patches
+        or configurations) for use in Sphinx documentation, even if the
+        CWD is cleaned up later.
+
+        :param filename: Name or path of the source file in the CWD.
+        :param target_name: Optional new name for the destination file.
+        :return: The path to the copied file in the 'testdocinc' directory.
+        :raises FileNotFoundError: If the source file does not exist in the CWD.
+        """
+        source = Path.cwd() / filename
+        if not source.exists():
+            raise FileNotFoundError(f"Source file for doc include not found: {source}")
+
+        # Ensure the target directory exists
+        self._doc_inc.mkdir(parents=True, exist_ok=True)
+
+        target_filename = target_name if target_name else source.name
+        target_path = self._doc_inc / target_filename
+
+        shutil.copy2(source, target_path)
+        return target_path
+
     def teardown(self) -> None:
         """
         Restore the original environment variables and working directory.
@@ -239,7 +271,7 @@ class TestHomeEnvironment:
             return
 
         for item in self.base_dir.iterdir():
-            if item == self.input_dir:
+            if item == self.input_dir or item == self.docinclude:
                 continue
             if item.is_dir():
                 shutil.rmtree(item)

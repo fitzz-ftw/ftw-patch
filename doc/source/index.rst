@@ -111,6 +111,8 @@ Documentation
    devel/get_started_exceptions
    devel/get_started_protocols
    devel/get_started_utils
+   devel/get_started_parser
+   devel/get_started_patcher
    devel/get_started_ftw_patch
    devel/ftw_patch_module
 

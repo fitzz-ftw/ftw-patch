@@ -1,16 +1,16 @@
+# File: src/fitzzftw/patch/static.py
+# Author: Fitzz TeXnik Welt
+# Email: FitzzTeXnikWelt@t-online.de
+# License: LGPLv2 or above
 """
 static
 ===============================
 
-| File: src/fitzzftw/patch/static.py
-| Author: Fitzz TeXnik Welt
-| Email: FitzzTeXnikWelt@t-online.de
-| License: LGPLv2 or above
 
 Static shared resources for the ftw-patch project.
 
 This module provides global access to color management via a pre-instantiated
-singleton-like object.
+singleton-like object (:const:`colors`).
 """
 
 from pathlib import Path

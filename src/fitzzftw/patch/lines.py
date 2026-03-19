@@ -1,13 +1,49 @@
+# File: src/fitzzftw/patch/lines.py
+# Author: Fitzz TeXnik Welt
+# Email: FitzzTeXnikWelt@t-online.de
+# License: LGPLv2 or above
+
 """
 lines
 ===============================
 
-| File: src/fitzzftw/patch/lines.py
-| Author: Fitzz TeXnik Welt
-| Email: FitzzTeXnikWelt@t-online.de
-| License: LGPLv2 or above
+This module provides the structural representation of individual lines within
+a patch file. It acts as a specialized parser that converts raw patch
+fragments into intelligent objects capable of self-validation and metadata
+extraction.
 
-Modul lines documentation
+Core Line Types:
+----------------
+* **PatchLine**: 
+  The base class for all lines, handling basic sanitization
+  and trailing newline management.
+* **HeadLine**: 
+  Manages file headers (--- and +++), extracting paths,
+  timestamps, and identifying null-device targets.
+* **HunkHeadLine**: 
+  Parses the coordination metadata (@@ -l,s +l,s @@),
+  providing structured access to line ranges.
+* **FileLine & HunkLine**: 
+  Represent actual content changes. They include
+  advanced whitespace normalization logic (collapse, ignore-all) required
+  for robust patch application across different formatting styles.
+
+Key Features:
+-------------
+* **Integrated Styling**:
+  Most line classes inherit from :class:`.base.TerminalColorMixin`
+  and define a :attr:`~.HeadLine._color_map`, allowing them to print themselves with the
+  correct semantic color (e.g., green for additions, red for deletions).
+* **Whitespace Awareness**:
+  Objects can dynamically provide different
+  representations of their content (:attr:`~.FileLine.normalized_ws_content`,
+  :attr:`~.FileLine.ignore_all_ws_content`)
+  to support flexible matching algorithms.
+* **Protocol Compliance**:
+  By providing :attr:`~.HeadLine.prefix`, :attr:`~.HeadLine.orig_line`, and
+  :attr:`~.HeadLine._color_map`,
+  these classes satisfy the `LineLike` protocol, enabling seamless
+  integration with the framework's diagnostic and output tools.
 """
 
 import re

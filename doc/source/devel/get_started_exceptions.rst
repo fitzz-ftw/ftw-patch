@@ -35,7 +35,7 @@ True
 []
 
 
->>> protocol1.annontations
+>>> protocol1.annotations
 {'_color_map': 'dict', 'prefix': str | None, 'orig_line': 'str'}
 
 >>> type(protocol1.attributes) == set
@@ -105,7 +105,7 @@ True
 ['test', 'test2']
 
 
->>> protocol1.annontations
+>>> protocol1.annotations
 {'_color_map': 'dict', 'prefix': str | None, 'orig_line': 'str'}
 
 >>> type(protocol1.attributes) == set

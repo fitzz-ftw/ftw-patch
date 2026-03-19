@@ -19,10 +19,13 @@
 
 {% endif %}
 
+.. automodule:: {{ fullname }}
+   :no-members:
+   :no-undoc-members:
 
 .. container:: custom-api-style api-module
 
-    .. module:: {{ fullname }}
+    .. currentmodule:: {{ fullname }}
 
     {%- block classes %}
     {%- if classes %}

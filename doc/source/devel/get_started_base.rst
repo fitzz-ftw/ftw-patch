@@ -1,15 +1,21 @@
-.. SECTION - 
+Getting Started: Terminal Colors and Protocol Safety
+=====================================================
 
-TerminalColorMixin Class
-------------------------
+The :mod:`.base` module provides the :class:`.base.TerminalColorMixin`, which allows any class to
+print colorized output while ensuring structural integrity through protocols. 
 
-The :class:`~fitzzftw.patch.ftw_patch.TerminalColorMixin` class provides standardized CLI color capabilities. 
+.. CLASS -  TerminalColorMixin Class
+
+Using the TerminalColorMixin Class
+-----------------------------------
+
+The :class:`~fitzzftw.patch.base.TerminalColorMixin` class provides standardized CLI color capabilities. 
 It encapsulates ANSI escape sequences and ensures a safe fallback 
 (plain text) for environments where colors are disabled or not supported.
 
 Global Controls
 ~~~~~~~~~~~~~~~
-Unlike some other tools, :class:`~fitzzftw.patch.ftw_patch.TerminalColorMixin` does **not** perform "magic" 
+Unlike some other tools, :class:`~fitzzftw.patch.base.TerminalColorMixin` does **not** perform "magic" 
 terminal detection via :func:`~os.isatty`. This ensures consistent behavior 
 across different environments and pipes.
 
@@ -43,14 +49,15 @@ The colors defined are the following. There is a special color called
 Method Signature
 ~~~~~~~~~~~~~~~~
 
-The :meth:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.colorize` method is the primary interface for styling text. 
+The :meth:`~fitzzftw.patch.base.TerminalColorMixin.colorize` method is the primary interface for styling text. 
 It accepts a ``color_key`` (red, green, yellow, terminal, or cyan) and an optional ``bold`` flag.
 
 Testing and Validation
 ~~~~~~~~~~~~~~~~~~~~~~
 
 In automated testing environments like doctests, raw ANSI escape codes are 
-invisible and difficult to assert. To solve this, the internal :attr:`~fitzzftw.patch.ftw_patch.TerminalColorMixin._ANSI` 
+invisible and difficult to assert. To solve this, the internal 
+:attr:`~fitzzftw.patch.base.TerminalColorMixin._ANSI` 
 mapping can be overridden with human-readable placeholders.
 
 .. code-block:: python
@@ -65,7 +72,8 @@ mapping can be overridden with human-readable placeholders.
     >>> m._ANSI.mode
     'TEST'
 
-If :data:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.use_colors` is ``False``, the text remains plain:
+If :data:`~fitzzftw.patch.base.TerminalColorMixin.use_colors` is ``False``, 
+the text remains plain:
 
 .. code-block:: python
 
@@ -73,7 +81,8 @@ If :data:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.use_colors` is ``False``,
     >>> m.colorize(text="Error", color_key="red", bold=True)
     Error
 
-If :attr:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.use_colors` is set to ``True``, the mocked style is applied:
+If :attr:`~fitzzftw.patch.base.TerminalColorMixin.use_colors` is set to ``True``, 
+the mocked style is applied:
 
 .. code-block:: python
 
@@ -117,8 +126,8 @@ Basic Integration
 ~~~~~~~~~~~~~~~~~
 
 To equip a class with color capabilities, inherit from 
-:class:`~fitzzftw.patch.ftw_patch.TerminalColorMixin`. 
-The :meth:`~fitzzftw.patch.ftw_patch.TerminalColorMixin.colorize` method then 
+:class:`~fitzzftw.patch.base.TerminalColorMixin`. 
+The :meth:`~fitzzftw.patch.base.TerminalColorMixin.colorize` method then 
 becomes available to handle styled output.
 
 
@@ -132,11 +141,18 @@ becomes available to handle styled output.
     >>> reporter.info("Starting patch process...")
     bold.cyn>Starting patch process...<reset
 
+The :meth:`~.base.TerminalColoMixin.print` method is more advanced: it requires the object to be 
+:class:`.protocol.LineLike` 
+(it must have a ``_color_map``, ``prefix`` and ``orig_line`` attribute). 
+
+If we try to print an object that does not follow this protocol, the framework 
+raises a detailed :exc:`~.exceptions.FtwProtocolError`. Doctest allows us to verify 
+this behavior by looking for the specific error message:
 
     >>> reporter.print() # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS  +REPORT_NDIFF
     Traceback (most recent call last):
       ...
-    fitzzftw.patch.exceptions.FtwProtcolError:
+    fitzzftw.patch.exceptions.FtwProtocolError:
     Error: TerminalColorMixin.print for PatchReporter
     Please implement:
       LineLike:
@@ -147,7 +163,7 @@ becomes available to handle styled output.
     or
       overwrite TerminalColorMixin.print(self, **kwargs) -> None.
 
-
+Let's create a class which fullfils the :class:`.lines.LineLike`` protocols. 
 
     >>> class PatchLineReporter(TerminalColorMixin):
     ...     _color_map = {"?": "green", "": "yellow"}

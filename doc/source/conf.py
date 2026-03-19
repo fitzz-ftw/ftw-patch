@@ -141,8 +141,10 @@ toc_object_entries_show_parents = "hide"
 
 
 # -- Options for Intersphinx
-intersphinx_mapping = {"python": (f"https://docs.python.org/{sys.version_info.major}.{sys.version_info.minor}",
-                        None)}
+intersphinx_mapping = {
+    "python": (f"https://docs.python.org/{sys.version_info.major}.{sys.version_info.minor}", None),
+    "platformdirs": ("https://platformdirs.readthedocs.io/en/latest/", None),
+}
 
 # -- Options for ePub output -------------------------------------------------
 
@@ -261,7 +263,7 @@ autosummary_imported_members = False
 autosummary_ignore_module_all = True
 autosummary_context = {}
 
-inherit_diagramm:list[str]=["fitzzftw.patch.lines",]
+inherit_diagramm: list[str] = ["fitzzftw.patch.lines", 'fitzzftw.patch.exceptions']
 exclude_inherit_diagramm: list[str] = []
 
 class_extention_context = {

@@ -1,13 +1,38 @@
+# File: src/fitzzftw/patch/parser.py
+# Author: Fitzz TeXnik Welt
+# Email: FitzzTeXnikWelt@t-online.de
+# License: LGPLv2 or above
+
 """
-cli
-===============================
+Unified Diff and Patch Parsing
+==============================
 
-| File: src/fitzzftw/patch/cli.py
-| Author: Fitzz TeXnik Welt
-| Email: FitzzTeXnikWelt@t-online.de
-| License: LGPLv2 or above
+This module provides the core logic for deconstructing raw patch data into
+structured object hierarchies. It acts as a high-performance state machine
+that transforms streams of strings into validated containers.
 
-Modul cli documentation
+Core Components:
+----------------
+* **PatchParser**:
+    The central engine for parsing diff sequences. It implements a factory
+    pattern for line instantiation and manages the state transition between
+    file-headers, hunk-headers, and content.
+* **The Sieve**:
+    An optimized inline parsing logic within :meth:`~.PatchParser.iter_files`
+    that validates the structural integrity of the diff format (e.g.,
+    ensuring headers precede content).
+
+Key Features:
+-------------
+* **Strict Validation**:
+    Raises :class:`~.exceptions.PatchParseError` for malformed sequences
+    to prevent processing corrupted or incomplete patch data.
+* **Streaming Architecture**:
+    Uses generators to process large patch files efficiently without
+    loading the entire content into memory.
+* **Extensibility**:
+    The factory method :meth:`~.PatchParser.create_line` allows for
+    customization of how individual lines are categorized and instantiated.
 """
 
 from pathlib import Path
@@ -161,24 +186,25 @@ class PatchParser:
 #!SECTION - Parsers
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     from doctest import FAIL_FAST, testfile
-    
+
     be_verbose = False
     be_verbose = True
     option_flags = 0
     option_flags = FAIL_FAST
     test_sum = 0
     test_failed = 0
-    
+
     # Pfad zu den dokumentierenden Tests
     testfiles_dir = Path(__file__).parents[3] / "doc/source/devel"
-    test_file = testfiles_dir / "get_started_cli.rst"
-    test_file = testfiles_dir / "get_started_ftw_patch.rst"
+    test_file = testfiles_dir / "get_started_parser.rst"
+    # test_file = testfiles_dir / "get_started_ftw_patch.rst"
     if test_file.exists():
         print(f"--- Running Doctest for {test_file.name} ---")
         doctestresult = testfile(
             str(test_file),
+            module_relative=False,
             verbose=be_verbose,
             optionflags=option_flags,
         )
