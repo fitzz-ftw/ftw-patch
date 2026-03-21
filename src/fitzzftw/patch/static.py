@@ -151,6 +151,16 @@ class Color:
         """
         return self._get_value("BOLD")
 
+    @property
+    def TERMINAL(self)->str:
+        """
+        The ANSI sequence or marker for terminal color.
+
+        :returns: Terminal style string.
+        :rtype: str
+        """
+        return self._get_value("TERMINAL")
+
     def __getitem__(self, key: str) -> str:
         """
         Enables dictionary-like access for style names.

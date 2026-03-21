@@ -273,11 +273,13 @@ class TestHomeEnvironment:
         for item in self.base_dir.iterdir():
             if item == self.input_dir or item == self.docinclude:
                 continue
-            if item.is_dir():
+            if item.is_dir() and item != self.output_dir:
                 shutil.rmtree(item)
+            elif item == self.output_dir:
+                pass
             else:
                 item.unlink()
-
+        
 
 class TestRootEnvironment:
     """

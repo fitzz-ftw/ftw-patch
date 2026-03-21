@@ -13,11 +13,14 @@ doc/build_old_theme
 .coverage
 doc/source/_static/cover.svg
 
+
 #local copies
 * copy.css
 
 # Doctest generated files
 doc/source/devel/testhome/.config
+doc/source/devel/testhome/testoutput/*
+
 
 
 # Build generated files

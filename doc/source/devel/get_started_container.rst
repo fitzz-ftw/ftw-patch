@@ -61,13 +61,33 @@ for each line. You can continue adding lines to build the full code block:
 >>> len(hunk1)
 3
 
+The :class:`.container.Hunk` tracks line changes automatically as you add them:
+
+>>> hunk1.addedlines
+3
+>>> hunk1.deletedlines
+0
+
+Adding a deletion line
+
+>>> h_del = HunkLine("-      old_code()\n")
+>>> hunk1.add_line(h_del)
+>>> hunk1.deletedlines
+1
+
+This :class:`Hunk` is unbound.
+
+>>> hunk1.parent is None 
+True
+
 The container acts like a standard Python :class:`~python.list`, allowing you to inspect all lines 
 at once, access specific lines by their index, or iterate through them:
 
 >>> hunk1.lines # doctest: +NORMALIZE_WHITESPACE
 [HunkLine(Content: '  def test_fn(a:str, b:int): ', Prefix: '+'),
  HunkLine(Content: '      ret = a + str(b)', Prefix: '+'), 
- HunkLine(Content: '      return ret', Prefix: '+')]
+ HunkLine(Content: '      return ret', Prefix: '+'),
+ HunkLine(Content: '      old_code()', Prefix: '-')]
 
 >>> hunk1[1]
 HunkLine(Content: '      ret = a + str(b)', Prefix: '+')
@@ -81,6 +101,7 @@ HunkLine(Content: '  def test_fn(a:str, b:int): ', Prefix: '+')
 ...     print(line)
 HunkLine(Content: '      ret = a + str(b)', Prefix: '+')
 HunkLine(Content: '      return ret', Prefix: '+')
+HunkLine(Content: '      old_code()', Prefix: '-')
 
 Working with DiffCodeFile Containers
 --------------------------------------
@@ -145,3 +166,40 @@ on the header information, which is essential for applying the patch later:
 >>> diff_file.get_source_path(strip=1).as_posix()
 'test.py'
 
+>>> diff_file.addedlines
+0
+
+>>> diff_file.deletedlines
+0
+
+>>> diff_file.add_hunk(hunk1)
+>>> diff_file.addedlines
+3
+
+>>> diff_file.deletedlines
+1
+
+>>> hunk1.parent=None
+Traceback (most recent call last):
+    ...
+fitzzftw.patch.exceptions.FtwPatchError: Hunk parent cannot be set to None!
+
+>>> hunk1.parent= diff_file
+Traceback (most recent call last):
+    ...
+fitzzftw.patch.exceptions.FtwPatchError: Hunk parent is already set and cannot be changed!
+
+>>> hunk1.parent == diff_file
+True
+
+>>> diff_file_hunk1 = hunk1.parent
+>>> diff_file_hunk1.hunks # doctest: +NORMALIZE_WHITESPACE
+[Hunk(header=(1, 1, 1, 1), lines=0), 
+ Hunk(header=(1, 2, 1, 3), lines=4)]
+
+
+>>> diff_error = DiffCodeFile(h1)
+>>> diff_error.get_target_path()
+Traceback (most recent call last):
+    ...
+ValueError: New Header is None

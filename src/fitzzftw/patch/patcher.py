@@ -33,11 +33,83 @@ Initialize with an options object satisfying the
 from pathlib import Path
 from shutil import copy2, move
 from tempfile import TemporaryDirectory
+from typing import cast
 
+from fitzzftw.patch.base import TerminalColorMixin
 from fitzzftw.patch.container import DiffCodeFile
 from fitzzftw.patch.exceptions import FtwPatchError, PatchParseError
+from fitzzftw.patch.lines import HeadLine
 from fitzzftw.patch.parser import PatchParser
 from fitzzftw.patch.protocols import ArgParsOptions, BackupOptions, FtwPatchApplyOptions
+
+
+# CLASS - PatchStatistics
+class PatchStatistics(TerminalColorMixin):
+    _color_map={"del":"red", "create":"green", "modified":"yellow"}
+    def __init__(self, verbosity:int=0) -> None:
+        super().__init__()
+        self._verbosity = verbosity
+        self._modified:list[DiffCodeFile] = []
+        self._created: list[DiffCodeFile] = []
+        self._deleted: list[DiffCodeFile] = []
+        self._lines_added:int = 0
+        self._lines_removed:int = 0
+    # SECTION - Properties
+    @property
+    def verbosity(self)->int:
+        return self._verbosity
+    @property
+    def total_files(self)->int:
+        return len(self._created)+len(self._deleted)+len(self._modified)
+    @property
+    def lines_added(self)->int:
+        return self._lines_added
+    @property
+    def lines_removed(self)->int:
+        return self._lines_removed
+    @property
+    def files_modified(self)->int:
+        return len(self._modified)
+    @property
+    def files_created(self)-> int:
+        return len(self._created)
+    @property
+    def files_deleted(self)->int:
+        return len(self._deleted)
+    #!SECTION
+
+    #METHOD - add_file
+    def add_file(self, file:DiffCodeFile)-> None:
+        if file.new_header is None:
+            raise FtwPatchError("New Header not found!")
+        new_header:HeadLine = cast(HeadLine,file.new_header)
+        if file.orig_header.is_null_path and not new_header.is_null_path:
+            self._created.append(file)
+        elif not file.orig_header.is_null_path and new_header.is_null_path:
+            self._deleted.append(file)
+        else:
+            self._modified.append(file)
+
+        self._lines_added += file.addedlines
+        self._lines_removed += file.deletedlines
+
+    #!METHOD
+
+    #METHOD - print
+    def print(self):
+        match self._verbosity:
+            case 1:
+                self.colorize((f"Files processed: {self.total_files}\n"
+                              f"Lines processed: {self.lines_removed+self.lines_added}")
+                              ,"terminal")
+            case _:
+                self.colorize(f"Files processed: {self.total_files}", "terminal")
+    #!METHOD
+    #METHOD - __repr__
+    def __repr__(self):
+        return f"{self.__class__.__name__}(verbosity: {self._verbosity})"
+    #!METHOD
+#!CLASS
 
 
 # CLASS - FtwPatch
@@ -62,6 +134,7 @@ class FtwPatch:
         """
         self._args = args
         self._patch_files = None
+        self._files2delete:list[Path]=[]
         # Proactive check for the existence of the patch file
         if not self._args.patch_file.is_file():
             raise FileNotFoundError(f"Patch file not found at {self._args.patch_file!r}")
@@ -75,6 +148,7 @@ class FtwPatch:
         # self.__class__.__name__ erfüllt die Anforderung für Vererbung
         return f"{self.__class__.__name__}(patch_file={self._args.patch_file!r})"
 
+    #SECTION - Properties
     @property
     def patch_file_path(self) -> Path:
         """
@@ -161,6 +235,7 @@ class FtwPatch:
         :returns: The verbosity level ranging from 0 to 3.
         """
         return self._args.verbose
+    #!SECTION Properties
 
     def _get_patch_stream(self):
         """
@@ -222,24 +297,34 @@ class FtwPatch:
 
             try:
                 for code_file in self.parsed_files:
+                    # if code_file.new_header and code_file.new_header.is_null_path:
+                        # print(f"{code_file.get_source_path(options.strip_count)=}", flush=True)
+                        # print(f"{code_file.get_target_path(options.strip_count)=}", flush=True)
+                        # print(f"{code_file.new_header.is_null_path=}", flush=True)
+                        # continue
+                        # ...
                     # SCHRITT 1: Logik (nur lesend auf die Originaldatei)
                     patched_lines = code_file.apply(options)
 
                     # SCHRITT 2: Staging (Schreibend in den Temp-Bereich)
                     # Wir erzeugen einen sicheren Pfad im Temp-Verzeichnis
-                    source_path = code_file.get_source_path(options.strip_count) 
+                    if code_file.new_header and code_file.new_header.is_null_path:
+                        target_path = code_file.get_source_path(options.strip_count)
+                        self._files2delete.append(target_path)
+                    else:
+                        target_path = code_file.get_target_path(options.strip_count) 
                     # name}_{id(code_file)}.tmp
-                    tmp_file_name=f"{source_path.name}_{id(code_file)}.tmp"
-                    source_tmp_path = source_path.with_name(tmp_file_name)
+                    tmp_file_name=f"{target_path.name}_{id(code_file)}.tmp"
+                    target_tmp_path = target_path.with_name(tmp_file_name)
 
-                    staged_path = staging_dir / source_tmp_path
+                    staged_path = staging_dir / target_tmp_path
                     # f"{code_file.get_source_path(options.strip_count).name}_{id(code_file)}.tmp"
 
                     with staged_path.open("w", encoding="utf-8") as f:
                         for line in patched_lines:
                             f.write(line.line_string)
 
-                    staged_results.append((source_path, staged_path))
+                    staged_results.append((target_path, staged_path))
 
                 # SCHRITT 3: All-or-Nothing Commit
                 if self.dry_run:
@@ -270,7 +355,8 @@ class FtwPatch:
                     bak_path = backup_dir / (original.name + extension)
                 else:
                     bak_path = original.with_suffix(original.suffix + extension)
-
+                if not original.exists():
+                    continue
                 copy2(original, bak_path)
                 created_backups.append(bak_path)
             return created_backups
@@ -309,6 +395,8 @@ class FtwPatch:
                 f"Critical error during file move: {e}. Backups have been preserved for recovery."
             )
 
+        for file_ in self._files2delete:
+            file_.unlink()
         # Phase 3: Conditional cleanup
         # Default behavior: delete backups (backup=False)
         keep_backup = getattr(options, "backup", False)
@@ -320,7 +408,7 @@ class FtwPatch:
         return True
 #!CLASS - FtwPatch
 
-# Hier den Code einfügen
+
 
 if __name__ == "__main__": # pragma: no cover
     from doctest import FAIL_FAST, testfile
@@ -335,6 +423,7 @@ if __name__ == "__main__": # pragma: no cover
     # Pfad zu den dokumentierenden Tests
     testfiles_dir = Path(__file__).parents[3] / "doc/source/devel"
     test_file = testfiles_dir / "get_started_patcher.rst"
+    # test_file = testfiles_dir / "debug_patcher.rst"
     
     if test_file.exists():
         print(f"--- Running Doctest for {test_file.name} ---")

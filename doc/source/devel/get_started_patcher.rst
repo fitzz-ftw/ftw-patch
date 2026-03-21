@@ -1,5 +1,91 @@
-FtwPatch Class
+.. SECTION - Statistics
+Get Started with PatchStatistics
+================================
+
+>>> from fitzzftw.patch.static import colors
+>>> colors.switch_to_testmode(False)
+
+
+The :class:`.patcher.PatchStatistics` class is responsible for collecting 
+information during the patching process and presenting it to the user.
+
+Initialization and Properties
 -----------------------------
+
+When you create a new instance, you define the verbosity level. All counters 
+start at zero:
+
+>>> from fitzzftw.patch.patcher import PatchStatistics
+>>> stats = PatchStatistics()
+
+You can access the current state through several read-only properties:
+
+>>> stats
+PatchStatistics(verbosity: 0)
+
+>>> stats.verbosity
+0
+
+>>> stats.total_files
+0
+
+>>> stats.lines_added
+0
+>>> stats.lines_removed
+0
+
+>>> stats.files_modified
+0
+
+>>> stats.files_created
+0
+
+>>> stats.files_deleted
+0
+
+Basic Output
+------------
+
+The :meth:`.PatchStatistics.print` method generates a summary based on the gathered data. 
+Even without any files added, it provides a basic status report:
+
+>>> stats.print() 
+Files processed: 0
+
+Higher Verbosity
+----------------
+
+Changing the verbosity level doesn't affect the data, but it will change 
+what :meth:`~.PatchStatistics.print` eventually shows (once data is present). 
+
+
+>>> stat1 = PatchStatistics(verbosity=1)
+>>> stat1
+PatchStatistics(verbosity: 1)
+
+>>> stat1.print()
+Files processed: 0
+Lines processed: 0
+
+
+.. !SECTION - Statistics
+
+>>> stat_error = PatchStatistics()
+
+>>> from fitzzftw.patch.lines import HeadLine
+>>> from fitzzftw.patch.container import DiffCodeFile
+>>> h1 = HeadLine("--- a/test.py")
+>>> diff_error = DiffCodeFile(h1)
+
+>>> stat_error.add_file(diff_error)
+Traceback (most recent call last):
+    ...
+fitzzftw.patch.exceptions.FtwPatchError: New Header not found!
+
+
+
+FtwPatch Class
+=================
 
 The :py:class:`.patcher.FtwPatch` class is the high-level controller 
 of the module. It coordinates the parsing of the patch file and the application 
@@ -23,7 +109,7 @@ of changes to the target directory using a safe staging mechanism.
         >>> env = TestHomeEnvironment(Path("doc/source/devel/testhome"))
         >>> env.setup()
         >>> env.input_readonly = True
-        >>> env.do_not_clean = True
+        >>> env.do_not_clean = False
 
 .. !SECTION
 
@@ -32,7 +118,7 @@ of changes to the target directory using a safe staging mechanism.
 
 
 Initialization and Properties
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 
 .. code:: python
@@ -43,7 +129,7 @@ Initialization and Properties
 
 
 1. Preparation and Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To initialize the patcher, we provide an :obj:`options` object which fullfill the 
 :class:`~.protocols.ArgParsOptions` protocol,
@@ -71,7 +157,7 @@ We use the dummy_patch_file created in the setup
     FtwPatch(patch_file=...('patch.diff'))
 
 2. Executing the Patch (:py:meth:`.FtwPatch.apply` method)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :py:meth:`~.FtwPatch.apply` method executes the patching logic. It returns ``0`` 
 if the process was successful.
@@ -83,7 +169,7 @@ Using the options defined above
     >>> patcher.apply(options)
 
 Verifying Dry-Run Behavior
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 A key feature of :py:class:`~.patcher.FtwPatch` is the ability to simulate changes. 
 When ``options.dry_run`` is set to ``True``, the internal staging area is 
@@ -126,7 +212,7 @@ The file remains unchanged
 
 
 Inspecting Patcher Properties
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 Once initialized, the :py:class:`~.patcher.FtwPatch` instance provides read-only 
 access to its configuration and the results of the parsing process 
@@ -146,7 +232,7 @@ Accessing the core paths
 .. _ftw_patch-ftw_patch-strip_count-property:
 
 :py:attr:`~.patcher.FtwPatch.strip_count`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :py:attr:`~.patcher.FtwPatch.strip_count` property returns the number of leading path components 
 that are stripped from the file names found in the patch file **(ro)**.
@@ -227,7 +313,7 @@ Verify paths are handled correctly
     True
 
 Advanced Configuration
-~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 The patcher can handle different whitespace styles. This is useful when 
 dealing with files from different operating systems. Enabling these 
@@ -247,7 +333,7 @@ The patcher now uses advanced parsing logic
     >>> advanced_patcher.apply(options)
 
 Simulation vs. Real Execution
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 The :py:meth:`~.patcher.FtwPatch.apply` method is a procedure that performs the patching process. 
 You can switch between a safe simulation and the actual write process.
@@ -278,7 +364,7 @@ This executes the final commit to the file system
 .. _ftw_patch-ftw_patch-apply-backup_logic:
 
 :py:meth:`.FtwPatch.apply`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 When applying changes, the patcher automatically creates backups of the 
 modified files. If no specific backup directory is provided, the backup 
@@ -324,7 +410,7 @@ your source code remains consistent.
     ... not match the hunk's context.
 
 Verification of Atomicity
-~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Because the patch failed the integrity check, no changes were written to 
 the disk, and no backup file was created. The operation is atomic.
@@ -373,8 +459,9 @@ patching cycle: creating a source file, defining a unified diff, and applying it
    We create a simple Python file with a few lines of code.
 
 .. code:: python
-
+    >>> env.clean_home()
     >>> source_path = env.copy2cwd("app.py")
+    >>> deleted_path = env.copy2cwd("app_old_config.py", "old_config.py")
 
 2. **Create the Patch File**
    We define a patch that changes the greeting and adds a new function. 
@@ -382,7 +469,9 @@ patching cycle: creating a source file, defining a unified diff, and applying it
 
 .. code:: python
 
-    >>> patch_path = env.copy2cwd("changes.diff")
+    >>> patch_path = env.copy2cwd("changes_multi.diff","changes.diff")
+
+.. "changes_multi.diff",
 
 3. **Apply the Patch**
    Now we use :class:`~.patcher.FtwPatch` to apply these changes. We will enable backup 
@@ -405,7 +494,10 @@ patching cycle: creating a source file, defining a unified diff, and applying it
     ... )
     >>> patcher = FtwPatch(run_options)
     >>> patcher.apply(run_options)
-
+    
+    Traceback (most recent call last):
+        ...
+    fitzzftw.patch.exceptions.PatchParseError: Hunk starting at line 0 exceeds file bounds. File has 0 lines.
 
 4. **Verify the Results**
    The original file should now contain the new content, and a backup 
@@ -462,6 +554,47 @@ Copy the patched file to a persistant directory.
                 :linenos:
                 :emphasize-lines: 2, 4-6
                 :caption: app.py (patched)
+
+    >>> Path("old_config.py.orig").exists()
+    True
+
+    >>> deleted_path.exists()
+    False
+
+    >>> Path("utils.py").exists()
+    True
+
+    >>> Path("utils.py.orig").exists()
+    False
+
+
+    >>> for diff_ in patcher.parsed_files:
+    ...     stats.add_file(diff_)
+    ...     stat1.add_file(diff_)
+
+    >>> stats.print()
+    Files processed: 3
+
+    >>> stat1.print()
+    Files processed: 3
+    Lines processed: 11
+
+    >>> stats.lines_added
+    7
+
+    >>> stats.lines_removed
+    4
+
+
+    >>> stats.files_modified
+    1
+
+    >>> stats.files_created
+    1
+
+    >>> stats.files_deleted
+    1
+
 
 .. !CLASS
 .. SECTION - CleanUp

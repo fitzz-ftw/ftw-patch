@@ -68,6 +68,9 @@ The ``colors`` manager supports different modes to adapt to various environments
     >>> colors.BOLD
     'bold.'
 
+    >>> colors.TERMINAL
+    'trm>'
+
 Validation and Type Safety
 --------------------------
 

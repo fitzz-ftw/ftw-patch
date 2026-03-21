@@ -17,7 +17,8 @@ write_to = "src/fitzzftw/patch/_version.py"
 
 [project]
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
   "Intended Audience :: Developers",
   "Topic :: Software Development :: Build Tools",
   "Topic :: Text Processing :: Filters",

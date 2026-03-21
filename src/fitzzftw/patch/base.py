@@ -80,7 +80,7 @@ class TerminalColorMixin:
         else:
             prefix = self._ANSI.get("bold", "\033[1m") if bold else ""
             prefix += self._ANSI.get(color_key, "")
-            suffix = self._ANSI.get("reset", "\033[0m")
+            suffix = self._ANSI.get("reset", "\033[0m") if prefix else ""
             print(f"{prefix}{text}{suffix}", **kwargs)
 
     def print(self, **kwargs) -> None:

@@ -1,0 +1,6 @@
+--- a/old_config.py
++++ /dev/null
+@@ -1,3 +0,0 @@
+-# old_config.py
+-DEBUG = True
+-DATABASE_URL = "sqlite:///old.db"

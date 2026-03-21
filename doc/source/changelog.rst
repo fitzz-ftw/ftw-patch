@@ -2,7 +2,24 @@ Changelog
 =========
 All notable changes to this project will be documented in this file.
 
+.. rubric:: v0.3.2 (2026-03-20) Core Robustness & Statistics
+    :class: ftw-cr-title
 
+.. rubric:: Added
+    :class: ftw-cr-added
+
+* **Patch Statistics:** Introduced a metrics engine to track file operations (Created, 
+  Modified, Deleted) and line-level changes (added/deleted lines) during the patch process.
+
+.. rubric:: Fixed
+    :class: ftw-cr-fixed
+
+* **Null-Path Resolution:** Resolved a critical ``FileNotFoundError`` by strictly using the 
+  ``is_null_path`` property to identify source or target "nothingness" (e.g., ``/dev/null``).
+* **Staging Area Safety:** Improved temporary file creation to prevent the engine from 
+  attempting to create OS-invalid paths during file creation or deletion.
+* **Backup Logic:** The backup mechanism now intelligently skips non-existent files when a 
+  patch creates a new file, preventing crashes in the pre-patch phase.
 
 .. rubric:: v0.3.1 (2026-03-08) Documentation Overhaul
     :class: ftw-cr-title

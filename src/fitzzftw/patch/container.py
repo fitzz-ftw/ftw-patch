@@ -29,37 +29,84 @@ list-like access (indexing, iteration) to their internal elements for
 seamless integration with the rest of the framework.
 """
 import tempfile
+import weakref
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, cast
 
-from fitzzftw.patch.exceptions import PatchParseError
+from fitzzftw.patch.exceptions import FtwPatchError, PatchParseError
 from fitzzftw.patch.lines import FileLine, HeadLine, HunkHeadLine, HunkLine
 from fitzzftw.patch.protocols import DiffCodeOptions, HunkCompareOptions
 
+
 # CLASS - Hunks
-
-
 class Hunk:
     """
     Container for a single change block within a file.
 
     This class stores the coordinate information from the hunk header and
     the actual content lines. It ensures that only valid HunkHeadLine objects
-    are used as headers.
+    are used as headers. It tracks added and deleted lines and reports
+    them to a parent DiffCodeFile if associated.
     """
 
-    def __init__(self, header: HunkHeadLine) -> None:
+    def __init__(
+        self,
+        header: HunkHeadLine,
+        parent: "DiffCodeFile|None" = None,
+    ) -> None:
         """
         Initializes a new Hunk with coordinate metadata.
 
         :param header: The '@@' coordinate header line object.
+        :param parent: Optional parent DiffCodeFile for statistics aggregation.
         :raises TypeError: If header is not a HunkHeadLine instance.
         """
         if not isinstance(header, HunkHeadLine):
             raise TypeError(f"header must be HunkHeadLine, got {type(header).__name__}")
 
+        self._parent:"DiffCodeFile|None" = weakref.proxy(parent) if parent else None
         self._header = header
         self._lines: list[HunkLine] = []
+        self._lines_added:int = 0
+        self._lines_deleted:int = 0
+
+    @property
+    def parent(self) -> 'DiffCodeFile | None':
+        """
+        The parent DiffCodeFile (via weakref proxy) **(rw)**.
+
+        This can only be set once to maintain statistical integrity. If the
+        hunk already contains lines, they are reported to the new parent.
+
+        Note: Accessing this property may raise a ReferenceError if the
+        referenced object has been garbage collected.
+
+        :param value: The DiffCodeFile instance to link.
+        :type value: 'DiffCodeFile'
+        """
+        return self._parent
+
+    @parent.setter
+    def parent(self, value: 'DiffCodeFile') -> None:
+        """
+        Sets the parent DiffCodeFile as a weak reference.
+
+        This can only be set once to maintain statistical integrity. If the
+        hunk already contains lines, they are reported to the new parent.
+
+        :param value: The DiffCodeFile instance to link.
+        :raises FtwPatchError: If parent is already set or value is None.
+        """
+        if value is None:
+            raise FtwPatchError("Hunk parent cannot be set to None!")
+        
+        if self._parent is not None:
+            raise FtwPatchError("Hunk parent is already set and cannot be changed!")
+            
+        self._parent = cast("DiffCodeFile", weakref.proxy(value))
+        # Sync existing counts to the new parent
+        if self._lines_added > 0 or self._lines_deleted > 0:
+            self._parent.update_line_counts(self._lines_added, self._lines_deleted)
 
     @property
     def lines(self) -> list[HunkLine]:
@@ -88,13 +135,38 @@ class Hunk:
         """
         return self._header.new_start
 
+    @property
+    def addedlines(self) -> int:
+        """Total number of added lines (+) in this hunk **(ro)**.
+
+        :returns: Total number of added lines.
+        """
+        return self._lines_added
+    
+    @property
+    def deletedlines(self)->int:
+        """Total number of deleted lines (-) in this hunk **(ro)**.
+
+        :returns: Total number of deleted lines.
+        """
+        return self._lines_deleted
+
     def add_line(self, line: HunkLine) -> None:
         """
-        Adds a single content line to the hunk.
+        Adds a single content line to the hunk and updates statistics.
 
         :param line: The HunkLine object to append.
         """
+        lines_add = 1 if line.is_addition else 0
+        lines_del = 1 if line.is_deletion else 0
+        self._lines_added += lines_add
+        self._lines_deleted += lines_del
         self.lines.append(line)
+        if self._parent is not None:
+            try:
+                self._parent.update_line_counts(lines_add, lines_del)
+            except ReferenceError:
+                self._parent = None
 
     def _compare_context( self, 
                          expected: list[HunkLine], 
@@ -153,8 +225,7 @@ class Hunk:
         """
         # 1. Indizierung vorbereiten (old_start aus dem Unified Diff Header)
         # Wir korrigieren auf 0-basierten Index
-        start_idx = self.old_start - 1
-
+        start_idx = self.old_start - 1 if self.old_start else 0
         # 2. Erwarteten Kontext extrahieren
         expected_hunk_lines = [lin for lin in self.lines if not lin.is_addition]
 
@@ -214,22 +285,18 @@ class Hunk:
     def __repr__(self) -> str:
         return (f"{self.__class__.__name__}(header={self._header.coords}, "
                 f"lines={len(self.lines)})")
-
-
 #!CLASS - Hunks
 
 
 # CLASS - DiffCodeFile
-
-
-
 class DiffCodeFile:
     """
     Stateful container for a single file's modifications within a patch.
 
     This class serves as the central assembly point for a file-level patch. It
     ensures that only valid HeadLine objects are used for headers. It manages
-    a collection of Hunks and provides indexed and iterative access to them.
+    a collection of Hunks, provides indexed and iterative access, and aggregates
+    line-level statistics (added/deleted) from its child hunks.
 
     Attributes:
         hunks (list[Hunk]): The collection of change blocks for this file.
@@ -241,6 +308,7 @@ class DiffCodeFile:
 
         :param orig_header: The '---' header line object.
         :raises TypeError: If orig_header is not a HeadLine instance.
+        :raises PatchParseError: If the header is not an original (---) header.
         """
         if not isinstance(orig_header, HeadLine):
             raise TypeError(f"orig_header must be HeadLine, got {type(orig_header).__name__}")
@@ -260,6 +328,8 @@ class DiffCodeFile:
         self._orig_header = orig_header
         self._new_header: HeadLine | None = None
         self._hunks: list[Hunk] = []
+        self._lines_added:int = 0
+        self._lines_deleted:int = 0
 
     @property
     def hunks(self) -> list[Hunk]:
@@ -302,6 +372,17 @@ class DiffCodeFile:
             raise TypeError(f"new_header must be HeadLine, got {type(value).__name__}")
         self._new_header = value
 
+    @property
+    def addedlines(self) -> int:
+        """Total number of added lines (+) across all hunks **(ro)**."""
+        return self._lines_added
+    
+    @property
+    def deletedlines(self)->int:
+        """Total number of deleted lines (-) across all hunks **(ro)**."""
+        return self._lines_deleted
+
+
     def __getitem__(self, index: int) -> "Hunk":
         """
         Enables indexed access to the stored hunks.
@@ -329,10 +410,13 @@ class DiffCodeFile:
 
     def add_hunk(self, hunk: "Hunk") -> None:
         """
-        Appends a Hunk to the internal collection.
+        Appends a Hunk to the internal collection and establishes
+        the parent-child link for statistics.
 
         :param hunk: The Hunk object to add.
         """
+        if hunk.parent is None:
+            hunk.parent = self
         self.hunks.append(hunk)
 
     def apply(self, options: DiffCodeOptions) -> list[FileLine]:
@@ -346,7 +430,10 @@ class DiffCodeFile:
         :raises FtwPatchError: If any hunk fails to apply.
         """
         # 1. Datei einlesen (Lesender Zugriff)
-        current_lines = self._read_file(self.get_source_path(strip=options.strip_count))
+        if self.orig_header.is_null_path:
+            current_lines = []
+        else:
+           current_lines = self._read_file(self.get_source_path(strip=options.strip_count))
 
         # 2. Hunks sortieren (wie besprochen: rückwärts)
         sorted_hunks = sorted(self.hunks, key=lambda h: h.old_start, reverse=True)
@@ -367,6 +454,29 @@ class DiffCodeFile:
         """
         # Wir delegieren die Arbeit an das HeadLine-Objekt
         return Path(self.orig_header.get_path(strip))
+
+    def get_target_path(self, strip: int = 0) -> Path:
+        """
+        Determine the source file path based on the header and strip level.
+
+        :param strip: Number of path components to remove from the start.
+        :returns: A Path object for the source file.
+        """
+        # Wir delegieren die Arbeit an das HeadLine-Objekt
+        if self.new_header is None:
+            raise ValueError("New Header is None")
+        return Path(cast(HeadLine,self.new_header).get_path(strip))
+
+    def update_line_counts(self,lines_added:int, lines_deleleted:int)->None:
+        """
+        Increment the file-wide line counters.
+        Usually called by child Hunk objects.
+
+        :param lines_added: Number of '+' lines to add.
+        :param lines_deleted: Number of '-' lines to add.
+        """
+        self._lines_added += lines_added
+        self._lines_deleted += lines_deleleted
 
     @property
     def _temp_path(self) -> Path:
@@ -426,8 +536,6 @@ class DiffCodeFile:
                 f"hunks={len(self.hunks)})",
             ]
         )
-
-
 #!CLASS - DiffCodeFile
 
 # Hier den Code einfügen
