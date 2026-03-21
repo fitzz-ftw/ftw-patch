@@ -1,6 +1,7 @@
 # --- Configuration ---
 DEPLOY_BRANCH = master
 TAG_FILE      = TAGMESSAGE.txt
+MERGE_file    = MERGEMESSAGE.txt
 OLD_MSG_DIR   = old_messages
 CLEAN_DIRS    = docs/build dist build .tox .pytest_cache .mypy_cache 
 
@@ -27,7 +28,7 @@ help:
 	@printf "$(YELLOW)%s$(NC)\n" "Usage: make <target> [V=x.y.z]"
 	@printf "  $(YELLOW)make help$(NC)                Show this help message (standard info)\n\n"
 	@printf "$(GREEN)%s$(NC)\n" "Main Workflows:"
-
+	@printf "  $(YELLOW)make merge-release$(NC)            Merge feature to $(DEPLOY_BRANCH) (runs tox + uses $(MERGE_file))\n"
 	@printf "  $(YELLOW)make deploy V=x.y.z$(NC)           Production Release: Tag & Push to PyPI via GitHub Actions\n"
 	@printf "  $(YELLOW)make test-deploy-git V=x.y.z$(NC)  Test Release: Tag & Push to TestPyPI via GitHub Actions\n"
 	@printf "  $(YELLOW)make test-deploy V=x.y.z$(NC)      Local Check: Build and verify package only (no upload)\n"
@@ -189,3 +190,25 @@ build: clean ## Build sdist and wheel using tox
 	@printf "$(YELLOW)%s$(NC)\n" "Starting isolated build via tox..."
 	tox -e build
 	@printf "$(GREEN)%s$(NC)\n" "Build finished. Check dist/ for artifacts."
+
+
+.PHONY: merge-release
+
+CURR_BRANCH = $(shell $(GIT) rev-parse --abbrev-ref HEAD)
+
+merge-release: tox
+	@printf "$(YELLOW)%s$(NC)\n" "--- Merging $(CURR_BRANCH) into $(DEPLOY_BRANCH) ---"
+	@if [ "$(CURR_BRANCH)" = "$(DEPLOY_BRANCH)" ]; then \
+		printf "$(RED)%s$(NC)\n" "ERROR: You are already on $(DEPLOY_BRANCH)!"; exit 1; \
+	fi
+	@if [ ! -s $(MERGE_file) ]; then \
+		printf "$(RED)%s$(NC)\n" "ERROR: $(MERGE_file) is empty or missing!"; exit 1; \
+	fi
+	@# Modernes Switching und Mergen
+	$(GIT) switch $(DEPLOY_BRANCH)
+	$(GIT) merge $(CURR_BRANCH) --no-ff -F $(MERGE_file)
+	@# Archivierung und Leeren der Merge-Nachricht (wie beim Deploy)
+	@mkdir -p $(OLD_MSG_DIR)
+	@cp $(MERGE_file) $(OLD_MSG_DIR)/$(MERGE_file)_$$(date +%Y%m%d_%H%M%S).bak
+	@> $(MERGE_file)
+	@printf "$(GREEN)%s$(NC)\n" "Merge successful. $(MERGE_file) archived and cleared."

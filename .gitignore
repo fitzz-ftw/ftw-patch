@@ -40,6 +40,7 @@ doc/source/devel/api/
 .tox
 
 TAGMESSAGE.txt
+MERGEMESSAGE.txt
 old_messages/**
 doc/build_old_theme/coverage/python.txt
 
