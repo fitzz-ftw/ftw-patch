@@ -1,4 +1,5 @@
 .. SECTION - Statistics
+
 Get Started with PatchStatistics
 ================================
 
@@ -459,6 +460,7 @@ patching cycle: creating a source file, defining a unified diff, and applying it
    We create a simple Python file with a few lines of code.
 
 .. code:: python
+
     >>> env.clean_home()
     >>> source_path = env.copy2cwd("app.py")
     >>> deleted_path = env.copy2cwd("app_old_config.py", "old_config.py")

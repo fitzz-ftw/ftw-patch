@@ -17,6 +17,20 @@ Get Started with Ftwpatch Exception Classes
 .. SECTION - Without methods
 
 >>> protocol1 = FtwProtocolWrap(LineLike)
+['__abstractmethods__', '__annotate_func__', '__annotations_cache__', '__class__', 
+ '__class_getitem__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', 
+ '__firstlineno__', '__format__', '__ge__', '__getattribute__', '__getstate__', 
+ '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', 
+ '__module__', '__ne__', '__new__', '__non_callable_proto_members__', 
+ '__parameters__', '__protocol_attrs__', '__reduce__', '__reduce_ex__', 
+ '__repr__', '__setattr__', '__sizeof__', '__slots__', 
+ '__static_attributes__', '__str__', '__subclasshook__', 
+ '__weakref__', '_abc_impl', '_is_protocol', 
+ '_is_runtime_protocol']
+
+{'_color_map': dict[str, typing.Literal['red', 'green', 'yellow', 'cyan', 'terminal']], 'prefix': str | None, 'orig_line': <class 'str'>}
+
+self._attributes={'prefix', 'orig_line', '_color_map'}
 
 >>> protocol1.name
 'LineLike'
@@ -88,9 +102,7 @@ True
 >>> sorted(protocol1.attributes)
 ['_color_map', 'orig_line', 'prefix', 'test', 'test2']
 
->>> protocol1.signatures #doctest: +ELLIPSIS
-{'test': '...', 'test2': '...'}
-
+>>> protocol1.signatures
 {'test': '(self) -> str', 'test2': '(self, a: int) -> None'}
 
 .. !SECTION 
@@ -192,7 +204,7 @@ Hunk.__repr__(self) -> str
 'Please implement:\n  LineLike:\n    Args:\n      _color_map: dict\n      
     orig_line: str\n      prefix: str | None'
 
->>> protocol_error_message(None, "test", LineLike, LineLike2) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+>>> protocol_error_message(None, "test", LineLike, LineLike2) # doctest: +NORMALIZE_WHITESPACE
 'Please implement one of:\n  
   LineLike:\n    
     Args:\n      
@@ -205,10 +217,6 @@ Hunk.__repr__(self) -> str
       orig_line: str\n      
       prefix: str | None\n    
     Meth:\n      
-      test...\n      
-      test2...'
-
-    Meth:\n      
       test(self) -> str\n      
       test2(self, a: int) -> None'
 
@@ -220,7 +228,7 @@ Hunk.__repr__(self) -> str
 ...     def colorprint(self, text:str, invers:bool, fcolor:str, bcolor:str)-> bool:... 
 ...     def empty_page(self)->bool:...
 
->>> protocol_error_message(None, "test", LineLike, LineLike2, PrinterLike) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+>>> protocol_error_message(None, "test", LineLike, LineLike2, PrinterLike) # doctest: +NORMALIZE_WHITESPACE
 'Please implement one of:\n  
   LineLike:\n    
     Args:\n      

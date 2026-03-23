@@ -13,18 +13,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
+# File: src/fitzzftw/patch/__init__.py
+# Author: Fitzz TeXnik Welt
+# Email: FitzzTeXnikWelt@t-online.de
+# License: LGPLv2 or above
 """
-FTW Patch
-===============================
+:mod:`fitzzftw.patch`
+=====================
 
+This package provides high-level patching and introspection utilities for
+Python Protocols and callables. It dynamically adapts to the Python runtime
+to ensure consistent metadata extraction across versions.
 
-| File: fitzzftw.patch/ftw_patch.py
-| Author: Fitzz TeXnik Welt
-| Email: FitzzTeXnikWelt@t-online.de
+Architecture:
+-------------
+The package uses a version-dispatching mechanism to handle significant
+changes in Python's introspection capabilities:
 
+* **Python 3.14+**: Leverages PEP 649 (Deferred Evaluation) and 'annotationlib'.
+* **Python 3.12 - 3.13**: Uses standard 'inspect' and 'typing' hints.
+* **Python 3.11**: Implements legacy workarounds for Protocol introspection.
 
-Ein Unicode resistenter Ersatz für patch.
+Exported API:
+-------------
+The following classes are resolved dynamically based on :data:`sys.version_info`:
 
+* :class:`~.current_312_313.FtwProtocolWrap`: Metadata extractor for structural types.
+* :class:`~.current_312_313.FtwMethFuncWrap`: Signature and metadata wrapper for callables.
 
+Note:
+    Documentation is primarily linked to the :mod:`.current_312_313`
+    implementation to provide a stable reference, though all versions
+    adhere to the same public interface.
 """

@@ -1,0 +1,17 @@
+[run]
+source = ["fitzzftw.patch"]
+# Wir ignorieren die alten 3.13-Workarounds, da sie unter 3.14 nicht mehr ziehen
+omit = ["**/_version.py",
+    "**/future_314_ge.py",
+    "**/legacy_311.py",
+]
+branch = true
+
+[report]
+exclude_also = ["if *__name__ *=*[\"']__main__.*"]
+fail_under = 100
+show_missing = true
+
+[html]
+directory = "doc/build/test_coverage/312/"
+

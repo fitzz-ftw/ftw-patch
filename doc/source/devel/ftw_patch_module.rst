@@ -1,7 +1,7 @@
 FTW Patch
 ###################################
 
-
+.. automodule:: fitzzftw.patch
 
 .. autosummary::
     :toctree: api
@@ -18,5 +18,9 @@ FTW Patch
     fitzzftw.patch.lines
     fitzzftw.patch.static
     fitzzftw.patch.utils
+    fitzzftw.patch.legacy_311
+    fitzzftw.patch.current_312_313
+    fitzzftw.patch.future_314_ge
+
 
 

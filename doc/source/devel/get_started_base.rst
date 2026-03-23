@@ -149,7 +149,7 @@ If we try to print an object that does not follow this protocol, the framework
 raises a detailed :exc:`~.exceptions.FtwProtocolError`. Doctest allows us to verify 
 this behavior by looking for the specific error message:
 
-    >>> reporter.print() # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS  +REPORT_NDIFF
+    >>> reporter.print() # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     Traceback (most recent call last):
       ...
     fitzzftw.patch.exceptions.FtwProtocolError:

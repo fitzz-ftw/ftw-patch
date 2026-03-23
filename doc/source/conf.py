@@ -216,6 +216,8 @@ autodoc_default_options = {
     "exclude-members": "__weakref__,__new__",
     "class-doc-from": "class",
 }
+if sys.version_info < (3, 14):
+    autodoc_mock_imports = ["annotationlib"]
 
 #SECTION - Function for Autosummary
 def create_mermaid_decision_maker(whitelist:list[str]|None=None, 
@@ -287,6 +289,8 @@ class_extention_context = {
         inherit_diagramm, exclude_inherit_diagramm
     ),
 }
+
+
 
 autosummary_context.update(class_extention_context)
 

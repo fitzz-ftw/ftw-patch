@@ -1,0 +1,23 @@
+Why a Legacy Module
+====================
+.. Note::
+    Python 3.11's inspect module often struggles with Protocols and modern type hints like 
+    list[str] | None. The fitzzftw.patch.legacy_311 module provides a robust fallback to 
+    ensure you get clean, human-readable signatures even on older LTS systems like Debian 12.
+
+>>> from fitzzftw.patch.protocols import LineLike
+>>> from typing import Protocol
+
+>>> class LineLike2(LineLike,Protocol):
+...     def test(self) -> str: ...
+...     def test2(self, a: int) -> None: ...
+...     def test3(self, a:int, b:list[str]|None=None)-> str:...
+
+>>> from fitzzftw.patch.legacy_311 import sig2str
+
+>>> for k, v in [(k,v) for k,v in LineLike2.__dict__.items() if not k.startswith("_")]:
+...     v_str = sig2str(v)
+...     print(f"{k}{v_str}")
+test(self)-> str
+test2(self, a: int)-> None
+test3(self, a: int, b: list[str] | None)-> str

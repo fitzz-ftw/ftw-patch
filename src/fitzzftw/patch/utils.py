@@ -12,6 +12,10 @@ string normalization, and hierarchical configuration merging.
 
 Core Functions:
 ---------------
+* **get_string_of_type**:
+    A robust helper to extract human-readable names from type objects or
+    strings. It ensures consistent naming even when dealing with complex
+    Protocols or edge cases where a simple `__name__` access might fail.
 * **get_backup_extension**:
     Normalizes backup extensions and handles dynamic keywords like
     'timestamp' to generate ISO-compliant suffixes.
@@ -33,6 +37,30 @@ from pathlib import Path
 from tomllib import load as tomlload
 
 from platformdirs import user_config_path
+
+
+# FUNCTION - get_string_of_type
+def get_string_of_type(protocol_type) -> str:
+    """
+    Extracts a human-readable string representation of a type.
+
+    This helper is used during protocol introspection to handle both actual
+    class objects and pre-defined type strings. If the input has a '__name__'
+    attribute (e.g., a class), it returns that name; otherwise, it returns
+    the input as is.
+
+    :param protocol_type: The type object or string to convert.
+    :returns: A string representation of the type.
+    """
+    if hasattr(protocol_type, "__name__"):
+        ret = protocol_type.__name__
+    else:  # cov skip if >=3.14
+        ret = protocol_type
+        ret = str(ret)
+    return ret
+
+
+#!FUNCTION
 
 
 def get_backup_extension(ext: str) -> str:

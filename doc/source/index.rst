@@ -103,17 +103,8 @@ Documentation
 .. toctree::
    :maxdepth: 1
    :caption: Developer Guides:
-
-   devel/get_started_static
-   devel/get_started_base
-   devel/get_started_lines
-   devel/get_started_container
-   devel/get_started_exceptions
-   devel/get_started_protocols
-   devel/get_started_utils
-   devel/get_started_parser
-   devel/get_started_patcher
-   devel/get_started_ftw_patch
+   
+   index_get_started
    devel/ftw_patch_module
 
 .. toctree:: 

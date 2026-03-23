@@ -45,8 +45,26 @@ from fitzzftw.patch.protocols import ArgParsOptions, BackupOptions, FtwPatchAppl
 
 # CLASS - PatchStatistics
 class PatchStatistics(TerminalColorMixin):
+    """
+    Collector for patch execution metrics and file operation statistics.
+
+    Tracks modified, created, and deleted files during a patch process and
+    aggregates line-level changes (additions/removals). It supports colorized
+    terminal output based on the configured verbosity level.
+
+    :cvar _color_map: Mapping of operation types to terminal colors.
+    :ivar _verbosity: Controls the detail level of the statistical output.
+    :ivar _modified: List of DiffCodeFile objects identifying modified files.
+    :ivar _created: List of DiffCodeFile objects identifying new files.
+    :ivar _deleted: List of DiffCodeFile objects identifying removed files.
+    """
     _color_map={"del":"red", "create":"green", "modified":"yellow"}
     def __init__(self, verbosity:int=0) -> None:
+        """
+        Initializes the statistics collector.
+
+        :param verbosity: Output detail level. 0 for minimal, 1 for extended info.
+        """
         super().__init__()
         self._verbosity = verbosity
         self._modified:list[DiffCodeFile] = []
@@ -57,29 +75,73 @@ class PatchStatistics(TerminalColorMixin):
     # SECTION - Properties
     @property
     def verbosity(self)->int:
+        """
+        Returns the current verbosity level.
+
+        :return: Verbosity level.
+        """
         return self._verbosity
     @property
     def total_files(self)->int:
+        """
+        Returns the total number of files affected by the patch.
+
+        :return: Count of all processed files.
+        """
         return len(self._created)+len(self._deleted)+len(self._modified)
     @property
     def lines_added(self)->int:
+        """
+        Returns the cumulative count of lines added across all files.
+
+        :return: Total lines added.
+        """
         return self._lines_added
     @property
     def lines_removed(self)->int:
+        """
+        Returns the cumulative count of lines removed across all files.
+
+        :return: Total lines removed.
+        """
         return self._lines_removed
     @property
     def files_modified(self)->int:
+        """
+        Returns the count of existing files that were changed.
+
+        :return: Count of modified files.
+        """
         return len(self._modified)
     @property
     def files_created(self)-> int:
+        """
+        Returns the count of files newly created by the patch.
+
+        :return: Count of created files.
+        """
         return len(self._created)
     @property
     def files_deleted(self)->int:
+        """
+        Returns the count of files removed by the patch.
+
+        :return: Count of deleted files.
+        """
         return len(self._deleted)
     #!SECTION
 
     #METHOD - add_file
     def add_file(self, file:DiffCodeFile)-> None:
+        """
+        Categorizes a processed file and updates aggregate line counters.
+
+        Analyzes the original and new headers to determine if the file was
+        created, deleted, or modified.
+
+        :param file: The processed file object containing diff data.
+        :raises FtwPatchError: If the file object lacks a valid new header.
+        """
         if file.new_header is None:
             raise FtwPatchError("New Header not found!")
         new_header:HeadLine = cast(HeadLine,file.new_header)
@@ -96,7 +158,14 @@ class PatchStatistics(TerminalColorMixin):
     #!METHOD
 
     #METHOD - print
-    def print(self):
+    def print(self) -> None:
+        """
+        Prints a colorized summary of the collected statistics to the terminal.
+
+        Output detail varies by 'verbosity' level:
+        - Level 0: Total files processed.
+        - Level 1: Total files and sum of added/removed lines.
+        """
         match self._verbosity:
             case 1:
                 self.colorize((f"Files processed: {self.total_files}\n"
@@ -106,7 +175,12 @@ class PatchStatistics(TerminalColorMixin):
                 self.colorize(f"Files processed: {self.total_files}", "terminal")
     #!METHOD
     #METHOD - __repr__
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Returns a developer-friendly string representation of the instance.
+
+        :return: String representation.
+        """
         return f"{self.__class__.__name__}(verbosity: {self._verbosity})"
     #!METHOD
 #!CLASS

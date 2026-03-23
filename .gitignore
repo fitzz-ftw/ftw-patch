@@ -1,5 +1,5 @@
 venv
-.venv
+.venv*
 
 *.egg-info
 .pytest_cache
