@@ -175,7 +175,7 @@ Hunk.apply(self,
 >>> hunk_lines = FtwMethFuncWrap(Hunk.lines) #doctest: +ELLIPSIS
 Traceback (most recent call last):
     ...
-TypeError: <property object at 0x7...> is not a callable object
+TypeError: <property object at ...> is not a callable object
 
 >>> hunk_repr = FtwMethFuncWrap(Hunk.__repr__)
 
