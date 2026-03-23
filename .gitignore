@@ -1,5 +1,5 @@
 venv
-.venv
+.venv*
 
 *.egg-info
 .pytest_cache
@@ -13,11 +13,14 @@ doc/build_old_theme
 .coverage
 doc/source/_static/cover.svg
 
+
 #local copies
 * copy.css
 
 # Doctest generated files
 doc/source/devel/testhome/.config
+doc/source/devel/testhome/testoutput/*
+
 
 
 # Build generated files
@@ -37,5 +40,10 @@ doc/source/devel/api/
 .tox
 
 TAGMESSAGE.txt
+MERGEMESSAGE.txt
 old_messages/**
 doc/build_old_theme/coverage/python.txt
+
+# Old Code Snippets
+old_code_snippets
+git_dif*

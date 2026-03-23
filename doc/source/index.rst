@@ -103,8 +103,8 @@ Documentation
 .. toctree::
    :maxdepth: 1
    :caption: Developer Guides:
-
-   devel/get_started_ftw_patch
+   
+   index_get_started
    devel/ftw_patch_module
 
 .. toctree:: 

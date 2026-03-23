@@ -13,8 +13,21 @@
    {%- endfor %}
    **import** {{ objname }}
 
-.. include:: ../api_inc/classes/{{fullname}}_{{class_inc}}.rst.inc
+.. include-if-exists:: ../api_inc/classes/{{fullname}}_{{class_inc}}.rst.inc
     :parser: rst
+
+{% if inheritence_diagram(fullname) %}
+
+.. container:: class-tree-diagram
+
+   .. autoclasstree:: {{fullname}}
+      :name: {{ objname }}
+      :title: {{ objname }}
+      :caption: Inheritage diagramm for {{ objname }} 
+      :align: center
+      :config: {"width": "300px", "height": "300px"}
+
+{% endif %}
 
 .. container:: custom-api-style api-class
 
@@ -24,11 +37,11 @@
    .. currentmodule:: {{ module }}
 
    .. autoclass:: {{ objname }}
+      :show-inheritance:
       {%- if (class_show_inheritance == True 
          or class_show_inheritance and objname is in(class_show_inheritance))
          and not (excl_class_show_inheritance and objname is in(excl_class_show_inheritance)) %}
       {%- set inherited = True %}
-      :show-inheritance:
       :inherited-members:
       {%- endif %}
       {%- if inherited and (autoclass_toc == True 

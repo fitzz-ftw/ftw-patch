@@ -7,6 +7,8 @@
     "commentAnchors.showCursor": true,
     "commentAnchors.tags.anchors": {
 
+
+
         "ANCHOR": {
             "iconColor": "default",
             "highlightColor": "#A8C023",
@@ -58,6 +60,11 @@
             "scope": "workspace",
             "behavior": "region",
             "highlightColor": "#2ecc71"
+        },
+        "FUNCTION":{
+            "scope": "workspace",
+            "behavior": "region",
+            "highlightColor": "#2ecc71"
         }
     },
     "git.followTagsWhenSync": true,
@@ -77,13 +84,18 @@
     // In v0.11.0 war dieser Pfad oft entscheidend:
     "esbonio.sphinx.buildDir": "${workspaceFolder}/doc/build/html",
     "esbonio.server.logLevel": "debug",
-    "python.defaultInterpreterPath": "dein/pfad/zum/venv/bin/python",
+    "python.defaultInterpreterPath": "./venv/bin/python",
     "files.associations": {
         "*.rst.inc": "restructuredtext"
     },
     "python.testing.pytestArgs": [
-        "tests"
+        "tests",
+        "--doctest-glob",
+        "doc/source/devel/get_started_*.rst"
     ],
+    "python.testing.autoTestDiscoverOnSavePattern": "**/get_started_*.rst",
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+    "packageToFlowchart.showDevDependencies": true
 }

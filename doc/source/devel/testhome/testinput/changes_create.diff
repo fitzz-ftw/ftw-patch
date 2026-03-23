@@ -1,0 +1,6 @@
+--- /dev/null
++++ b/utils.py
+@@ -0,0 +1,3 @@
++def helper():
++    """This is a new created file."""
++    return True

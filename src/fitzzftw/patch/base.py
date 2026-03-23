@@ -1,0 +1,190 @@
+# File: src/fitzzftw/patch/base.py
+# Author: Fitzz TeXnik Welt
+# Email: FitzzTeXnikWelt@t-online.de
+# License: LGPLv2 or above
+"""
+base
+===============================
+
+This module provides the core visual and behavioral foundations for the
+fitzzftw patch framework, focusing on terminal output and protocol safety.
+
+Core Features:
+--------------
+* **TerminalColorMixin**:
+  A reusable component that adds ANSI color support
+  to any class. It includes a global toggle (:attr:`~.base.TerminalColorMixin.use_colors`)
+  and a specialized
+  **Test-Mode** for predictable assertions in automated environments.
+
+* **Protocol-Enforced Printing**:
+  The :meth:`~.base.TerminalColorMixin.print` method validates the host
+  class against the :class:`~fitzzftw.patch.protocols.LineLike` protocol. 
+  If requirements (like `prefix`,
+  `orig_line`, or `_color_map`) are missing, it raises a detailed
+  :exc:`~.exceptions.FtwProtocolError` with implementation guidance.
+
+* **Visual Diagnostics**:
+  Includes :func:`~.base.color_terminal_check`, a utility to
+  verify ANSI support and semantic color mapping directly from the CLI.
+
+The module ensures that terminal output is not only visually rich but also
+structurally sound and testable.
+"""
+from pathlib import Path
+from typing import ClassVar, cast
+
+from fitzzftw.patch.exceptions import FtwProtocolError
+from fitzzftw.patch.protocols import LineLike
+from fitzzftw.patch.static import Color, ColorKey, colors
+
+#SECTION - MixinClasses
+
+#CLASS - ColorMixin
+class TerminalColorMixin:
+    """
+    Provides colorization capabilities for CLI output.
+
+    The mixin provides a :meth:`~ColorMixin.colorize` method to encapsulate strings with ANSI
+    color codes and bold styling.
+    """
+
+    # ANSI Terminal Codes
+    _ANSI:Color = colors
+    """Internal mapping of semantic names to ANSI escape sequences. 
+    Can be overridden for testing purposes. 
+    """
+
+    use_colors: ClassVar[bool] = True
+    """Global toggle to enable or disable colorized output. 
+    Defaults to True; should be set explicitly based on CLI flags.
+    """
+
+
+    def colorize(self, text: str, color_key: ColorKey , bold:bool=False, **kwargs) -> None:
+        """
+        Colorizes the text using ANSI escape sequences.
+
+        :param text: The string to colorize.
+        :param color_key: The color to use ('red', 'green', 'cyan').
+        :param bold: Whether to make the output bold.
+        :param kwargs: Arbitrary keyword arguments forwarded to the built-in print() function.
+               This allows for fine-grained control over the output, such as
+               specifying a custom 'file' stream or changing the line termination
+               via 'end' (e.g., end="|").
+        :returns: Colorized string or plain text if colors are disabled.
+        """
+        kwargs["flush"]= True
+        if not self.use_colors:
+            print(text, **kwargs)
+        else:
+            prefix = self._ANSI.get("bold", "\033[1m") if bold else ""
+            prefix += self._ANSI.get(color_key, "")
+            suffix = self._ANSI.get("reset", "\033[0m") if prefix else ""
+            print(f"{prefix}{text}{suffix}", **kwargs)
+
+    def print(self, **kwargs) -> None:
+        """
+        Prints the line with color mapping based on its prefix.
+
+        :raises TypeError: If the class does not satisfy the LineLike protocol.
+        :param kwargs: Passed to colorize/print (e.g., end, file).
+        """
+        if not isinstance(self, LineLike):
+            raise FtwProtocolError(self.print, self.__class__.__name__, (LineLike,))
+            # raise TypeError(
+            #     f"Class '{self.__class__.__name__}' is not 'LineLike'. "
+            #     "To use this mixin, you must provide 'prefix', 'content', "
+            #     "and '_color_map', or override the 'print' method."
+            # )
+        is_bold = kwargs.pop("bold", False)
+        self.colorize(self.orig_line, 
+                      self._color_map.get(cast(str, self.prefix), "terminal"),
+                      bold=is_bold, 
+                      **kwargs)
+
+
+#!CLASS
+
+#!SECTION
+def color_terminal_check() -> None:
+    """
+    Performs a visual diagnostic of ANSI color support in the current terminal.
+
+    This function prints a structured test pattern showcasing 'green', 'red',
+    and 'cyan' in both standard and bold variations. It then repeats the
+    pattern with colors disabled to verify the fallback mechanism.
+
+    **Usage via CLI:**
+
+    .. code-block:: bash
+
+        $ ftw-terminal-color
+
+    **Visual Output:**
+    - A header 'Visual Terminal Color Check' centered in a 39-character block.
+    - An 'Enabled' row showing colorized and bold tags.
+    - A 'Disabled' row showing plain text tags.
+    """
+    row_length=49
+    print("=" * row_length)
+    print(" Visual Terminal Color Check ".center(row_length, "="))
+    colmix = TerminalColorMixin()
+
+    # Testreihe 1: Colors ON
+    print("Enabled :", end=" ")
+    colmix.colorize("GRN", "green", end="|")
+    colmix.colorize("GRN-B", "green", True, end="|")
+    colmix.colorize("RED", "red", end="|")
+    colmix.colorize("RED-B", "red", True, end="|")
+    colmix.colorize("CYN", "cyan", end="|")
+    colmix.colorize("CYN-B", "cyan", True, end="|")
+    colmix.colorize("YLW", "yellow", end="|")
+    colmix.colorize("YLW-B", "yellow", True)
+
+    # Testreihe 2: Colors OFF
+    colmix.use_colors = False  # pyright: ignore[reportAttributeAccessIssue]
+    print("Disabled:", end=" ")
+    colmix.colorize("GRN", "green", end="|")
+    colmix.colorize("GRN-B", "green", True, end="|")
+    colmix.colorize("RED", "red", end="|")
+    colmix.colorize("RED-B", "red", True, end="|")
+    colmix.colorize("CYN", "cyan", end="|")
+    colmix.colorize("CYN-B", "cyan", True, end="|")
+    colmix.colorize("YLW", "yellow", end="|")
+    colmix.colorize("YLW-B", "yellow", True)
+    print("=" * row_length)
+
+
+
+if __name__ == "__main__": # pragma: no cover
+    from doctest import FAIL_FAST, testfile
+    
+    be_verbose = False
+    # be_verbose = True
+    option_flags = 0
+    option_flags = FAIL_FAST
+    test_sum = 0
+    test_failed = 0
+    
+    # Pfad zu den dokumentierenden Tests
+    testfiles_dir = Path(__file__).parents[3] / "doc/source/devel"
+    test_file = testfiles_dir / "get_started_base.rst"
+    # test_file = testfiles_dir / "get_started_ftw_patch.rst"
+
+    if test_file.exists():
+        print(f"--- Running Doctest for {test_file.name} ---")
+        doctestresult = testfile(
+            str(test_file),
+            module_relative=False,
+            verbose=be_verbose,
+            optionflags=option_flags,
+        )
+        test_failed += doctestresult.failed
+        test_sum += doctestresult.attempted
+        if test_failed == 0:
+            print(f"\nDocTests passed without errors, {test_sum} tests.")
+        else:
+            print(f"\nDocTests failed: {test_failed} tests.")
+    else:
+        print(f"⚠️ Warning: Test file {test_file.name} not found.")

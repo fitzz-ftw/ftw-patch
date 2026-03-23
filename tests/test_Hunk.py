@@ -1,7 +1,9 @@
+import gc
 from types import SimpleNamespace
 
 import pytest
 
+from fitzzftw.patch.container import DiffCodeFile
 from fitzzftw.patch.ftw_patch import (
     FileLine,
     FtwPatchError,
@@ -9,6 +11,7 @@ from fitzzftw.patch.ftw_patch import (
     HunkHeadLine,
     HunkLine,
 )
+from fitzzftw.patch.lines import HeadLine
 
 
 class TestHunk:
@@ -214,3 +217,32 @@ class TestHunk:
         
         with pytest.raises(FtwPatchError, match="actual file content does not match"):
             hunk.apply(file_content, self.opts_default)
+
+    def test_hunk_parent_reference_error(self):
+        """
+        Test that the hunk handles a deleted parent (DiffCodeFile) gracefully.
+        This should trigger the ReferenceError block in add_line.
+        """
+        # 1. Setup
+        orig_h = HeadLine("--- a/test.py")
+        diff_file = DiffCodeFile(orig_h)
+        
+        hh = HunkHeadLine("@@ -1,1 +1,1 @@")
+        hunk = Hunk(hh)
+        hunk.parent = diff_file
+        
+        # 2. Kill the parent
+        # We delete the reference and force garbage collection
+        del diff_file
+        gc.collect() 
+
+        # 3. Trigger the missing lines (168-169)
+        # Adding a line now attempts to call update_line_counts on a dead proxy
+        test_line = HunkLine("+ new line")
+        
+        # This should NOT raise an exception because of your try-except block
+        # but it should set hunk._parent to None internally.
+        hunk.add_line(test_line)
+        
+        assert hunk.parent is None
+        assert hunk.addedlines == 1

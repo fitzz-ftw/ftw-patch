@@ -1,0 +1,19 @@
+[run]
+source = ["fitzzftw.patch"]
+
+omit = ["**/_version.py",
+    "**/legacy_311.py",
+    "**/current_312_313.py",
+]
+branch = true
+
+[report]
+exclude_also = ["if *__name__ *=*[\"']__main__.*",
+    "# cov skip if >=3.14",
+    ]
+fail_under = 100
+show_missing = true
+
+[html]
+directory = "doc/build/test_coverage/314/"
+

@@ -1,5 +1,0 @@
-[tool.fitzzftw.patch]
-backupext = "timestamp"
-normalize-ws = false
-dry-run = true
-strip = 1
