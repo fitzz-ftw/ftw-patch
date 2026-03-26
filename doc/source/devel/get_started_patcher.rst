@@ -569,10 +569,19 @@ Copy the patched file to a persistant directory.
     >>> Path("utils.py.orig").exists()
     False
 
+    >>> stat2 = PatchStatistics(2)
+    >>> stat3 = PatchStatistics(3)
+    >>> stat4 = PatchStatistics(4)
+    >>> stat4.print()
+    >>> stat5 = PatchStatistics(5)
 
     >>> for diff_ in patcher.parsed_files:
     ...     stats.add_file(diff_)
     ...     stat1.add_file(diff_)
+    ...     stat2.add_file(diff_)
+    ...     stat3.add_file(diff_)
+    ...     stat4.add_file(diff_)
+    ...     stat5.add_file(diff_)
 
     >>> stats.print()
     Files processed: 3
@@ -596,6 +605,42 @@ Copy the patched file to a persistant directory.
 
     >>> stats.files_deleted
     1
+
+    >>> colors.switch_to_testmode()
+
+    >>> stat2.print()
+    grn>Files created:  1<reset
+    ylw>Files modified: 1<reset
+    red>Files deleted:  1<reset
+
+    >>> stat3.print()
+    grn>Files created:   1<reset
+    ylw>Files modified:  1<reset
+    red>Files deleted:   1<reset
+    trm>Lines processed: 11<reset
+
+    >>> stat4.print()
+    grn>Files created:   b/utils.py<reset
+    ylw>Files modified:  b/app.py<reset
+    red>Files deleted:   a/old_config.py<reset
+
+    >>> stat5.print() #doctest: +NORMALIZE_WHITESPACE
+    grn>File created:   b/utils.py<reset
+    grn>        Lines added: 3<reset
+    ylw>File modified:   b/app.py<reset
+    grn>        Lines added: 4<reset
+    red>        Lines deleted: 1<reset
+    red>File deleted:   a/old_config.py<reset
+    red>        Lines deleted: 3<reset
+
+    >>> stat6 = PatchStatistics(6)
+
+
+    >>> for diff_ in patcher.parsed_files:
+    ...     stat6.add_file(diff_)
+    ylw>MODIFIED b/app.py (+4, -1)<reset
+    grn>CREATED  b/utils.py (+3, -0)<reset
+    red>DELETED  a/old_config.py (+0, -3)<reset
 
 
 .. !CLASS

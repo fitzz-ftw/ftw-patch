@@ -4,9 +4,6 @@
 Command Line Tool ftwpatch
 =================================
 
-..
- This section describes the CLI command :command:`ftwpatch` . For a practical 
- introduction, see the :ref:`ftw-patch-get-argparser-func` guide.
 
 .. tip:: Why we recommend pipx
    :class: sd-card-text

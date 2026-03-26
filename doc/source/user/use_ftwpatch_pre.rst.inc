@@ -22,11 +22,11 @@ Configuration Priority
 
 Settings are merged from the following sources, where the higher level always overrides the lower ones:
 
-1. **Command Line Arguments:** Explicit options (e.g., :ftwpatchopt:`--dry-run`) always win.
+1. **Command Line Arguments:** Explicit options (e.g., :ftwoption:`--dry-run`) always win.
 2. **Project Configuration:** Settings in :file:`./pyproject.toml` under the ``[tool.fitzzftw.patch]`` section.
 3. **User Configuration:**
 
-   * Either a manual file provided via the :ftwpatchopt:`--userconfig` option.
+   * Either a manual file provided via the :ftwoption:`--userconfig` option.
    * Or the default :file:`patch.toml` in your OS-specific config directory.
 
 4. **Internal Defaults:** Built-in fallback values.
@@ -39,15 +39,21 @@ context-aware. The default values shown in the command-line help
 below are not hardcoded; they are recalculated every time you run 
 the command.
 
-When you call ``ftwpatch --help``, the tool first evaluates your 
+When you call :ftwpatchopt:`--help`, the tool first evaluates your 
 :file:`pyproject.toml` and your user configuration. The "(default: ...)" 
 strings in the output will reflect the **actually effective** values 
 for your current environment. 
 
 * If you change a setting in your :file:`pyproject.toml`, it will immediately 
   show up as the new default in your help output.
-* If you use :ftwpatchopt:`--userconfig`, the help output will adapt to show the 
+* If you use :ftwoption:`--userconfig`, the help output will adapt to show the 
   values defined in that specific file.
+
+Verbosity Levels
+-----------------
+
+.. verbosity-table::
+
 
 Command Line Interface
 ----------------------

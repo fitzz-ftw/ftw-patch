@@ -28,7 +28,7 @@ Ein Unicode resistenter Ersatz für patch.
 """
 
 import sys
-from argparse import ArgumentError, ArgumentParser
+from argparse import ArgumentError, ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 from tomllib import TOMLDecodeError
 from typing import cast
@@ -58,10 +58,21 @@ __all__ = [
     "FtwPatchApplyOptions",
 ] 
 
-
+VERBOSITY_LEVELS = {
+    0: "Total number of processed files (default).",
+    1: "Level 0 + sum of all added and removed lines.",
+    2: "Statistics for created, modified, and deleted files (colorized).",
+    3: "Level 2 + total count of lines processed.",
+    4: "List of filenames for created, modified, and deleted files (colorized).",
+    5: "Level 4 + line statistics for each individual file.",
+    6: "Real-time progress: shows filenames and line stats during processing.",
+}
 
 # SECTION -  --- CLI Entry Point ---
-
+def get_verbosity_epilog() -> str:
+    header = "Verbosity Levels:\n"
+    lines = [f"  {lvl}: {desc}" for lvl, desc in VERBOSITY_LEVELS.items()]
+    return header + "\n".join(lines)
 
 def _get_argparser() -> ArgumentParser:
     """
@@ -85,15 +96,13 @@ def _get_argparser() -> ArgumentParser:
     # 3. Final Parser Phase
     parser = ArgumentParser(
         prog="ftwpatch",
+        formatter_class=RawDescriptionHelpFormatter,
         description=("A Unicode-safe patch application tool with "
                      "advanced whitespace normalization. "
                      "Patch utility. Settings are loaded from pyproject.toml [tool.fitzzftw.patch] "
                      "or a user config file. Keys in TOML match CLI flags (e.g., 'backupext')."
                      ),
-        epilog=(
-            "Note: '--userconfig' cannot be set within a config file itself "
-            "as it is required to locate the file."
-        ),
+        epilog =get_verbosity_epilog(),
         exit_on_error=False,
     )
 
@@ -233,7 +242,11 @@ def _get_argparser() -> ArgumentParser:
         type=str,
         default="",
         dest="userconfig",
-        help="Path to a custom user TOML config (default: %(default)s)"
+        help="""Path to a custom user TOML config (default: %(default)s)
+
+        Note: '--userconfig' cannot be set within a config file itself as it is required to locate 
+              the file.
+        """
         )
 
 

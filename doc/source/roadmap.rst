@@ -4,16 +4,8 @@ Roadmap
 Upcoming Releases
 -----------------
 
+
 .. container:: roadmap-next
-
-   .. rubric:: v0.4.0 – Verbosity Option 
-      :class: ftw-cr-title
-   
-   Implementation of the --verbose option for granular output.
-   Starting from level 0, for displaying nothing until level X, displaying 
-   every single step it does.
-
-.. container:: roadmap-planned
 
    .. rubric:: v0.5.0 – Backup Directory
       :class: ftw-cr-title

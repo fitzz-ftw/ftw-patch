@@ -3,7 +3,7 @@ Configuration Examples
 
 The keys in your TOML configuration files match the long-form names of the 
 command-line arguments (e.g., use ``backupext`` for the 
-:ftwpatchopt:`--backupext` option).
+:ftwoption:`--backupext` option).
 
 Project-specific (:file:`pyproject.toml`)
 ---------------------------------------------
@@ -31,7 +31,7 @@ project-specific :file:`pyproject.toml` is present.
    backupext = "datetime"
    
 .. note::
-   If you use the :ftwpatchopt:`--userconfig` option, the path is resolved 
+   If you use the :ftwoption:`--userconfig` option, the path is resolved 
    relative to your CWD. 
    Example: ``ftwpatch --userconfig ./my_rules.toml <patch_file>`` will look 
    for the config exactly in your current folder.
