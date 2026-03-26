@@ -190,13 +190,13 @@ class PatchStatistics(TerminalColorMixin):
                     ,"terminal",)
             case 4:
                 if self.files_created:
-                    tmp_str = ",\n".join([str(x.get_target_path()) for x in self._created])
+                    tmp_str = ",\n".join([x.get_target_path().as_posix() for x in self._created])
                     self.colorize(f"Files created:   {tmp_str}", "green")
                 if self.files_modified:
-                    tmp_str = ",\n".join([str(x.get_target_path()) for x in self._modified])
+                    tmp_str = ",\n".join([x.get_target_path().as_posix() for x in self._modified])
                     self.colorize(f"Files modified:  {tmp_str}", "yellow")
                 if self.files_deleted:
-                    tmp_str = ",\n".join([str(x.get_source_path()) for x in self._deleted])
+                    tmp_str = ",\n".join([x.get_source_path().as_posix() for x in self._deleted])
                     self.colorize(f"Files deleted:   {tmp_str}", "red")
             case 5:
                 for df in self._created:
@@ -207,7 +207,7 @@ class PatchStatistics(TerminalColorMixin):
                     self.colorize(f"\tLines added: {df.addedlines}", "green")
                     self.colorize(f"\tLines deleted: {df.deletedlines}", "red")
                 for df in self._deleted:
-                    self.colorize(f"File deleted:   {df.get_target_path().as_posix()}", "red")
+                    self.colorize(f"File deleted:   {df.get_source_path().as_posix()}", "red")
                     self.colorize(f"\tLines deleted: {df.deletedlines}", "red")
             case _:
                 self.colorize(f"Files processed: {self.total_files}", "terminal")

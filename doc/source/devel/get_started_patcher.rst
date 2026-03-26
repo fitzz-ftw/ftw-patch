@@ -630,7 +630,7 @@ Copy the patched file to a persistant directory.
     ylw>File modified:   b/app.py<reset
     grn>        Lines added: 4<reset
     red>        Lines deleted: 1<reset
-    red>File deleted:   /dev/null<reset
+    red>File deleted:   a/old_config.py<reset
     red>        Lines deleted: 3<reset
 
     >>> stat6 = PatchStatistics(6)
