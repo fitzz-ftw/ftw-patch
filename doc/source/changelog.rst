@@ -2,6 +2,32 @@ Changelog
 =========
 All notable changes to this project will be documented in this file.
 
+
+.. rubric:: v0.4.0 (2026-03-26) Advanced Verbosity & Documentation Automation
+    :class: ftw-cr-title
+
+.. rubric:: Added
+    :class: ftw-cr-added
+
+* **Granular Verbosity Control:** Added support for verbosity levels 0–6 in ``PatchStatistics``, allowing users to toggle between silent operation and extreme debug-level detail.
+* **Sphinx Documentation Suite:**
+    * Integrated ``VerbosityTableDirective`` to automatically generate synchronized verbosity level tables from the source code.
+    * Added ``:ftwoption:`` custom role for semantic linking and consistent styling of CLI parameters.
+    * Implemented ``inject_option_anchors`` to provide automated HTML anchors for all configuration options.
+* **Build Safety:** Introduced a ``guard-master`` check in the ``Makefile`` to prevent accidental direct pushes to protected branches.
+
+.. rubric:: Fixed
+    :class: ftw-cr-fixed
+
+* **Windows Compatibility:** Forced POSIX-style forward slashes in ``PatchStatistics`` output by strictly using ``.as_posix()``, resolving string mismatch failures in doctests on Windows runners.
+* **Documentation Layout:** Refined CSS for improved link visibility and better code block contrast in the HTML documentation.
+
+.. rubric:: Changed
+    :class: ftw-cr-changed
+
+* **Output Refactoring:** Optimized the statistics engine to handle high-verbosity data collection without performance overhead in standard modes.
+
+
 .. rubric:: v0.3.2 (2026-03-20) Core Robustness & Statistics
     :class: ftw-cr-title
 
