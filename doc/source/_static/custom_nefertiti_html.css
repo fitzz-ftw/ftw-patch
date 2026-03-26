@@ -43,3 +43,7 @@
 .field-list dd {
     overflow-x: auto;
 }
+
+a>code {
+    color: var(--nftt-code-color);
+}

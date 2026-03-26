@@ -8,9 +8,12 @@ from typing import Sequence, cast
 
 from docutils import nodes
 from docutils.nodes import Node
-from docutils.parsers.rst import directives
+from docutils.parsers.rst import Directive, directives
 from docutils.parsers.rst.directives.misc import Include, adapt_path
 from jinja2 import Environment, FileSystemLoader
+from sphinx.transforms import SphinxTransform
+
+from fitzzftw.patch.ftw_patch import VERBOSITY_LEVELS
 
 # Read the Docs liefert uns die Canonical URL direkt!
 html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
@@ -30,12 +33,81 @@ except ImportError:
 
 # -- Custom Roles and Components ---------------------------------------------
 def ftwpatchopt_role(name, rawtext, text, lineno, inliner, options=None, content=None):
-    """Custom role for monospace text styling."""
+    """
+    Custom role for monospace text styling.
+
+    :param name: The role name used in the document.
+    :type name: str
+    :param rawtext: The entire markup body.
+    :type rawtext: str
+    :param text: The argument of the role (the option name).
+    :type text: str
+    :param lineno: The line number where the role appears.
+    :type lineno: int
+    :param inliner: The inliner instance.
+    :type inliner: docutils.parsers.rst.states.Inliner
+    :param options: Directive options for customization.
+    :type options: dict
+    :param content: The directive content.
+    :type content: list
+    :return: A tuple containing a list of nodes and a list of system messages.
+    :rtype: tuple[list[reference], list[Any]]
+    """
     node = nodes.literal(rawtext, text, classes=['ftwpatchopt'])
     return [node], []
 
+def ftwoption_role(name, rawtext, text, lineno, inliner, options=None, content=None):
+    """
+    Custom Sphinx role to link to CLI options.
+
+    :param name: The role name used in the document.
+    :type name: str
+    :param rawtext: The entire markup body.
+    :type rawtext: str
+    :param text: The argument of the role (the option name).
+    :type text: str
+    :param lineno: The line number where the role appears.
+    :type lineno: int
+    :param inliner: The inliner instance.
+    :type inliner: docutils.parsers.rst.states.Inliner
+    :param options: Directive options for customization.
+    :type options: dict
+    :param content: The directive content.
+    :type content: list
+    :return: A tuple containing a list of nodes and a list of system messages.
+    :rtype: tuple[list[reference], list[Any]]
+    """
+    inner_node = nodes.literal(rawtext, text, classes=["ftw-opt-link", "custom-option-style"])
+
+    target_id = nodes.make_id(f"opt-{text}")
+
+    ref_node = nodes.reference(rawtext, "", internal=True, refid=target_id)
+
+    ref_node += inner_node
+
+    return [ref_node], []
+
 def person_role(name, rawtext, text, lineno, inliner, options=None, content=None):
-    """Custom role for person names styled as small caps."""
+    """
+    Custom role for person names styled as small caps.
+
+    :param name: The role name used in the document.
+    :type name: str
+    :param rawtext: The entire markup body.
+    :type rawtext: str
+    :param text: The argument of the role (the option name).
+    :type text: str
+    :param lineno: The line number where the role appears.
+    :type lineno: int
+    :param inliner: The inliner instance.
+    :type inliner: docutils.parsers.rst.states.Inliner
+    :param options: Directive options for customization.
+    :type options: dict
+    :param content: The directive content.
+    :type content: list
+    :return: A tuple containing a list of nodes and a list of system messages.
+    :rtype: tuple[list[reference], list[Any]]
+    """
     node = nodes.inline(rawtext, text, classes=["person"])
     return [node], []
 
@@ -62,11 +134,154 @@ class IncludeIfExists(Include):
 
         return super().run()
 
+class VerbosityTableDirective(Directive):
+    """
+    A custom Sphinx directive to render a verbosity levels table.
+
+    This directive iterates over the ``VERBOSITY_LEVELS`` dictionary and
+    generates a docutils table with two columns: 'Level' and 'Description'.
+
+    :return: A list containing the constructed table node.
+    :rtype: list[docutils.nodes.table]
+    """
+    def run(self):
+        """
+        Process the directive and build the docutils table.
+
+        :return: A list of nodes to be injected into the document.
+        :rtype: list[docutils.nodes.node]
+        """
+        table = nodes.table()
+        tgroup = nodes.tgroup(cols=2)
+        table += tgroup
+
+        # Define column widths (percentage)
+        tgroup += nodes.colspec(colwidth=10)
+        tgroup += nodes.colspec(colwidth=90)
+
+        # Build Table Header
+        thead = nodes.thead()
+        tgroup += thead
+        header_row = nodes.row()
+        # Level column
+        entry_lvl = nodes.entry()
+        entry_lvl += nodes.paragraph(text="Level")
+        # row += nodes.entry("", nodes.paragraph(text="Level"))
+        header_row += entry_lvl
+
+        # Description column
+        entry_desc = nodes.entry()
+        entry_desc += nodes.paragraph(text="Description")
+        # row += nodes.entry("", nodes.paragraph(text="Description"))
+        header_row += entry_desc
+
+        thead += header_row
+        # thead += row
+
+
+        # Build Table Body
+        tbody = nodes.tbody()
+        tgroup += tbody
+
+        # Assuming VERBOSITY_LEVELS is a dict {int: str} defined in conf.py
+        for lvl, desc in VERBOSITY_LEVELS.items():
+            row = nodes.row()
+            
+            # Level Cell
+            c1 = nodes.entry()
+            c1 += nodes.paragraph(text=str(lvl))
+            row += c1
+            # row += nodes.entry("", nodes.paragraph(text=str(lvl)))
+
+            # Description Cell
+            c2 = nodes.entry()
+            c2 += nodes.paragraph(text=desc)
+            row += c2
+            # row += nodes.entry("", nodes.paragraph(text=desc))
+
+            tbody += row
+
+        return [table]
+
+def inject_option_anchors(app, doctree):
+    """
+    Scan the doctree and inject HTML anchors into argparse option groups.
+
+    This function acts as a Sphinx event handler. It identifies all
+    ``option_group`` nodes and assigns unique IDs to them, enabling
+    internal cross-referencing via the custom :ftwoption: role.
+
+    :param app: The Sphinx application instance.
+    :type app: sphinx.application.Sphinx
+    :param doctree: The docutils document tree being processed.
+    :type doctree: docutils.nodes.document
+    """
+    docname = app.env.docname
+    std = app.env.get_domain("std")
+
+    for node in doctree.traverse(nodes.option_list_item):
+        if len(node) < 1 or not isinstance(node[0], nodes.option_group):
+            continue
+
+        option_nodes = list(node[0].traverse(nodes.option_string))
+        if not option_nodes:
+            continue
+
+        opt_text = option_nodes[0].astext()
+        anchor_id = f"opt-{opt_text}"
+
+        if anchor_id not in node["ids"]:
+            node["ids"].append(anchor_id)
+
+        std.data["labels"][anchor_id] = (docname, anchor_id, opt_text)
+
+class InjectArgparseAnchors(SphinxTransform):
+    """
+    A transform to inject HTML anchors into argparse option groups.
+
+    This transform scans the document for ``option_group`` nodes and assigns
+    a unique ID to each option. It allows direct linking to specific CLI
+    flags via the :ftwoption: role.
+    """
+    def apply(self, **kwargs) -> None:
+        """
+        Apply the transform to the document tree.
+
+        Iterates through all option groups, generates a clean ID based on
+        the longest option string, and registers each option variant as
+        a global label in the standard domain.
+        """
+        std = self.env.get_domain("std")
+        docname = self.env.docname
+
+        for node in self.document.findall(nodes.option_group):
+            option_nodes = list(node.findall(nodes.option_string))
+            if not option_nodes:
+                continue
+
+            primary_opt = max([n.astext() for n in option_nodes], key=len)
+            clean_id = nodes.make_id(f"opt-{primary_opt}")
+
+            if clean_id not in node["ids"]:
+                node["ids"].append(clean_id)
+
+            for opt_node in option_nodes:
+                opt_text = opt_node.astext().strip()
+                label_key = f"opt-{opt_text}"
+
+                std.data["labels"][label_key] = (docname, clean_id, opt_text)
+
+
 def setup(app):
     """Register custom components during the Sphinx setup process."""
     app.add_role('ftwpatchopt', ftwpatchopt_role)
+    app.add_role("ftwoption", ftwoption_role)
     app.add_role("person", person_role)
     app.add_directive("include-if-exists", IncludeIfExists)
+    app.add_directive("verbosity-table", VerbosityTableDirective)
+    app.connect("doctree-read", inject_option_anchors)
+    app.add_transform(InjectArgparseAnchors)
+    InjectArgparseAnchors.default_priority = 10
 
 
 # -- Project information -----------------------------------------------------
@@ -78,16 +293,16 @@ language = "en"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
-    "sphinxarg.ext",
-    "autoclasstoc",
+    "sphinx.ext.autodoc",       # Zuerst die Basis
+    "sphinx.ext.intersphinx",  # Wichtig für Cross-Refs
     "sphinx.ext.autosummary",
-    "sphinx.ext.autodoc",
+    "myst_parser",             # Falls du Markdown nutzt
+    "sphinxarg.ext",           # Das "tote Pferd" erst jetzt laden
+    "autoclasstoc",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
     "sphinx_design",
-    "sphinx.ext.intersphinx",
-    "myst_parser",
     "sphinxcontrib.mermaid",
 ]
 

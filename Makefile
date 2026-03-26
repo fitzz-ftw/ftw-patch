@@ -33,6 +33,7 @@ help:
 	@printf "  $(YELLOW)make test-deploy-git V=x.y.z$(NC)  Test Release: Tag & Push to TestPyPI via GitHub Actions\n"
 	@printf "  $(YELLOW)make test-deploy V=x.y.z$(NC)      Local Check: Build and verify package only (no upload)\n"
 	@printf "  $(YELLOW)make test-deploy-direct V=x.y.z$(NC) Direct Upload: Manual upload to TestPyPI via Twine\n"
+	@printf "  $(YELLOW)make guard-master$(NC)             Verify current branch is $(DEPLOY_BRANCH)\n"
 	@printf "$(GREEN)%s$(NC)\n" "Quality Assurance & Documentation:"
 	@printf "  $(YELLOW)make tox$(NC)                 Run all tests using tox\n"
 	@printf "  $(YELLOW)make build$(NC)               Build package (sdist & wheel) via tox\\n"
@@ -112,7 +113,7 @@ prepare-tag: init-msg
 
 
 # --- Production Release (GitHub CI) ---
-deploy: check-gitclean
+deploy: guard-master check-gitclean
 	@$(MAKE) prepare-master
 	@$(MAKE) check-upstream EXIT_ON_FAIL=1
 	@$(MAKE) check-v prepare-tag tox html
@@ -212,3 +213,15 @@ merge-release: tox
 	@cp $(MERGE_file) $(OLD_MSG_DIR)/$(MERGE_file)_$$(date +%Y%m%d_%H%M%S).bak
 	@> $(MERGE_file)
 	@printf "$(GREEN)%s$(NC)\n" "Merge successful. $(MERGE_file) archived and cleared."
+
+
+# --- Safety Checks ---
+.PHONY: guard-master
+
+guard-master:
+	@curr_branch=$$( $(GIT) rev-parse --abbrev-ref HEAD ); \
+	if [ "$$curr_branch" != "$(DEPLOY_BRANCH)" ]; then \
+		printf "$(RED)ERROR:$(NC) Deployment only allowed from branch '$(DEPLOY_BRANCH)'.\n"; \
+		printf "Current branch is: '$(YELLOW)$$curr_branch$(NC)'\n"; \
+		exit 1; \
+	fi
