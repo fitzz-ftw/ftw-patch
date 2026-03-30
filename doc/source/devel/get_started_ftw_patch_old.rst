@@ -1194,11 +1194,13 @@ We use the dummy_patch_file created in the setup
     ...     ignore_blank_lines=False,
     ...     ignore_all_whitespace=False,
     ...     dry_run=False,
-    ...     verbose=0
+    ...     verbose=0,
+    ...     backup_ext=".bak",
+    ...     backup_path=Path("."),
     ... )
     >>> patcher = FtwPatch(options)
     >>> patcher # doctest: +ELLIPSIS
-    FtwPatch(patch_file=...('patch.diff'))
+    FtwPatch(backup_ext='.bak', backup_path='.')
 
 2. Executing the Patch (:py:class:`apply` method)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1437,6 +1439,7 @@ is created in the same directory as the original file using an extension.
         dry_run=False, 
         verbose=0, 
         backup_ext='.bak',
+        backup_path=...Path('.'),
         backup=True)
     
 .. code:: python

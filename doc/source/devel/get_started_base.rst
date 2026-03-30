@@ -60,9 +60,9 @@ invisible and difficult to assert. To solve this, the internal
 :attr:`~fitzzftw.patch.base.TerminalColorMixin._ANSI` 
 mapping can be overridden with human-readable placeholders.
 
-.. code-block:: python
+Mocking colors for readable test assertions.
 
-    >>> # Mocking colors for readable test assertions
+.. code-block:: python
 
     >>> TerminalColorMixin._ANSI.switch_to_testmode()
     >>> TerminalColorMixin._ANSI.mode
@@ -141,7 +141,7 @@ becomes available to handle styled output.
     >>> reporter.info("Starting patch process...")
     bold.cyn>Starting patch process...<reset
 
-The :meth:`~.base.TerminalColoMixin.print` method is more advanced: it requires the object to be 
+The :meth:`~.base.TerminalColorMixin.print` method is more advanced: it requires the object to be 
 :class:`.protocol.LineLike` 
 (it must have a ``_color_map``, ``prefix`` and ``orig_line`` attribute). 
 

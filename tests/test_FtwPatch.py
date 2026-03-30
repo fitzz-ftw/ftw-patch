@@ -1,4 +1,5 @@
 from argparse import Namespace
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -26,7 +27,10 @@ class TestFtwPatch:
             ignore_blank_lines=False,
             ignore_all_whitespace=True,
             dry_run=True,
-            verbose = 0
+            verbose = 0,
+            backup_ext=".bak",
+            backup_path=Path("."),
+            dt_now=datetime.now()
         )
 
     ## --- Tests für Initialisierung und Properties ---
@@ -38,7 +42,8 @@ class TestFtwPatch:
 
     def test_init_raises_file_not_found(self):
         """Prüft den proaktiven Check auf Existenz der Patch-Datei."""
-        bad_args = Namespace(patch_file=Path("/tmp/non_existent_patch_123.diff"))
+        bad_args = Namespace(patch_file=Path("/tmp/non_existent_patch_123.diff"),
+                             verbose=0)
         with pytest.raises(FileNotFoundError) as excinfo:
             FtwPatch(bad_args)
         assert "Patch file not found" in str(excinfo.value)
@@ -58,7 +63,7 @@ class TestFtwPatch:
     def test_repr_format(self, valid_args):
         """Prüft die __repr__ Methode für Debugging-Zwecke."""
         app = FtwPatch(valid_args)
-        assert "FtwPatch(patch_file=" in repr(app)
+        assert "FtwPatch(backup_ext=" in repr(app)
 
     ## --- Tests für die run() Methode (Error Handling) ---
 
@@ -89,8 +94,10 @@ class TestFtwPatch:
         
         assert app.run() == 2
 
-    def test_create_backups_success(self, valid_args, tmp_path):
+    def test_create_backups_success(self, valid_args, tmp_path, monkeypatch):
         """Prüft, ob Backups für mehrere Dateien korrekt erstellt werden."""
+        monkeypatch.chdir(tmp_path)
+
         app = FtwPatch(valid_args)
         
         # Testdateien erstellen
@@ -105,8 +112,9 @@ class TestFtwPatch:
         assert Path(str(file1) + ".bak").exists()
         assert Path(str(file2) + ".bak").read_text() == "content2"
 
-    def test_create_backups_failure_and_cleanup(self, valid_args, tmp_path, mocker):
+    def test_create_backups_failure_and_cleanup(self, valid_args, tmp_path, mocker, monkeypatch):
         """Prüft, ob bei einem Fehler bereits erstellte Backups gelöscht werden."""
+        monkeypatch.chdir(tmp_path)
         app = FtwPatch(valid_args)
         
         file1 = tmp_path / "file1.txt"
@@ -129,11 +137,12 @@ class TestFtwPatch:
 
 
 
-    def test_commit_changes_rollback_on_failure(self, valid_args, tmp_path, mocker):
+    def test_commit_changes_rollback_on_failure(self, valid_args, tmp_path, mocker, monkeypatch):
         """
         Tests lines 1401-1429: Verifies that OSError is caught, 
         handled via rollback, and re-raised as FtwPatchError.
         """
+        monkeypatch.chdir(tmp_path)
         import shutil
         app = FtwPatch(valid_args)
         
@@ -163,11 +172,12 @@ class TestFtwPatch:
         assert original.read_text() == "safe_original_content"
 
 
-    def test_create_backups_with_custom_directory(self, valid_args, tmp_path):
+    def test_create_backups_with_custom_directory(self, valid_args, tmp_path, monkeypatch):
         """
         Covers lines 1375-1376: Verifies that a custom backup directory 
         is created and used correctly.
         """
+        monkeypatch.chdir(tmp_path)
         app = FtwPatch(valid_args)
         
         # Setup: Source file
@@ -194,10 +204,11 @@ class TestFtwPatch:
 
 
 
-    def test_commit_changes_cleanup_backups(self, valid_args, tmp_path):
+    def test_commit_changes_cleanup_backups(self, valid_args, tmp_path, monkeypatch):
         """
         Covers lines 1423-1427: Default case where backups are deleted.
         """
+        monkeypatch.chdir(tmp_path)
         app = FtwPatch(valid_args)
         
         # Setup: We need a 'real' file to act as the target for the move
@@ -221,10 +232,11 @@ class TestFtwPatch:
         # Assert: Cleanup should have removed the backup
         assert not bak_file.exists()
 
-    def test_commit_changes_keep_backups(self, valid_args, tmp_path):
+    def test_commit_changes_keep_backups(self, valid_args, tmp_path, monkeypatch):
         """
         Covers lines 1423-1429: Ensures backups are preserved if option is True.
         """
+        monkeypatch.chdir(tmp_path)
         app = FtwPatch(valid_args)
         
         original = tmp_path / "file.txt"

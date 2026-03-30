@@ -33,11 +33,13 @@ Key Features:
     configuration paths across different operating systems.
 """
 
+from datetime import datetime
 from pathlib import Path
 from tomllib import load as tomlload
 
 from platformdirs import user_config_path
 
+DATETIME_KEYWORDS:set[str]=set(("auto", "date", "time", "datetime", "timestamp"))
 
 # FUNCTION - get_string_of_type
 def get_string_of_type(protocol_type) -> str:
@@ -58,33 +60,54 @@ def get_string_of_type(protocol_type) -> str:
         ret = protocol_type
         ret = str(ret)
     return ret
-
-
 #!FUNCTION
 
-
-def get_backup_extension(ext: str) -> str:
+# FUNCTION - replace_keywords_to_isodatetime
+def replace_keywords_to_isodatetime(path_str:str, now:datetime)->str:
     """
-    Normalizes the backup extension and handles dynamic keywords.
+    Replace predefined placeholders in a path string with an ISO timestamp.
 
-    Input is cleaned by removing outer whitespace and dots. If a keyword is
-    detected, it is replaced by an ISO 8601 compliant timestamp.
+    This function searches the string for tokens defined in DATETIME_KEYWORDS
+    enclosed by '@' characters. It replaces them with a timestamp generated
+    from 'now' using the format YYYYMMDDTHHMMSS.
 
-    :param ext: The extension string or keyword ('date', 'time', 'datetime', 'auto', 'timestamp').
-    :returns: A normalized string starting with a dot. Keywords result
-              in the format: '.bak_YYYY-MM-DDTHHMMSS'.
+    :param path_str: The path or filename string to process.
+    :param now: The datetime.datetime object used as the source for the timestamp.
+    :returns: The string containing the resolved timestamps.
+    """
+    ret:str=path_str
+    ts_value:str = now.strftime("%Y%m%dT%H%M%S")
+    for key in DATETIME_KEYWORDS:
+        placeholder:str = f"@{key}@"
+        if placeholder in ret:
+            ret = ret.replace(placeholder, ts_value)
+    return ret
+# !FUNCTION - replace_keywords
+
+# FUNCTION - get_backup_extension
+def get_backup_extension(ext: str, now:datetime=datetime.now()) -> str:  # noqa: B008
+    """
+    Normalize the backup extension and handle dynamic keywords.
+
+    This function cleans the input by removing outer whitespace and dots.
+    If a keyword from DATETIME_KEYWORDS is detected, it is replaced by
+    an ISO 8601 compliant timestamp.
+
+    :param ext: The extension string or a valid datetime keyword.
+    :param now: The datetime.datetime object used for timestamp generation.
+    :returns: A normalized extension string starting with a dot and
+        including the timestamp if a keyword was used.
     """
     ext = ext.strip().strip(".").strip()
 
     # Aliases for the full ISO 8601 timestamp
-    if ext in ("auto", "date", "time", "datetime", "timestamp"):
-        import datetime
-
-        ext = f"bak_{datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')}"
+    if ext in DATETIME_KEYWORDS:
+        ext = f"bak_{now.strftime('%Y-%m-%dT%H%M%S')}"
 
     return f".{ext}"
+#!FUNCTION
 
-
+# FUNCTION - get_merged_config
 def get_merged_config(app_name: str = "ftw", manual_user_cfg: str = "") -> dict:
     """
     Merge configuration from hierarchical sources into a single dictionary.
@@ -130,6 +153,7 @@ def get_merged_config(app_name: str = "ftw", manual_user_cfg: str = "") -> dict:
             config.update(project_cfg)
 
     return config
+#!FUNCTION
 
 
 if __name__ == "__main__":  # pragma: no cover

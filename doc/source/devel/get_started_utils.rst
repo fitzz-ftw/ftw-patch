@@ -39,5 +39,17 @@ You can also use simple extensions:
 
     >>> get_backup_extension(".old")
     '.old'
+
+
+
     >>> get_backup_extension("orig ")
     '.orig'
+
+>>> from datetime import datetime
+>>> from fitzzftw.patch.utils import replace_keywords_to_isodatetime
+
+>>> now = datetime.now()
+>>> dir_str ="test/today_@auto@_patch1/"
+>>> result = replace_keywords_to_isodatetime(dir_str, now)
+>>> result #doctest: +ELLIPSIS
+'test/today_20..._patch1/'

@@ -30,6 +30,7 @@ Key Features:
     :class:`WhitespaceOptions`) to allow for flexible dependency injection.
 """
 
+from datetime import datetime
 from pathlib import Path
 from typing import (
     Protocol,
@@ -60,6 +61,8 @@ class BackupOptions(Protocol):
 
     backup: bool
     backup_ext: str
+    backup_path:Path
+    dt_now:datetime
 
 
 class FtwPatchApplyOptions(DiffCodeOptions, BackupOptions):
