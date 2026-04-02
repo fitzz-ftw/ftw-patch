@@ -1,4 +1,5 @@
 from argparse import ArgumentError
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -63,6 +64,10 @@ class TestMainEntry:
         """Tests the successful execution path (Returns 0)."""
         # Mock Parser
         mock_args = mocker.Mock(dry_run=False)
+        mock_args.backup_path = Path("/tmp/fake_path")
+        mock_args.backup_ext = ".bak"
+        mock_args.dry_run = False
+        mock_args.dt_now = datetime.now()
         mocker.patch("fitzzftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
         
         # Mock FtwPatch logic
@@ -76,7 +81,12 @@ class TestMainEntry:
 
     def test_prog_ftw_patch_ftw_error(self, mocker, capsys):
         """Tests the handling of a known FtwPatchError (Returns 1)."""
-        mocker.patch("fitzzftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mocker.Mock()  # noqa: E501
+        mock_args = mocker.Mock(dry_run=False)
+        mock_args.backup_path = Path("/tmp/fake_path")
+        mock_args.backup_ext = ".bak"
+        mock_args.dry_run = False
+        mock_args.dt_now = datetime.now()
+        mocker.patch("fitzzftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
         
         # Force a FtwPatchError during initialization
         mocker.patch("fitzzftw.patch.ftw_patch.FtwPatch", side_effect=FtwPatchError("Parser fail"))
@@ -104,6 +114,11 @@ class TestMainEntry:
         """
         # 1. Mock parser to return a valid namespace
         mock_args = mocker.Mock(dry_run=False)
+        mock_args.backup_path = Path("/tmp/fake_path")
+        mock_args.backup_ext = ".bak"
+        mock_args.dry_run = False
+        mock_args.dt_now = datetime.now()
+
         mocker.patch("fitzzftw.patch.ftw_patch._get_argparser").return_value.parse_args.return_value = mock_args  # noqa: E501
         
         # 2. Mock FtwPatch to raise the specific FileNotFoundError

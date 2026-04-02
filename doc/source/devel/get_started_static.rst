@@ -1,7 +1,9 @@
 Global Color Management
 =======================
 
-The ``static`` module provides a centralized ``colors`` instance to manage terminal 
+.. currentmodule:: fitzzftw.patch.static
+
+The :mod:`.static` module provides a centralized ``colors`` instance to manage terminal 
 output consistently across the entire ``ftw-patch`` project.
 
 Basic Usage
@@ -39,9 +41,9 @@ The ``colors`` manager supports different modes to adapt to various environments
 * **PLAIN**: Returns empty strings (strips all formatting).
 * **TEST**: Returns semantic tags (e.g., ``red>``) for easy assertion in tests.
 
-.. code-block:: python
 
-   # Switch to PLAIN mode for clean logs
+Switch to PLAIN mode for clean logs
+
 .. code-block:: python
 
     >>> colors.mode = "PLAIN"
@@ -52,7 +54,8 @@ The ``colors`` manager supports different modes to adapt to various environments
     >>> color == ""
     True
 
-   # Switch to TEST mode for unit testing
+Switch to TEST mode for unit testing
+
 .. code-block:: python
 
     >>> colors.mode = "TEST"
@@ -75,7 +78,7 @@ Validation and Type Safety
 --------------------------
 
 The system is strictly validated. Attempting to set an invalid mode will 
-raise a ``ValueError``.
+raise a :exc:`~python:ValueError`.
 
 .. code-block:: python
    

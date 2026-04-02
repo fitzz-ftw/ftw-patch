@@ -87,7 +87,7 @@ class TerminalColorMixin:
         """
         Prints the line with color mapping based on its prefix.
 
-        :raises TypeError: If the class does not satisfy the LineLike protocol.
+        :raises FtwProtocolError: If the class does not satisfy the LineLike protocol.
         :param kwargs: Passed to colorize/print (e.g., end, file).
         """
         if not isinstance(self, LineLike):

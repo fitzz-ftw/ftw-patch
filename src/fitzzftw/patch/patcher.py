@@ -26,10 +26,11 @@ Usage:
 ------
 
 Initialize with an options object satisfying the
-:class:`~.protocols.ArgParsOptions` protocol and call :meth:`~.FtwPatch.apply`.
+:class:`~.protocols.ArgParsOptions` protocol and call :meth:`~.FtwPatch.run`.
 
 """
 
+from datetime import datetime
 from pathlib import Path
 from shutil import copy2, move
 from tempfile import TemporaryDirectory
@@ -67,6 +68,7 @@ class PatchStatistics(TerminalColorMixin):
         """
         super().__init__()
         self._verbosity = verbosity
+        self._start_time:datetime|None=None
         self._modified:list[DiffCodeFile] = []
         self._created: list[DiffCodeFile] = []
         self._deleted: list[DiffCodeFile] = []
@@ -129,6 +131,15 @@ class PatchStatistics(TerminalColorMixin):
         :return: Count of deleted files.
         """
         return len(self._deleted)
+    
+    @property
+    def start_time(self)->datetime|None:
+        return self._start_time
+    
+    @start_time.setter
+    def start_time(self, value:datetime) -> None:
+        self._start_time= value
+    
     #!SECTION
 
     #METHOD - add_file
@@ -211,6 +222,10 @@ class PatchStatistics(TerminalColorMixin):
                     self.colorize(f"\tLines deleted: {df.deletedlines}", "red")
             case _:
                 self.colorize(f"Files processed: {self.total_files}", "terminal")
+        
+        time_delta = datetime.now() - (self.start_time if self.start_time else datetime.now())
+        self.colorize(f"Runtime: {time_delta.total_seconds():.2f} s","terminal")
+
     #!METHOD
     #METHOD - __repr__
     def __repr__(self) -> str:
@@ -229,7 +244,7 @@ class FtwPatch:
     """
     Main class for the ``ftwpatch`` program.
 
-    Implements the PIMPLE idiom by storing the parsed argparse.Namespace object
+    Implements the PIMPLE idiom by storing the parsed :class:`python:argparse.Namespace` object
     and providing command-line arguments via read-only properties (getters).
     """
 
@@ -245,20 +260,21 @@ class FtwPatch:
         :raises FtwPatchError: If any internal error occurs during setup.
         """
         self._args = args
-        self._patch_files = None
+        self._patch_files:list|None = None
         self._files2delete:list[Path]=[]
+        self._statistics= PatchStatistics(args.verbose)
         # Proactive check for the existence of the patch file
         if not self._args.patch_file.is_file():
             raise FileNotFoundError(f"Patch file not found at {self._args.patch_file!r}")
 
     def __repr__(self) -> str:
         """
-        Return a formal string representation of the FtwPatch instance.
-
-        :returns: String containing the class name and the associated patch file path.
+        Return a machine-readable representation of the instance.
+        :returns: A string containing the class name and its state.
         """
-        # self.__class__.__name__ erfüllt die Anforderung für Vererbung
-        return f"{self.__class__.__name__}(patch_file={self._args.patch_file!r})"
+        # Nutzung von self.__class__.__name__ wie vorgeschrieben
+        return (f"{self.__class__.__name__}(backup_ext='{self.backup_ext}', "
+                f"backup_path='{self.backup_path.as_posix()}')")
 
     #SECTION - Properties
     @property
@@ -326,6 +342,50 @@ class FtwPatch:
         return self._args.dry_run
 
     @property
+    def verbose(self) -> int:
+        """Get the verbosity level for console output **(ro)**.
+        
+        :returns: The verbosity level ranging from 0 to 3.
+        """
+        return self._args.verbose
+
+    @property
+    def backup_ext(self)->str:
+        """
+        Get the normalized backup file extension **(ro)**.
+
+        This property returns the extension including the dot and the
+        optional timestamp if a keyword was used during initialization.
+
+        :returns: The backup extension string.
+        """
+        return self._args.backup_ext
+
+    @property
+    def backup_path(self)->Path:
+        """
+        Get the base directory for backup files **(ro)**.
+
+        This path is resolved and contains the processed timestamp if
+        any keywords were present in the initial configuration.
+
+        :returns: The Path object for the backup directory.
+        """
+        return self._args.backup_path
+
+    @property
+    def start_time(self) -> datetime:
+        """
+        Get the global reference timestamp for this session **(ro)**.
+
+        This timestamp is fixed at program start to ensure consistency
+        between directory names and file extensions.
+
+        :returns: The reference datetime.datetime object.
+        """
+        return self._args.dt_now
+
+    @property
     def parsed_files(self) -> list[DiffCodeFile]:
         """
         Return the list of code files extracted from the patch **(ro)**.
@@ -336,17 +396,10 @@ class FtwPatch:
         :raises OSError: If file access fails during parsing **(Indirect)**.
         :returns: List of DiffCodeFile objects.
         """
-        if getattr(self, '_patch_files', None) is None:
+        if getattr(self, "_patch_files", None) is None:
             self._parse()
-        return self._patch_files # pyright: ignore[reportReturnType]
+        return self._patch_files  # pyright: ignore[reportReturnType]
 
-    @property
-    def verbose(self) -> int:
-        """Get the verbosity level for console output **(ro)**.
-        
-        :returns: The verbosity level ranging from 0 to 3.
-        """
-        return self._args.verbose
     #!SECTION Properties
 
     def _get_patch_stream(self):
@@ -370,9 +423,14 @@ class FtwPatch:
         :raises OSError: If an I/O error occurs during reading **(Indirect)**.
         """
         parser = PatchParser() 
+        self._patch_files=[]
         
         with self._get_patch_stream() as stream:
-            self._patch_files = list(parser.iter_files(stream))
+            for diff_file in parser.iter_files(stream):
+                self._statistics.add_file(diff_file)
+                self._patch_files.append(diff_file)
+
+            # self._patch_files = list(parser.iter_files(stream))
 
     def run(self) -> int|None:
         """
@@ -381,7 +439,10 @@ class FtwPatch:
         :returns: Exit code (0 for success, 1 or 2 for errors).
         """
         try:
-            return self.apply(self._args)
+            ret= self.apply(self._args)
+            self._statistics.start_time = self.start_time
+            self._statistics.print()
+            return ret
         except FtwPatchError as e:
             print(f"\nPatch failed: {e}")
             return 1
@@ -448,7 +509,7 @@ class FtwPatch:
                 raise
 
     def _create_backups(
-        self, file_paths: list[Path], extension: str = ".ftwBak", backup_dir: Path | None = None
+        self, file_paths: list[Path], extension: str = ".ftwBak", backup_dir: Path = Path(".")
     ) -> list[Path]:
         """
         Create mandatory backups of all files before any modification.
@@ -460,15 +521,22 @@ class FtwPatch:
         :raises FtwPatchError: If a backup fails, removes all previously created backups.
         """
         created_backups = []
+        base_anchor_len = len(Path.cwd().resolve().parts)
         try:
             for original in file_paths:
-                if backup_dir:
-                    backup_dir.mkdir(parents=True, exist_ok=True)
-                    bak_path = backup_dir / (original.name + extension)
-                else:
-                    bak_path = original.with_suffix(original.suffix + extension)
+                # if backup_dir:
+                #     backup_dir.mkdir(parents=True, exist_ok=True)
+                #     # bak_path = backup_dir / (original.name + extension)
+                #     bak_path = backup_dir / original.with_suffix(original.suffix + extension)
+                # else:
+                #     bak_path = original.with_suffix(original.suffix + extension)
                 if not original.exists():
                     continue
+                abs_parts = original.resolve().parts
+                rel_parts = abs_parts[base_anchor_len:]
+                rel_path_with_ext = Path(*rel_parts).with_suffix(original.suffix + extension)
+                bak_path = backup_dir / rel_path_with_ext
+                bak_path.parent.mkdir(parents=True, exist_ok=True)
                 copy2(original, bak_path)
                 created_backups.append(bak_path)
             return created_backups
@@ -494,7 +562,7 @@ class FtwPatch:
         backup_paths = self._create_backups(
             originals,
             extension=getattr(options, "backup_ext", ".ftwBak"),
-            backup_dir=getattr(options, "backup_dir", None),
+            backup_dir=getattr(options, "backup_path", Path().cwd()),
         )
 
         # Phase 2: Overwrite original files
@@ -535,7 +603,7 @@ if __name__ == "__main__": # pragma: no cover
     # Pfad zu den dokumentierenden Tests
     testfiles_dir = Path(__file__).parents[3] / "doc/source/devel"
     test_file = testfiles_dir / "get_started_patcher.rst"
-    # test_file = testfiles_dir / "debug_patcher.rst"
+    # test_file = testfiles_dir / "debug_patcher.txt"
     
     if test_file.exists():
         print(f"--- Running Doctest for {test_file.name} ---")

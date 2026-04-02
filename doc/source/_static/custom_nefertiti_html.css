@@ -47,3 +47,36 @@
 a>code {
     color: var(--nftt-code-color);
 }
+
+:root {
+    --header-height: 60px;
+}
+
+@media (min-width: 576px){
+    :root {
+            --header-height: 60px;
+    }
+}
+
+@media (min-width: 768px) {
+    :root {
+        --header-height: 80px;
+    }
+}
+
+@media (min-width: 992px){
+    :root {
+            --header-height: 80px;
+    }
+}
+
+@media (min-width: 1200px){
+    :root {
+            --header-height: 80px;
+    }
+}
+
+html {
+    scroll-padding-top: var(--header-height);
+    scroll-behavior: smooth;
+}

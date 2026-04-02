@@ -50,8 +50,9 @@ Basic Output
 The :meth:`.PatchStatistics.print` method generates a summary based on the gathered data. 
 Even without any files added, it provides a basic status report:
 
->>> stats.print() 
+>>> stats.print() #doctest: +ELLIPSIS   
 Files processed: 0
+Runtime: ... s
 
 Higher Verbosity
 ----------------
@@ -64,9 +65,10 @@ what :meth:`~.PatchStatistics.print` eventually shows (once data is present).
 >>> stat1
 PatchStatistics(verbosity: 1)
 
->>> stat1.print()
+>>> stat1.print() #doctest: +ELLIPSIS
 Files processed: 0
 Lines processed: 0
+Runtime: ... s
 
 
 .. !SECTION - Statistics
@@ -151,11 +153,13 @@ We use the dummy_patch_file created in the setup
     ...     ignore_blank_lines=False,
     ...     ignore_all_whitespace=False,
     ...     dry_run=False,
-    ...     verbose=0
+    ...     verbose=0,
+    ...     backup_ext=".bak",
+    ...     backup_path=Path(".")
     ... )
     >>> patcher = FtwPatch(options)
     >>> patcher # doctest: +ELLIPSIS
-    FtwPatch(patch_file=...('patch.diff'))
+    FtwPatch(backup_ext='.bak', backup_path='.')
 
 2. Executing the Patch (:py:meth:`.FtwPatch.apply` method)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -385,6 +389,7 @@ is created in the same directory as the original file using an extension.
         dry_run=False, 
         verbose=0, 
         backup_ext='.bak',
+        backup_path=...Path('.'),
         backup=True)
     
 .. code:: python
@@ -482,6 +487,7 @@ patching cycle: creating a source file, defining a unified diff, and applying it
 .. code:: python
 
     >>> from argparse import Namespace
+    >>> from datetime import datetime
     >>> run_options = Namespace(
     ...     patch_file=patch_path,
     ...     target_directory=Path("."),
@@ -492,7 +498,9 @@ patching cycle: creating a source file, defining a unified diff, and applying it
     ...     dry_run=False,
     ...     verbose=1,
     ...     backup=True,
-    ...     backup_ext=".orig"
+    ...     backup_ext=".orig",
+    ...     dt_now = datetime.now(),
+    ...     backup_path = Path("."),
     ... )
     >>> patcher = FtwPatch(run_options)
     >>> patcher.apply(run_options)
@@ -572,7 +580,8 @@ Copy the patched file to a persistant directory.
     >>> stat2 = PatchStatistics(2)
     >>> stat3 = PatchStatistics(3)
     >>> stat4 = PatchStatistics(4)
-    >>> stat4.print()
+    >>> stat4.print() #doctest: +ELLIPSIS
+    Runtime: ... s
     >>> stat5 = PatchStatistics(5)
 
     >>> for diff_ in patcher.parsed_files:
@@ -583,12 +592,14 @@ Copy the patched file to a persistant directory.
     ...     stat4.add_file(diff_)
     ...     stat5.add_file(diff_)
 
-    >>> stats.print()
+    >>> stats.print() #doctest: +ELLIPSIS
     Files processed: 3
+    Runtime: ... s
 
-    >>> stat1.print()
+    >>> stat1.print() #doctest: +ELLIPSIS
     Files processed: 3
     Lines processed: 11
+    Runtime: ... s
 
     >>> stats.lines_added
     7
@@ -608,23 +619,26 @@ Copy the patched file to a persistant directory.
 
     >>> colors.switch_to_testmode()
 
-    >>> stat2.print()
+    >>> stat2.print() #doctest: +ELLIPSIS
     grn>Files created:  1<reset
     ylw>Files modified: 1<reset
     red>Files deleted:  1<reset
+    trm>Runtime: ... s<reset
 
-    >>> stat3.print()
+    >>> stat3.print() #doctest: +ELLIPSIS
     grn>Files created:   1<reset
     ylw>Files modified:  1<reset
     red>Files deleted:   1<reset
     trm>Lines processed: 11<reset
+    trm>Runtime: ... s<reset
 
-    >>> stat4.print()
+    >>> stat4.print() #doctest: +ELLIPSIS
     grn>Files created:   b/utils.py<reset
     ylw>Files modified:  b/app.py<reset
     red>Files deleted:   a/old_config.py<reset
+    trm>Runtime: ... s<reset
 
-    >>> stat5.print() #doctest: +NORMALIZE_WHITESPACE
+    >>> stat5.print() #doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     grn>File created:   b/utils.py<reset
     grn>        Lines added: 3<reset
     ylw>File modified:   b/app.py<reset
@@ -632,6 +646,7 @@ Copy the patched file to a persistant directory.
     red>        Lines deleted: 1<reset
     red>File deleted:   a/old_config.py<reset
     red>        Lines deleted: 3<reset
+    trm>Runtime: ... s<reset
 
     >>> stat6 = PatchStatistics(6)
 
@@ -641,6 +656,29 @@ Copy the patched file to a persistant directory.
     ylw>MODIFIED b/app.py (+4, -1)<reset
     grn>CREATED  b/utils.py (+3, -0)<reset
     red>DELETED  a/old_config.py (+0, -3)<reset
+
+    >>> env.clean_home()
+    >>> source_path = env.copy2cwd("app.py")
+    >>> deleted_path = env.copy2cwd("app_old_config.py", "old_config.py")
+    >>> patch_path = env.copy2cwd("changes_multi.diff","changes.diff")
+    
+    >>> run_options.backup_path=Path("my_backup")
+    
+    >> run_options
+
+    >>> patcher_run = FtwPatch(run_options)
+    >>> patcher_run.run() #doctest: +ELLIPSIS
+    trm>Files processed: 3
+    Lines processed: 11<reset
+    trm>Runtime: ... s<reset
+
+    >> Path("my_backup/app.py.orig").exists()
+    True
+    >>> "print('Hello')" in Path("my_backup/app.py.orig").read_text()
+    True
+
+    >>> Path("my_backup/old_config.py.orig").exists()
+    True
 
 
 .. !CLASS

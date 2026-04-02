@@ -52,6 +52,7 @@
 .. code:: python
 
     >>> from argparse import Namespace
+    >>> from datetime import datetime
     >>> run_options = Namespace(
     ...     patch_file=patch_path,
     ...     target_directory=Path("."),
@@ -62,17 +63,20 @@
     ...     dry_run=False,
     ...     verbose=1,
     ...     backup=True,
-    ...     backup_ext=".orig"
+    ...     backup_ext=".orig",
+    ...     dt_now = datetime.now(),
+    ...     backup_path = Path("my_backup"),
     ... )
+
     >>> patcher = FtwPatch(run_options)
 
     >>> env.input_readonly=False
 
-    >>> patcher.apply(run_options)
+    >>> patcher.run() #doctest: +ELLIPSIS
+    Files processed: 3
+    Lines processed: 11
+    Runtime: ... s
     
-    Traceback (most recent call last):
-        ...
-    fitzzftw.patch.exceptions.PatchParseError: Hunk starting at line 0 exceeds file bounds. File has 0 lines.
 
 4. **Verify the Results**
    The original file should now contain the new content, and a backup 
@@ -91,12 +95,12 @@
         greet()
     <BLANKLINE>
 
-    >> Path("app.py.orig").exists()
+    >> Path("my_backup/app.py.orig").exists()
     True
-    >>> "print('Hello')" in Path("app.py.orig").read_text()
+    >>> "print('Hello')" in Path("my_backup/app.py.orig").read_text()
     True
 
-    >>> Path("old_config.py.orig").exists()
+    >>> Path("my_backup/old_config.py.orig").exists()
     True
 
     >>> deleted_path.exists()

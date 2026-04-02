@@ -112,7 +112,7 @@ class FtwError(FtwException):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({str(self)!r})"
 
-class FtwProtocolError(FtwError):
+class FtwProtocolError(FtwError, TypeError):
     """
     Exception raised when an object violates one or more required Protocols.
 
@@ -122,15 +122,20 @@ class FtwProtocolError(FtwError):
     generate a highly detailed cryptographic-style error message.
 
     **Inheritance Hierarchy**
+
     * :py:class:`FtwProtocolError`
+
     * :py:class:`FtwError`
+
     * :py:class:`FtwException`
+
     * :py:class:`Exception`
 
-    Attributes:
-        _meth_func (Callable): The function or method where the protocol violation occurred.
-        _arg_name (str): The name of the argument that failed the check.
-        _protocols (tuple): A collection of Protocol classes that were expected.
+    :ivar Callable _meth_func: The function or method where the protocol violation occurred.
+        
+    :ivar str _arg_name: The name of the argument that failed the check.
+        
+    :ivar tuple _protocols: A collection of Protocol classes that were expected.
     """
 
     def __init__(self, meth_func: Callable, arg_name: str, protocols: tuple) -> None:

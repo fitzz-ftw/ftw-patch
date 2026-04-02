@@ -2,6 +2,30 @@ Changelog
 =========
 All notable changes to this project will be documented in this file.
 
+.. rubric:: v0.5.0 (2026-04-02) Streaming Engine & Backup Directories
+    :class: ftw-cr-title
+
+.. rubric:: Added
+    :class: ftw-cr-added
+
+* **Streaming Parser:** Changed the internal engine to process files one by one. This shows progress immediately instead of waiting for the whole list.
+* **Performance Tracking:** The final summary now shows the total runtime in seconds.
+* **Dynamic Backup Directories:** Added the ``--backup-dir`` option. You can use keywords like ``@auto@`` or ``@datetime@`` to create timestamped folders.
+* **Responsive Scroll Offsets:** Updated the CSS to handle fixed headers. Links now scroll to the correct position on all screen sizes.
+
+.. rubric:: Fixed
+    :class: ftw-cr-fixed
+
+* **Property Logic:** Fixed the ``@property.setter`` syntax to prevent "missing argument" errors in IDEs.
+* **Time Calculation:** Now uses ``total_seconds()`` to ensure correct time reports even for very long processes.
+* **Exception Documentation:** Updated the hierarchy to list errors from specific to general in the documentation.
+
+.. rubric:: Changed
+    :class: ftw-cr-changed
+
+* **Core Error Model:** ``FtwProtocolError`` now inherits from ``TypeError`` for better system integration.
+
+
 
 .. rubric:: v0.4.0 (2026-03-26) Advanced Verbosity & Documentation Automation
     :class: ftw-cr-title

@@ -29,6 +29,7 @@ Ein Unicode resistenter Ersatz für patch.
 
 import sys
 from argparse import ArgumentError, ArgumentParser, RawDescriptionHelpFormatter
+from datetime import datetime
 from pathlib import Path
 from tomllib import TOMLDecodeError
 from typing import cast
@@ -41,7 +42,11 @@ from fitzzftw.patch.lines import FileLine, HeadLine, HunkHeadLine, HunkLine, Pat
 from fitzzftw.patch.parser import PatchParser
 from fitzzftw.patch.patcher import FtwPatch
 from fitzzftw.patch.protocols import ArgParsOptions, BackupOptions, FtwPatchApplyOptions
-from fitzzftw.patch.utils import get_backup_extension, get_merged_config
+from fitzzftw.patch.utils import (
+    get_backup_extension,
+    get_merged_config,
+    replace_keywords_to_isodatetime,
+)
 
 __all__ = [
     "FileLine",
@@ -248,6 +253,15 @@ def _get_argparser() -> ArgumentParser:
               the file.
         """
         )
+    
+    parser.add_argument(
+        "--backup-dir",
+        dest="backup_path",
+        type=Path,
+        default=Path("."),
+        help="Base directory for backups. If set, the relative path structure of "
+        "patched files is mirrored here. Default is the current directory (default: %(default)s).",
+    )
 
 
     return parser
@@ -270,11 +284,15 @@ def prog_ftw_patch() -> int:
         # 2. Initialize Argument Parser (Assumption: _get_argparser() is defined)
         parser = _get_argparser()
 
+
         # 3. Parse arguments
         args:ArgParsOptions = cast(ArgParsOptions, parser.parse_args())
+        args.dt_now = datetime.now()
 
+        args.backup_ext = get_backup_extension(args.backup_ext, args.dt_now)
+        args.backup_path = Path(replace_keywords_to_isodatetime(args.backup_path.as_posix(),
+                                                           args.dt_now))
 
-        args.backup_ext = get_backup_extension(args.backup_ext)
 
         # The 'dry_run' argument must be correctly extracted from args
         # dry_run = getattr(args, "dry_run", False)
