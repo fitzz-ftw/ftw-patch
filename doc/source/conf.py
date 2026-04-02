@@ -480,7 +480,10 @@ autosummary_imported_members = False
 autosummary_ignore_module_all = True
 autosummary_context = {}
 
-inherit_diagramm: list[str] = ["fitzzftw.patch.lines", 'fitzzftw.patch.exceptions']
+inherit_diagramm: list[str] = ["fitzzftw.patch.lines", 
+                               'fitzzftw.patch.exceptions',
+                               'fitzzftw.patch.protocols',
+                               ]
 exclude_inherit_diagramm: list[str] = []
 
 class_extention_context = {
